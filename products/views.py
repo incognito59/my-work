@@ -8,13 +8,11 @@ def index(request):
 
 def login_page(request):
     if request.method == 'POST':
-        # You can later add real login logic
         return redirect('products:product-list')
     return render(request, 'login.html')
 
 def register_page(request):
     if request.method == 'POST':
-        # You can later save the user
         return redirect('products:login')
     return render(request, 'register.html')
 
@@ -41,12 +39,12 @@ def checkout(request):
         'products': products,
         'total': total,
         'total_kobo': total_kobo,
-        'paystack_public_key': 'pk_test_your_public_key_here'  # Not needed now, for later use
+        'paystack_public_key': 'pk_test_your_public_key_here'  
     }
     return render(request, 'checkout.html', context)
 
 def confirm_payment(request):
     if request.method == 'POST':
         messages.success(request, "Payment confirmed. Thank you!")
-        request.session['cart'] = []  # clear cart
+        request.session['cart'] = []  
         return redirect('products:product-list')
