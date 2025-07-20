@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2 class="mb-4">Register</h2>
+  <form method="POST">
+    {% csrf_token %}
+    <div class="form-group">
+      <label for="full_name">Full Name</label>
+      <input type="text" class="form-control" name="full_name" id="full_name" required>
+    </div>
+    <div class="form-group">
+      <label for="email">Email address</label>
+      <input type="email" class="form-control" name="email" id="email" required>
+    </div>
+    <div class="form-group">
+      <label for="phone">Phone Number (Nigerian)</label>
+      <input type="tel" class="form-control" name="phone" id="phone" pattern="^0\d{10}$" required>
+    </div>
+    <div class="form-group">
+      <label for="password">Password (min 8 characters)</label>
+      <input type="password" class="form-control" name="password" id="password" minlength="8" required>
+    </div>
+    <div class="form-group">
+      <label for="confirm_password">Confirm Password</label>
+      <input type="password" class="form-control" name="confirm_password" id="confirm_password" minlength="8" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Register</button>
+  </form>
+</div>
+{% endblock %}
