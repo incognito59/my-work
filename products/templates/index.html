@@ -7,9 +7,17 @@
     {% for product in products %}
       <div class="col-md-4 mb-4">
         <div class="card h-100">
-          <img src="{{ product.image_url }}" class="card-img-top" alt="{{ product.name }}">
+          <!-- 🔗 Image linked to detail page -->
+          <a href="{% url 'products:product-detail' product.id %}">
+            <img src="{{ product.image_url }}" class="card-img-top" alt="{{ product.name }}">
+          </a>
           <div class="card-body">
-            <h5 class="card-title">{{ product.name }}</h5>
+            <!-- 🔗 Product name linked to detail page -->
+            <h5 class="card-title">
+              <a href="{% url 'products:product-detail' product.id %}" class="text-dark">
+                {{ product.name }}
+              </a>
+            </h5>
             <p class="card-text">₦{{ product.price }}</p>
             <p class="card-text">Stock: {{ product.stock }}</p>
             <a href="{% url 'products:add-to-cart' product.id %}" class="btn btn-success">Add to Cart</a>
