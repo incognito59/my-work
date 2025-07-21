@@ -39,14 +39,22 @@ def checkout(request):
         'products': products,
         'total': total,
         'total_kobo': total_kobo,
+<<<<<<< HEAD
         'paystack_public_key': 'pk_test_your_public_key_here'
+=======
+        'paystack_public_key': 'pk_test_your_public_key_here'  
+>>>>>>> c38250015cc0dc8e8692c53443fead5b2b558d68
     }
     return render(request, 'checkout.html', context)
 
 def confirm_payment(request):
     if request.method == 'POST':
         messages.success(request, "Payment confirmed. Thank you!")
+<<<<<<< HEAD
         request.session['cart'] = []
+=======
+        request.session['cart'] = []  
+>>>>>>> c38250015cc0dc8e8692c53443fead5b2b558d68
         return redirect('products:product-list')
 
 # ✅ Corrected detail view
