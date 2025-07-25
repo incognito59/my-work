@@ -1,34 +1,49 @@
 {% extends 'base.html' %}
 
 {% block content %}
+
+<!-- Search Bar in Navbar (inject this into base.html inside navbar block if not already) -->
+<form class="d-flex me-2" method="get" action="{% url 'products:product-list' %}">
+  <input class="form-control me-2" type="search" name="search" placeholder="Search products..." value="{{ request.GET.search }}">
+  <button class="btn btn-outline-light" type="submit">Search</button>
+</form>
+
 <div class="container mt-5">
-  <h2 class="mb-4">All Products</h2>
+  <h2 class="text-center mb-4 fw-bold">Browse Our Products</h2>
+
+  {% if products %}
   <div class="row">
     {% for product in products %}
-      <div class="col-md-4 mb-4">
-        <div class="card h-100">
-          <!-- 🔗 Image linked to detail page -->
-          <a href="{% url 'products:product-detail' product.id %}">
-            <img src="{{ product.image_url }}" class="card-img-top" alt="{{ product.name }}">
+      <div class="col-md-4 mb-5">
+        <div class="card h-100 shadow-sm border-0 product-card">
+          <a href="{% url 'products:product-detail' product.id %}" class="text-decoration-none text-dark">
+            <img src="{{ product.image_url }}" class="card-img-top" style="height: 270px; object-fit: cover;" alt="{{ product.name }}">
+            <div class="card-body">
+              <h5 class="card-title">{{ product.name }}</h5>
+              <p class="card-text fs-5 text-success">₦{{ product.price }}</p>
+            </div>
           </a>
-          <div class="card-body">
-            <!-- 🔗 Product name linked to detail page -->
-            <h5 class="card-title">
-              <a href="{% url 'products:product-detail' product.id %}" class="text-dark">
-                {{ product.name }}
-              </a>
-            </h5>
-            <p class="card-text">₦{{ product.price }}</p>
-            <p class="card-text">Stock: {{ product.stock }}</p>
-            <a href="{% url 'products:add-to-cart' product.id %}" class="btn btn-success">Add to Cart</a>
+          <div class="card-footer bg-white border-0">
+            <a href="{% url 'products:add-to-cart' product.id %}" class="btn btn-success w-100">Add to Cart</a>
           </div>
         </div>
       </div>
-    {% empty %}
-      <p>No products available.</p>
     {% endfor %}
   </div>
 
-  <a href="{% url 'products:view-cart' %}" class="btn btn-warning mt-4">View Cart</a>
+  <div class="text-center mt-4">
+    <a href="{% url 'products:view-cart' %}" class="btn btn-warning btn-lg">View Cart</a>
+  </div>
+  {% else %}
+    <p class="text-center mt-5">No products found.</p>
+  {% endif %}
 </div>
+
+<style>
+  .product-card:hover {
+    transform: scale(1.02);
+    transition: all 0.3s ease-in-out;
+  }
+</style>
+
 {% endblock %}

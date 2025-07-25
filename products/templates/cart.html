@@ -1,28 +1,38 @@
 {% extends 'base.html' %}
-
 {% block content %}
 <div class="container mt-5">
-  <h2 class="mb-4">Your Cart</h2>
-
-  {% if products %}
-    <ul class="list-group mb-4">
-      {% for product in products %}
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-          <div>
-            <strong>{{ product.name }}</strong><br>
-            <small>₦{{ product.price }}</small>
-          </div>
-          <span class="badge badge-primary badge-pill">₦{{ product.price }}</span>
-        </li>
-      {% endfor %}
-    </ul>
-
-    <div class="text-right mb-4">
-      <h5>Total: ₦{{ total }}</h5>
-      <a href="{% url 'products:checkout' %}" class="btn btn-success">Proceed to Checkout</a>
+  <form method="get" action="{% url 'products:product-list' %}" class="mb-4">
+    <div class="input-group">
+      <input type="text" name="q" placeholder="Search..." class="form-control" />
+      <button class="btn btn-primary" type="submit">Search</button>
     </div>
-  {% else %}
-    <div class="alert alert-warning">Your cart is empty.</div>
-  {% endif %}
+  </form>
+
+  <h3>Your Cart</h3>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Product</th>
+        <th>Qty</th>
+        <th>Price</th>
+        <th>Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for product in products %}
+        <tr>
+          <td>{{ product.title }}</td>
+          <td>{{ product.quantity }}</td>
+          <td>₦{{ product.price }}</td>
+          <td>₦{{ product.total_price }}</td>
+        </tr>
+      {% endfor %}
+      <tr>
+        <td colspan="3"><strong>Total</strong></td>
+        <td><strong>₦{{ total }}</strong></td>
+      </tr>
+    </tbody>
+  </table>
+  <a href="{% url 'products:checkout' %}" class="btn btn-success">Proceed to Checkout</a>
 </div>
 {% endblock %}

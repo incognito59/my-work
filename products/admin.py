@@ -1,15 +1,21 @@
 from django.contrib import admin
-from .models import Product, Offer
-
-
-class OfferAdmin(admin.ModelAdmin):
-    list_display = ('code', 'discount')
+from .models import Product, Offer, Comment
 
 
 class ProductAdmin(admin.ModelAdmin):
     list_display = ('name', 'price', 'stock')
-    fields = ('name', 'price', 'stock', 'description', 'image_url', 'image_2', 'image_3')  # ✅ Show all fields in form
 
 
-admin.site.register(Offer, OfferAdmin)
+class OfferAdmin(admin.ModelAdmin):
+    list_display = ('code', 'description', 'discount')
+
+
+class CommentAdmin(admin.ModelAdmin):
+    list_display = ('product', 'name', 'rating', 'created_at')
+    list_filter = ('rating', 'created_at')
+    search_fields = ('name', 'text')
+
+
 admin.site.register(Product, ProductAdmin)
+admin.site.register(Offer, OfferAdmin)
+admin.site.register(Comment, CommentAdmin)
