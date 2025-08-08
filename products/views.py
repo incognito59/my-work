@@ -22,18 +22,27 @@ def register_page(request):
 
 def add_to_cart(request, item_id):
     product = get_object_or_404(Product, id=item_id)
-    cart = request.session.get('cart', {})
+    
+    # Ensure cart is a dictionary
+    cart = request.session.get('cart')
+    if not isinstance(cart, dict):
+        cart = {}
 
-    if str(product.id) in cart:
-        cart[str(product.id)] += 1
+    # Update cart
+    product_id = str(product.id)
+    if product_id in cart:
+        cart[product_id] += 1
     else:
-        cart[str(product.id)] = 1
+        cart[product_id] = 1
 
     request.session['cart'] = cart
     return redirect('products:view-cart')
 
 def view_cart(request):
-    cart = request.session.get('cart', {})
+    cart = request.session.get('cart')
+    if not isinstance(cart, dict):
+        cart = {}
+
     products = []
     total = 0
 
@@ -47,7 +56,10 @@ def view_cart(request):
     return render(request, 'cart.html', {'products': products, 'total': total})
 
 def checkout(request):
-    cart = request.session.get('cart', {})
+    cart = request.session.get('cart')
+    if not isinstance(cart, dict):
+        cart = {}
+
     products = []
     total = 0
 
@@ -71,12 +83,12 @@ def checkout(request):
 def confirm_payment(request):
     if request.method == 'POST':
         messages.success(request, "Payment confirmed. Thank you!")
-        request.session['cart'] = {}
+        request.session['cart'] = {}  # Clear cart after payment
         return redirect('products:product-list')
 
 def product_detail(request, product_id):
     product = get_object_or_404(Product, id=product_id)
-    
+
     # Handle additional images if the relation exists
     try:
         additional_images = product.additional_images.all()
@@ -102,5 +114,5 @@ def product_detail(request, product_id):
 
 def buy_now(request, product_id):
     product = get_object_or_404(Product, id=product_id)
-    request.session['cart'] = {str(product.id): 1}
+    request.session['cart'] = {str(product.id): 1}  # Overwrite cart with this one product
     return redirect('products:checkout')
