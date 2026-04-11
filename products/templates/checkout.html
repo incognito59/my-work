@@ -23,9 +23,16 @@
 
         <form method="post" action="{% url 'products:confirm-payment' %}" class="mt-4">
           {% csrf_token %}
+          {% if stripe_publishable_key and stripe_client_secret %}
+          <div id="payment-element"></div>
+          <button id="submit-payment" class="btn btn-success w-100 py-3 fw-semibold rounded-pill shadow-sm btn-glow mt-3">
+            Pay securely
+          </button>
+          {% else %}
           <button type="submit" class="btn btn-success w-100 py-3 fw-semibold rounded-pill shadow-sm btn-glow">
             ✅ I Have Paid
           </button>
+          {% endif %}
         </form>
       </div>
     </div>
@@ -116,9 +123,41 @@
     border-left: 4px solid #ffb400;
   }
 
-  .dark-mode .theme-card {
+  /* Dark theme support */
+  [data-theme="dark"] .theme-card {
     background-color: #1f1f1f !important;
     color: #e0e0e0 !important;
+  }
+
+  [data-theme="dark"] h2,
+  [data-theme="dark"] h3,
+  [data-theme="dark"] h4,
+  [data-theme="dark"] h5,
+  [data-theme="dark"] label,
+  [data-theme="dark"] p {
+    color: #e0e0e0;
+  }
+
+  [data-theme="dark"] .text-muted,
+  [data-theme="dark"] small {
+    color: #aaa;
+  }
+
+  [data-theme="dark"] .form-control,
+  [data-theme="dark"] .form-select {
+    background-color: #2a2a2a;
+    color: #e0e0e0;
+    border-color: #444;
+  }
+
+  [data-theme="dark"] .alert-warning {
+    background-color: #332200;
+    border-left-color: #ffb400;
+    color: #ddd;
+  }
+
+  [data-theme="dark"] .color-changing {
+    color: #66b3ff;
   }
 </style>
 
@@ -134,5 +173,29 @@
     });
   });
 </script>
+
+{% if stripe_publishable_key and stripe_client_secret %}
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+  const stripe = Stripe('{{ stripe_publishable_key }}');
+  const elements = stripe.elements({clientSecret: '{{ stripe_client_secret }}'});
+  const paymentElement = elements.create('payment');
+  paymentElement.mount('#payment-element');
+
+  const submitBtn = document.getElementById('submit-payment');
+  submitBtn.addEventListener('click', async (e) => {
+    e.preventDefault();
+    submitBtn.disabled = true;
+    const {error} = await stripe.confirmPayment({
+      elements,
+      confirmParams: {return_url: window.location.href},
+    });
+    if (error) {
+      alert(error.message || 'Payment failed');
+      submitBtn.disabled = false;
+    }
+  });
+</script>
+{% endif %}
 
 {% endblock %}

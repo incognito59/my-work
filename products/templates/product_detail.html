@@ -10,9 +10,7 @@
     
     <!-- Thumbnails on the left -->
     <div class="col-md-2 d-flex flex-column align-items-center">
-      {% if product.image_url %}
-        <img src="{{ product.image_url }}" class="thumb-img mb-2" alt="Main" onclick="changeImage(this)">
-      {% endif %}
+      <img src="{{ product.image_src }}" class="thumb-img mb-2" alt="Main" onclick="changeImage(this)">
       {% if product.additional_images %}
         {% for img in product.additional_images %}
           <img src="{{ img }}" class="thumb-img mb-2" alt="Additional" onclick="changeImage(this)">
@@ -23,7 +21,7 @@
     <!-- Main image in the center -->
     <div class="col-md-6">
       <div class="main-img-container border rounded-4 shadow-sm overflow-hidden animate-img">
-        <img id="main-image" src="{{ product.image_url }}" class="img-fluid" alt="{{ product.name }}">
+        <img id="main-image" src="{{ product.image_src }}" class="img-fluid" alt="{{ product.name }}">
       </div>
     </div>
 
@@ -195,6 +193,57 @@
   /* Theme support */
   .theme-card {
     transition: background-color 0.5s ease, color 0.5s ease;
+  }
+
+  /* Dark theme text visibility */
+  [data-theme="dark"] .theme-card {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+  }
+
+  [data-theme="dark"] h3,
+  [data-theme="dark"] h4,
+  [data-theme="dark"] h5,
+  [data-theme="dark"] .fw-bold {
+    color: #e0e0e0;
+  }
+
+  [data-theme="dark"] p,
+  [data-theme="dark"] .text-muted {
+    color: #aaa;
+  }
+
+  [data-theme="dark"] .animated-price {
+    color: #66b3ff;
+  }
+
+  [data-theme="dark"] .thumb-img {
+    border-color: #444;
+  }
+
+  [data-theme="dark"] .animate-card {
+    background-color: #2a2a2a;
+    color: #ddd;
+  }
+
+  [data-theme="dark"] .bg-light {
+    background-color: #2a2a2a !important;
+    color: #ddd;
+  }
+
+  [data-theme="dark"] .form-control,
+  [data-theme="dark"] .form-select {
+    background-color: #2a2a2a;
+    color: #e0e0e0;
+    border-color: #444;
+  }
+
+  [data-theme="dark"] .form-label {
+    color: #ddd;
+  }
+
+  [data-theme="dark"] strong {
+    color: #e0e0e0;
   }
 </style>
 {% endblock %}

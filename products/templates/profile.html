@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container my-5">
+  <div class="row g-4">
+    <!-- Profile Info -->
+    <div class="col-md-4">
+      <div class="card border-0 shadow-lg rounded-4 p-4 theme-card">
+        <div class="text-center mb-4">
+          <div class="avatar rounded-circle mx-auto mb-3" style="width: 100px; height: 100px; background: linear-gradient(135deg, #ff4747, #ff6b6b); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: #fff;">
+            {{ user.first_name|default:user.username|first|upper }}
+          </div>
+          <h4 class="fw-bold">{{ user.first_name|default:user.username }}</h4>
+          <p class="text-muted">@{{ user.username }}</p>
+        </div>
+
+        <div class="mb-3">
+          <p><strong>Email:</strong> {{ user.email }}</p>
+          <p><strong>Member Since:</strong> {{ user.date_joined|date:"M d, Y" }}</p>
+          <p><strong>Total Orders:</strong> <span class="badge bg-danger">{{ order_count }}</span></p>
+        </div>
+
+        <div class="d-flex gap-2">
+          <a href="{% url 'products:product-list' %}" class="btn btn-warning w-100 fw-semibold rounded-pill">
+            <i class="bi bi-shop"></i> Continue Shopping
+          </a>
+          <a href="{% url 'products:logout' %}" class="btn btn-outline-danger w-100 fw-semibold rounded-pill">
+            <i class="bi bi-box-arrow-right"></i> Logout
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Order History -->
+    <div class="col-md-8">
+      <div class="card border-0 shadow-lg rounded-4 p-4 theme-card">
+        <h5 class="fw-bold mb-4 text-gradient">📦 Order History</h5>
+
+        {% if orders %}
+          <div class="table-responsive">
+            <table class="table">
+              <thead class="table-light">
+                <tr>
+                  <th>Order ID</th>
+                  <th>Date</th>
+                  <th>Items</th>
+                  <th>Total</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for order in orders %}
+                  <tr>
+                    <td>#{{ order.id }}</td>
+                    <td>{{ order.created_at|date:"M d, Y" }}</td>
+                    <td>
+                      <span class="badge bg-info">{{ order.items.count }} item{{ order.items.count|pluralize }}</span>
+                    </td>
+                    <td class="fw-semibold">₦{{ order.total|floatformat:2 }}</td>
+                    <td>
+                      {% if order.is_paid %}
+                        <span class="badge bg-success">Paid</span>
+                      {% else %}
+                        <span class="badge bg-warning">Pending</span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="text-center py-5">
+            <i class="bi bi-inbox" style="font-size: 3rem; color: #ccc;"></i>
+            <p class="text-muted mt-3">No orders yet. <a href="{% url 'products:product-list' %}" class="link-danger fw-semibold">Start shopping now!</a></p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .avatar {
+    box-shadow: 0 4px 12px rgba(255, 71, 71, 0.3);
+    font-weight: bold;
+  }
+
+  [data-theme="dark"] .avatar {
+    box-shadow: 0 4px 12px rgba(255, 112, 112, 0.3);
+  }
+
+  .text-gradient {
+    background: linear-gradient(45deg, #ff6b6b, #f8c471, #6ab04c, #2980b9, #8e44ad);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+</style>
+
+{% endblock %}

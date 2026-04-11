@@ -25,6 +25,100 @@
         --card-bg: #1e1e1e;
       }
 
+      /* Dark theme overrides for specific elements */
+      [data-theme="dark"] .footer {
+        background-color: #0a0a0a;
+        color: #bbb;
+      }
+
+      [data-theme="dark"] .table-light {
+        background-color: #2a2a2a !important;
+        color: #fff !important;
+      }
+
+      [data-theme="dark"] .table {
+        color: #e0e0e0;
+      }
+
+      [data-theme="dark"] .card {
+        background-color: var(--card-bg);
+        color: var(--text-color);
+        border-color: #333;
+      }
+
+      [data-theme="dark"] .text-muted {
+        color: #999 !important;
+      }
+
+      [data-theme="dark"] input,
+      [data-theme="dark"] textarea,
+      [data-theme="dark"] select {
+        background-color: #2a2a2a;
+        color: #e0e0e0;
+        border-color: #444;
+      }
+
+      [data-theme="dark"] .btn-light {
+        background-color: #444;
+        color: #e0e0e0;
+        border-color: #555;
+      }
+
+      [data-theme="dark"] .btn-light:hover {
+        background-color: #555;
+        color: #fff;
+      }
+
+      /* Dark theme text colors for all elements */
+      [data-theme="dark"] h1,
+      [data-theme="dark"] h2,
+      [data-theme="dark"] h3,
+      [data-theme="dark"] h4,
+      [data-theme="dark"] h5,
+      [data-theme="dark"] h6,
+      [data-theme="dark"] p,
+      [data-theme="dark"] span,
+      [data-theme="dark"] label,
+      [data-theme="dark"] li,
+      [data-theme="dark"] td,
+      [data-theme="dark"] th,
+      [data-theme="dark"] a {
+        color: #e0e0e0;
+      }
+
+      [data-theme="dark"] a {
+        color: #66b3ff;
+      }
+
+      [data-theme="dark"] a:hover {
+        color: #99ccff;
+      }
+
+      [data-theme="dark"] .text-dark {
+        color: #e0e0e0 !important;
+      }
+
+      [data-theme="dark"] .text-secondary {
+        color: #aaa !important;
+      }
+
+      [data-theme="dark"] small,
+      [data-theme="dark"] .small {
+        color: #999;
+      }
+
+      [data-theme="dark"] .form-label {
+        color: #ddd;
+      }
+
+      [data-theme="dark"] .form-control::-webkit-input-placeholder {
+        color: #777;
+      }
+
+      [data-theme="dark"] .form-control::placeholder {
+        color: #777;
+      }
+
       body {
         font-family: "Poppins", sans-serif;
         background-color: var(--bg-color);
@@ -194,8 +288,27 @@
 
           <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
             <li class="nav-item"><a class="nav-link" href="{% url 'products:view-cart' %}"><i class="bi bi-cart3"></i> Cart</a></li>
-            <li class="nav-item"><a class="nav-link" href="{% url 'products:login' %}">Login</a></li>
-            <li class="nav-item"><a class="nav-link" href="{% url 'products:register' %}">Register</a></li>
+            
+            {% if user.is_authenticated %}
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                  <i class="bi bi-person-circle"></i> {{ user.first_name|default:user.username }}
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                  <li><a class="dropdown-item" href="{% url 'products:profile' %}"><i class="bi bi-person"></i> My Profile</a></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li>
+                    <a class="dropdown-item" href="{% url 'products:logout' %}" style="color: #dc3545;">
+                      <i class="bi bi-box-arrow-right"></i> Logout
+                    </a>
+                  </li>
+                </ul>
+              </li>
+            {% else %}
+              <li class="nav-item"><a class="nav-link" href="{% url 'products:login' %}"><i class="bi bi-lock"></i> Login</a></li>
+              <li class="nav-item"><a class="nav-link" href="{% url 'products:register' %}"><i class="bi bi-person-plus"></i> Register</a></li>
+            {% endif %}
+
             <li class="nav-item">
               <button class="theme-toggle" id="theme-toggle" title="Toggle theme">
                 <i class="bi bi-brightness-high-fill" id="theme-icon"></i>
@@ -238,19 +351,27 @@
       });
 
       // Theme toggle
-      const toggle = document.getElementById('theme-toggle');
-      const icon = document.getElementById('theme-icon');
-      const userTheme = localStorage.getItem('theme') || 'light';
-      document.documentElement.setAttribute('data-theme', userTheme);
-      if (userTheme === 'dark') icon.classList.replace('bi-brightness-high-fill', 'bi-moon-fill');
+      const themeToggle = document.getElementById('theme-toggle');
+      const themeIcon = document.getElementById('theme-icon');
 
-      toggle.addEventListener('click', () => {
+      function applyTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+        if (theme === 'dark') {
+          themeIcon.classList.remove('bi-brightness-high-fill');
+          themeIcon.classList.add('bi-moon-fill');
+        } else {
+          themeIcon.classList.remove('bi-moon-fill');
+          themeIcon.classList.add('bi-brightness-high-fill');
+        }
+      }
+
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      applyTheme(savedTheme);
+
+      themeToggle.addEventListener('click', () => {
         const current = document.documentElement.getAttribute('data-theme');
-        const newTheme = current === 'light' ? 'dark' : 'light';
-        document.documentElement.setAttribute('data-theme', newTheme);
-        localStorage.setItem('theme', newTheme);
-        icon.classList.toggle('bi-moon-fill');
-        icon.classList.toggle('bi-brightness-high-fill');
+        applyTheme(current === 'light' ? 'dark' : 'light');
       });
 
       // Scroll to top
@@ -271,6 +392,18 @@
         const toast = new bootstrap.Toast(toastEl);
         toast.show();
       }
+
+      // Image fallback for broken source paths
+      function applyImageFallbacks() {
+        document.querySelectorAll('img').forEach(img => {
+          img.addEventListener('error', () => {
+            img.onerror = null;
+            img.src = 'https://via.placeholder.com/500x350?text=Image+Not+Found';
+          });
+        });
+      }
+
+      window.addEventListener('load', applyImageFallbacks);
     </script>
   </body>
 </html>

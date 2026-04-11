@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% block title %}Login - RedCart{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+  <div class="row justify-content-center">
+    <div class="col-md-5">
+      <div class="card border-0 shadow-lg rounded-4 p-5 theme-card animate-card">
+        <h2 class="fw-bold mb-1 text-center text-gradient">Welcome Back</h2>
+        <p class="text-center text-muted mb-4 small">Sign in to your RedCart account</p>
+
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-3" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+
+        <form method="post" novalidate>
+          {% csrf_token %}
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Email or Username</label>
+            <input 
+              type="text" 
+              name="username_or_email" 
+              class="form-control form-control-lg rounded-pill px-4"
+              placeholder="john@example.com or john_doe"
+              required
+              autofocus
+            >
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Password</label>
+            <input 
+              type="password" 
+              name="password" 
+              class="form-control form-control-lg rounded-pill px-4"
+              placeholder="••••••••"
+              required
+            >
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="remember" name="remember">
+              <label class="form-check-label" for="remember">Remember me</label>
+            </div>
+            <a href="{% url 'products:password-reset' %}" class="text-decoration-none small fw-semibold">Forgot password?</a>
+          </div>
+
+          <button type="submit" class="btn btn-danger btn-lg w-100 rounded-pill fw-bold py-3 mb-3">
+            🔓 Sign In
+          </button>
+        </form>
+
+        <p class="text-center text-muted mt-4">
+          Don't have an account? 
+          <a href="{% url 'products:register' %}" class="fw-bold text-danger text-decoration-none">Sign up</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .text-gradient {
+    background: linear-gradient(45deg, #ff6b6b, #ff9900);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .animate-card {
+    animation: slideInUp 0.8s ease;
+  }
+
+  @keyframes slideInUp {
+    from {
+      opacity: 0;
+      transform: translateY(50px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .form-control {
+    border: 2px solid #eee;
+    transition: all 0.3s ease;
+  }
+
+  .form-control:focus {
+    border-color: #ff4747;
+    box-shadow: 0 0 0 0.2rem rgba(255, 71, 71, 0.25);
+  }
+
+  [data-theme="dark"] .card {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+  }
+
+  [data-theme="dark"] .form-control {
+    background-color: #2a2a2a;
+    color: #e0e0e0;
+    border-color: #444;
+  }
+
+  [data-theme="dark"] .form-label,
+  [data-theme="dark"] .form-check-label {
+    color: #ddd;
+  }
+
+  [data-theme="dark"] a {
+    color: #66b3ff;
+  }
+</style>
+
+{% endblock %}

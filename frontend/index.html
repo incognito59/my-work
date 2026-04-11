@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Login — RedCart</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="container center">
+    <div class="card form">
+      <h2>👋 Welcome Back</h2>
+      <p class="lead">Sign in to your RedCart account</p>
+
+      <div id="login-msg"></div>
+
+      <p style="font-weight:600;margin-bottom:10px;color:#111;">Sign in with</p>
+      <div class="social-row">
+        <div id="btn-google" class="social-btn" title="Login with Google"><img src="https://www.svgrepo.com/show/355037/google.svg" alt="Google" onerror="this.remove()"><span>🔍 Google</span></div>
+        <div id="btn-facebook" class="social-btn" title="Login with Facebook"><img src="https://www.svgrepo.com/show/475654/facebook-color.svg" alt="Facebook" onerror="this.remove()"><span>f Facebook</span></div>
+        <div id="btn-github" class="social-btn" title="Login with GitHub"><img src="https://www.svgrepo.com/show/354202/github.svg" alt="GitHub" onerror="this.remove()"><span>⚙️ GitHub</span></div>
+      </div>
+
+      <div style="display:flex;align-items:center;margin:16px 0;gap:10px;opacity:0.6;">
+        <div style="flex:1;height:1px;background:#ddd;"></div>
+        <span style="font-size:0.85rem;">OR</span>
+        <div style="flex:1;height:1px;background:#ddd;"></div>
+      </div>
+
+      <form id="login-form">
+        <label class="small">📧 Email</label>
+        <input id="login-email" class="input" type="email" placeholder="you@example.com" required>
+        
+        <label class="small">🔐 Password</label>
+        <input id="login-password" class="input" type="password" placeholder="••••••••" required>
+        
+        <button class="btn block" type="submit" style="margin-top:16px;">Sign In</button>
+      </form>
+
+      <p class="muted" style="text-align:center;margin-top:16px;">Don't have an account? <a class="link" href="register.html">Create one free</a></p>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initLogin, observeAuth } from './js/auth.js';
+    observeAuth();
+    initLogin();
+  </script>
+</body>
+</html>

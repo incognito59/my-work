@@ -19,6 +19,10 @@ urlpatterns = [
     path('buy-now/<int:product_id>/', views.buy_now, name='buy-now'),
 
     # 👤 Auth pages
-    path('login/', views.login_page, name='login'),
-    path('register/', views.register_page, name='register'),
+    path('login/', views.login_enhanced, name='login'),
+    path('register/', views.register_enhanced, name='register'),
+    path('password-reset/', views.CustomPasswordResetView.as_view(), name='password-reset'),
+    path('logout/', views.logout_page, name='logout'),
+    path('profile/', views.user_profile, name='profile'),
 ]
+

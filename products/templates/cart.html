@@ -6,13 +6,12 @@
 {% block content %}
 <div class="container my-5">
 
-  <!-- Header: Search Bar + Theme Toggle -->
+<!-- Header: Search Bar -->
   <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <form class="d-flex flex-grow-1 me-3" method="get" action="{% url 'products:product-list' %}">
       <input type="text" class="form-control me-2 rounded-pill shadow-sm" name="q" placeholder="Search for products..." value="{{ request.GET.q }}">
       <button class="btn btn-warning fw-semibold rounded-pill px-4 shadow-sm">Search</button>
     </form>
-    <button id="theme-toggle" class="btn btn-outline-dark rounded-pill px-4 shadow-sm">🌙 Dark Mode</button>
   </div>
 
   <div class="row g-4">
@@ -36,10 +35,10 @@
               </thead>
               <tbody>
                 {% for product in products %}
-                  <tr class="cart-row">
+                  <tr class="cart-row" data-product-id="{{ product.id }}" data-price="{{ product.price }}">
                     <td>
                       <div class="d-flex align-items-center gap-3">
-                        <img src="{{ product.image_url }}" alt="{{ product.name }}" class="rounded-3 shadow-sm" style="width: 70px; height: 70px; object-fit: cover;">
+                        <img src="{{ product.image_src }}" alt="{{ product.name }}" class="rounded-3 shadow-sm" style="width: 70px; height: 70px; object-fit: cover;">
                         <div>
                           <h6 class="mb-1 fw-semibold color-changing">{{ product.name }}</h6>
                           <small class="text-muted d-block">{{ product.description|truncatechars:50 }}</small>
@@ -52,7 +51,7 @@
                     </td>
 
                     <td class="text-end color-changing">₦{{ product.price|floatformat:2 }}</td>
-                    <td class="text-end fw-semibold color-changing">₦{{ product.total_price|floatformat:2 }}</td>
+                    <td class="text-end fw-semibold color-changing row-total">₦{{ product.total_price|floatformat:2 }}</td>
                     <td class="text-end">
                       <a href="{% url 'products:delete-from-cart' product.id %}" class="btn btn-sm btn-outline-danger rounded-circle remove-btn" title="Remove Item">
                         <i class="bi bi-trash"></i>
@@ -80,7 +79,7 @@
 
         <div class="d-flex justify-content-between mb-2">
           <span>Subtotal</span>
-          <span class="fw-semibold">₦{{ total|floatformat:2 }}</span>
+          <span class="fw-semibold" id="summary-subtotal">₦{{ total|floatformat:2 }}</span>
         </div>
 
         <div class="d-flex justify-content-between mb-2">
@@ -92,7 +91,7 @@
 
         <div class="d-flex justify-content-between mb-3">
           <span class="fw-bold fs-5">Total</span>
-          <span class="fw-bold fs-5 color-changing">₦{{ total|floatformat:2 }}</span>
+          <span class="fw-bold fs-5 color-changing" id="summary-total">₦{{ total|floatformat:2 }}</span>
         </div>
 
         <a href="{% url 'products:checkout' %}" class="btn checkout-btn w-100 fw-semibold py-3 mb-3 rounded-pill shadow-sm">
@@ -117,6 +116,8 @@
   .theme-card {
     transition: background-color 0.5s ease, color 0.5s ease;
     border-radius: 20px;
+    background-color: var(--card-bg);
+    color: var(--text-color);
   }
 
   /* Color Animation for Premium Feel */
@@ -164,37 +165,135 @@
     color: white;
   }
 
+  .cart-row {
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    transition: background-color 0.3s ease;
+  }
+
   .cart-row:hover {
-    background-color: #fff7f0;
+    background-color: var(--card-bg);
+    opacity: 0.9;
     transition: 0.3s ease;
   }
 
-  /* Dark Mode */
-  .dark-mode {
-    background-color: #121212 !important;
-    color: #e0e0e0 !important;
+  /* Dark theme text visibility for cart */
+  [data-theme="dark"] .theme-card {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
   }
-  .dark-mode .theme-card {
-    background-color: #1f1f1f !important;
-    color: #ddd !important;
+
+  [data-theme="dark"] .color-changing {
+    color: #66b3ff;
   }
-  .dark-mode .table-light {
-    background-color: #2a2a2a !important;
-    color: #fff !important;
+
+  [data-theme="dark"] .text-gradient {
+    background: linear-gradient(45deg, #ff9999, #ffcc99, #99ff99, #99ccff, #ff99ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
-  .dark-mode .checkout-btn {
-    background: linear-gradient(135deg, #f39c12, #d35400);
+
+  [data-theme="dark"] .table {
+    color: #ddd;
   }
+
+  [data-theme="dark"] .table thead {
+    background-color: #2a2a2a;
+    color: #fff;
+  }
+
+  [data-theme="dark"] .table td,
+  [data-theme="dark"] .table th {
+    color: #e0e0e0;
+    border-color: #333;
+  }
+
+  [data-theme="dark"] .text-muted {
+    color: #999 !important;
+  }
+
+  [data-theme="dark"] .fw-semibold,
+  [data-theme="dark"] h4,
+  [data-theme="dark"] h5,
+  [data-theme="dark"] h6 {
+    color: #e0e0e0;
+  }
+
+  [data-theme="dark"] .form-control {
+    background-color: #2a2a2a;
+    color: #e0e0e0;
+    border-color: #444;
+  }
+
+  [data-theme="dark"] .form-control::placeholder {
+    color: #777;
+  }
+
+  [data-theme="dark"] .btn-outline-danger {
+    color: #ff6b6b;
+    border-color: #ff6b6b;
+  }
+
+  [data-theme="dark"] .btn-outline-danger:hover {
+    background-color: #ff6b6b;
+    color: #fff;
+  }
+
 </style>
 
 <script>
-  // ✅ Theme Toggle
-  const toggleBtn = document.getElementById('theme-toggle');
-  toggleBtn.addEventListener('click', () => {
-    document.body.classList.toggle('dark-mode');
-    toggleBtn.textContent = document.body.classList.contains('dark-mode')
-      ? '☀ Light Mode'
-      : '🌙 Dark Mode';
+  // Cart quantity update with live total calculation
+  document.querySelectorAll('.qty-input').forEach(input => {
+    input.addEventListener('change', function() {
+      const row = this.closest('.cart-row');
+      const qty = Math.max(1, parseInt(this.value) || 1);
+      this.value = qty; // Enforce minimum
+      const unitPrice = parseFloat(row.dataset.price);
+      const newRowTotal = qty * unitPrice;
+      
+      // Update the total cell for this row
+      const totalCell = row.querySelector('.row-total');
+      totalCell.textContent = '₦' + newRowTotal.toFixed(2);
+      
+      // Recalculate overall cart total
+      updateOrderSummary();
+    });
+  });
+
+  function updateOrderSummary() {
+    let cartTotal = 0;
+    
+    // Sum all row totals from the cart table
+    document.querySelectorAll('.cart-row .row-total').forEach(cell => {
+      const textContent = cell.textContent.replace('₦', '').trim();
+      const value = parseFloat(textContent);
+      
+      if (!isNaN(value)) {
+        cartTotal += value;
+      }
+    });
+    
+    // Update summary using IDs (much more reliable)
+    const subtotalSpan = document.getElementById('summary-subtotal');
+    const totalSpan = document.getElementById('summary-total');
+    
+    const formattedTotal = cartTotal.toFixed(2);
+    
+    if (subtotalSpan) {
+      subtotalSpan.textContent = '₦' + formattedTotal;
+    }
+    
+    if (totalSpan) {
+      totalSpan.textContent = '₦' + formattedTotal;
+    }
+    
+    // Debug log (remove in production)
+    console.log('Cart Total Updated:', cartTotal, 'Rows:', document.querySelectorAll('.cart-row').length);
+  }
+
+  // Initialize on page load
+  document.addEventListener('DOMContentLoaded', function() {
+    updateOrderSummary();
   });
 </script>
 
