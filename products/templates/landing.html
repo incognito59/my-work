@@ -1,0 +1,619 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Welcome to RedCart - Shop Smart, Live Better{% endblock %}
+
+{% block content %}
+<style>
+  .landing-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  /* Hero Section */
+  .hero-section {
+    text-align: center;
+    color: white;
+    margin-bottom: 60px;
+    animation: fadeInDown 0.8s ease;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 80px 40px;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  }
+
+  .hero-section h1 {
+    font-size: 3.5rem;
+    font-weight: 800;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+  }
+
+  .hero-section p {
+    font-size: 1.3rem;
+    margin-bottom: 30px;
+    opacity: 0.95;
+  }
+
+  .hero-cta {
+    display: inline-flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .hero-btn {
+    padding: 15px 30px;
+    border-radius: 25px;
+    border: 2px solid white;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .hero-btn-primary {
+    background: white;
+    color: #667eea;
+  }
+
+  .hero-btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  }
+
+  .hero-btn-secondary {
+    color: white;
+    background: transparent;
+  }
+
+  .hero-btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-3px);
+  }
+
+  /* Featured Products Section */
+  .featured-section {
+    margin-bottom: 80px;
+  }
+
+  .section-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #333;
+    margin-bottom: 40px;
+    text-align: center;
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .products-scroll {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 25px;
+    margin-bottom: 50px;
+  }
+
+  .product-card {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .product-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 40px rgba(102, 126, 234, 0.2);
+  }
+
+  .product-image {
+    width: 100%;
+    height: 200px;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    overflow: hidden;
+  }
+
+  .product-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .product-info {
+    padding: 20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .product-name {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #333;
+    margin-bottom: 8px;
+    line-height: 1.3;
+  }
+
+  .product-category {
+    font-size: 0.85rem;
+    color: #999;
+    margin-bottom: 10px;
+  }
+
+  .product-price {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #667eea;
+    margin-top: auto;
+  }
+
+  /* Offers Section */
+  .offers-section {
+    margin-bottom: 80px;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    padding: 60px 40px;
+    border-radius: 20px;
+  }
+
+  .offers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 25px;
+  }
+
+  .offer-card {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    border: 2px solid #667eea;
+    transition: all 0.3s ease;
+  }
+
+  .offer-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 40px rgba(102, 126, 234, 0.2);
+  }
+
+  .offer-badge {
+    display: inline-block;
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 25px;
+    font-weight: 700;
+    font-size: 1.2rem;
+    margin-bottom: 15px;
+  }
+
+  .offer-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 10px;
+  }
+
+  .offer-desc {
+    color: #666;
+    font-size: 0.95rem;
+    margin-bottom: 15px;
+    line-height: 1.5;
+  }
+
+  /* Registration Section */
+  .auth-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    align-items: stretch;
+    margin-top: 80px;
+  }
+
+  .welcome-box {
+    background: white;
+    padding: 50px;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    animation: slideInLeft 0.8s ease;
+  }
+
+  .welcome-box h2 {
+    color: #333;
+    font-size: 2.2rem;
+    font-weight: 800;
+    margin-bottom: 20px;
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .welcome-box p {
+    color: #666;
+    font-size: 1.1rem;
+    line-height: 1.8;
+    margin-bottom: 20px;
+  }
+
+  .benefits-list {
+    list-style: none;
+    padding: 0;
+  }
+
+  .benefits-list li {
+    padding: 12px 0;
+    color: #555;
+    font-size: 1rem;
+    border-bottom: 1px solid #eee;
+  }
+
+  .benefits-list li:last-child {
+    border-bottom: none;
+  }
+
+  .benefits-list li:before {
+    content: "✓ ";
+    color: #667eea;
+    font-weight: bold;
+    margin-right: 10px;
+  }
+
+  .register-box {
+    background: white;
+    padding: 50px;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    animation: slideInRight 0.8s ease;
+  }
+
+  .register-box h2 {
+    color: #333;
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+
+  .register-box p {
+    color: #999;
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 0.95rem;
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  .form-group label {
+    display: block;
+    color: #333;
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+  }
+
+  .form-group input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid #eee;
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    font-family: inherit;
+  }
+
+  .form-group input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  }
+
+  .form-group input::placeholder {
+    color: #bbb;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+  }
+
+  .submit-btn {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 10px;
+  }
+
+  .submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+  }
+
+  .login-link {
+    text-align: center;
+    color: #666;
+    margin-top: 20px;
+    font-size: 0.95rem;
+  }
+
+  .login-link a {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.3s ease;
+  }
+
+  .login-link a:hover {
+    color: #764ba2;
+  }
+
+  .divider {
+    text-align: center;
+    margin: 20px 0;
+    color: #999;
+    font-size: 0.9rem;
+  }
+
+  .terms {
+    font-size: 0.85rem;
+    color: #999;
+    text-align: center;
+    margin-top: 15px;
+    line-height: 1.5;
+  }
+
+  .terms a {
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .contact-section {
+    text-align: center;
+    color: white;
+    margin-top: 60px;
+    padding: 40px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+  }
+
+  .contact-section h3 {
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+  }
+
+  .contact-section p {
+    font-size: 1.1rem;
+    margin-bottom: 20px;
+  }
+
+  .contact-section a {
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1.2rem;
+    display: inline-block;
+    padding: 10px 25px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 25px;
+    transition: all 0.3s ease;
+  }
+
+  .contact-section a:hover {
+    background: white;
+    color: #667eea;
+  }
+
+  @keyframes fadeInDown {
+    from {
+      opacity: 0;
+      transform: translateY(-30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideInLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-50px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes slideInRight {
+    from {
+      opacity: 0;
+      transform: translateX(50px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  .welcome-box,
+  .register-box {
+    padding: 30px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .products-scroll {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+
+  .offers-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-section {
+    grid-template-columns: 1fr;
+  }
+}
+
+[data-theme="dark"] .featured-section,
+[data-theme="dark"] .offers-section {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .product-card,
+[data-theme="dark"] .offer-card {
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+}
+
+[data-theme="dark"] .product-name,
+[data-theme="dark"] .offer-title {
+  color: #e0e0e0;
+}
+
+[data-theme="dark"] .welcome-box,
+[data-theme="dark"] .register-box {
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+}
+
+[data-theme="dark"] .form-control {
+  background-color: #2a2a2a;
+  color: #e0e0e0;
+  border-color: #444;
+}
+</style>
+
+<div class="landing-container">
+  <!-- Hero Section -->
+  <div class="hero-section">
+    <h1>👋 Welcome to RedCart</h1>
+    <p>Shop Smart, Live Better</p>
+    <div class="hero-cta">
+      <a href="#featured-products" class="hero-btn hero-btn-primary">Shop Now</a>
+      <a href="{% url 'products:register' %}" class="hero-btn hero-btn-secondary">Sign Up Free</a>
+    </div>
+  </div>
+
+  <!-- Featured Products Section -->
+  <div class="featured-section" id="featured-products">
+    <h2 class="section-title">⭐ Featured Products</h2>
+    
+    {% if featured_products %}
+      <div class="products-scroll">
+        {% for product in featured_products %}
+          <a href="{% url 'products:product-detail' product.id %}" class="product-card">
+            <div class="product-image">
+              <img src="{{ product.image_src }}" alt="{{ product.name }}">
+            </div>
+            <div class="product-info">
+              <div class="product-category">{{ product.get_category_display }}</div>
+              <div class="product-name">{{ product.name|truncatewords:5 }}</div>
+              <div class="product-price">₦{{ product.price|floatformat:0 }}</div>
+            </div>
+          </a>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p style="text-align: center; color: #999; padding: 40px;">No products available yet. Check back soon!</p>
+    {% endif %}
+    
+    <div style="text-align: center; margin-top: 40px;">
+      <a href="{% url 'products:product-list' %}" class="hero-btn hero-btn-primary">Browse All Products →</a>
+    </div>
+  </div>
+
+  <!-- Offers Section -->
+  {% if offers %}
+  <div class="offers-section">
+    <h2 class="section-title">🎉 Limited Time Offers</h2>
+    <div class="offers-grid">
+      {% for offer in offers %}
+        <div class="offer-card">
+          <div class="offer-badge">{{ offer.discount }}% OFF</div>
+          <div class="offer-title">{{ offer.name }}</div>
+          <div class="offer-desc">{{ offer.description|truncatewords:12 }}</div>
+          <a href="{% url 'products:offers' %}" class="hero-btn hero-btn-primary" style="font-size: 0.95rem; padding: 10px 20px;">View Deal →</a>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Welcome & Sign Up CTA Section -->
+  <div class="auth-section" id="register">
+    <div class="welcome-box">
+      <h2>Why Join RedCart?</h2>
+      <p>Become part of our community and enjoy exclusive benefits:</p>
+      <ul class="benefits-list">
+        <li>Track your orders in real-time</li>
+        <li>Save your favorite items</li>
+        <li>Get exclusive member-only deals</li>
+        <li>Earn rewards on every purchase</li>
+        <li>One-click checkout</li>
+        <li>Manage multiple addresses</li>
+        <li>View order history anytime</li>
+        <li>Personalized recommendations</li>
+      </ul>
+    </div>
+
+    <div class="register-box">
+      <h2>Start Your RedCart Journey</h2>
+      <p>Sign up on the dedicated register page and then log in with one account.</p>
+      <div style="display: flex; flex-direction: column; gap: 15px;">
+        <a href="{% url 'products:register' %}" class="submit-btn" style="text-align:center;">Create Account</a>
+        <a href="{% url 'products:login' %}" class="submit-btn" style="background: #fff; color: #667eea; border: 2px solid #667eea;">Sign In</a>
+      </div>
+      <p class="login-link" style="margin-top: 20px;">Already have an account? Use the sign-in page above.</p>
+    </div>
+  </div>
+
+  <!-- Contact Section -->
+  <div style="text-align: center; margin-top: 80px; padding: 50px 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px;">
+    <h3 style="color: white; font-size: 2rem; margin-bottom: 15px;">❓ Questions? We're Here to Help</h3>
+    <p style="color: white; font-size: 1.1rem; margin-bottom: 25px;">📧 Email: <strong>afolabiprosper329@gmail.com</strong> | 📞 24/7 Chat Support</p>
+    <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+      <a href="{% url 'products:contact' %}" style="background: white; color: #667eea; padding: 14px 35px; text-decoration: none; border-radius: 25px; display: inline-block; font-weight: 600; transition: all 0.3s ease; cursor: pointer;">Contact Us</a>
+      <a href="{% url 'products:faq' %}" style="background: rgba(255,255,255,0.2); color: white; padding: 14px 35px; text-decoration: none; border-radius: 25px; display: inline-block; font-weight: 600; transition: all 0.3s ease; cursor: pointer; border: 2px solid white;">FAQ</a>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

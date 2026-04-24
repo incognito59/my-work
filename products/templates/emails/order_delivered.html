@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 16px;
+            opacity: 0.95;
+        }
+        
+        .body {
+            padding: 40px 30px;
+        }
+        
+        .body h2 {
+            color: #667eea;
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .body p {
+            color: #555;
+            margin-bottom: 15px;
+            font-size: 15px;
+        }
+        
+        .summary-box {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 30px 0;
+        }
+        
+        .summary-box h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        
+        .summary-box p {
+            color: #666;
+            font-size: 14px;
+            margin: 8px 0;
+        }
+        
+        .next-steps {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 30px 0;
+            border-radius: 8px;
+        }
+        
+        .next-steps h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        
+        .next-steps ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .next-steps li {
+            padding: 8px 0;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .next-steps li:before {
+            content: "✓ ";
+            color: #667eea;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        .footer {
+            background: #f5f5f5;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #eee;
+            font-size: 13px;
+            color: #999;
+        }
+        
+        .footer p {
+            margin: 5px 0;
+        }
+        
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 25px;
+            margin-top: 20px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎉 Your Order Has Arrived!</h1>
+            <p>Hi {{ user.first_name|default:user.username }},</p>
+        </div>
+
+        <div class="body">
+            <p>Excellent news! Your order has been delivered successfully. We hope you're enjoying your purchase!</p>
+
+            <div class="summary-box">
+                <h3>📦 Delivery Details</h3>
+                <p><strong>Order ID:</strong> <span style="color: #667eea; font-weight: 700;">#{{ order.id }}</span></p>
+                <p><strong>Delivered:</strong> {{ order.delivered_date|date:"M d, Y (g:i A)" }}</p>
+                <p><strong>Status:</strong> <span style="background: #c8e6c9; color: #2e7d32; padding: 4px 8px; border-radius: 20px; font-weight: 600;">Delivered</span></p>
+            </div>
+
+            <div class="next-steps">
+                <h3>What's Next?</h3>
+                <ul>
+                    <li>Inspect your items to ensure everything is in perfect condition</li>
+                    <li>Leave a review to help other customers discover great products</li>
+                    <li>Continue shopping and enjoy exclusive member benefits</li>
+                </ul>
+            </div>
+
+            <p>If you notice any issues with your order or have any questions, please don't hesitate to reach out to our support team. We're here to help!</p>
+            
+            <center>
+                <a href="https://redcart.com/account" class="button">Leave a Review</a>
+            </center>
+        </div>
+
+        <div class="footer">
+            <p>Thank you for shopping at <strong>RedCart</strong>!</p>
+            <p>We hope you're happy with your purchase. Your feedback helps us improve!</p>
+            <p>Questions? <a href="mailto:afolabiprosper329@gmail.com">Contact us anytime</a></p>
+            <p>© 2026 RedCart. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

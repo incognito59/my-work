@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}About RedCart - Your Trusted Marketplace{% endblock %}
+
+{% block content %}
+<style>
+  .about-container {
+    max-width: 1150px;
+    margin: 0 auto;
+    padding: 40px 20px;
+  }
+
+  .hero-section {
+    text-align: center;
+    padding: 70px 30px;
+    border-radius: 25px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    margin-bottom: 50px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  }
+
+  .hero-section h1 {
+    font-size: 3rem;
+    margin-bottom: 20px;
+    font-weight: 800;
+  }
+
+  .hero-section p {
+    font-size: 1.2rem;
+    opacity: 0.95;
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-bottom: 50px;
+  }
+
+  .about-card {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 12px 35px rgba(0,0,0,0.08);
+    transition: transform 0.3s ease;
+  }
+
+  .about-card:hover {
+    transform: translateY(-5px);
+  }
+
+  .about-card h3 {
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+    color: #333;
+  }
+
+  .about-card p {
+    color: #555;
+    line-height: 1.8;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 25px;
+    margin-bottom: 40px;
+  }
+
+  .stat-card {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    border-radius: 20px;
+    padding: 30px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  }
+
+  .stat-number {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #667eea;
+  }
+
+  .stat-label {
+    margin-top: 10px;
+    color: #555;
+    font-weight: 600;
+  }
+
+  .team-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 25px;
+  }
+
+  .team-card {
+    background: white;
+    border-radius: 20px;
+    padding: 25px;
+    box-shadow: 0 12px 35px rgba(0,0,0,0.08);
+  }
+
+  .team-card h4 {
+    margin-bottom: 8px;
+    color: #333;
+  }
+
+  .team-card p {
+    color: #555;
+    line-height: 1.7;
+  }
+
+  .team-card .role {
+    color: #667eea;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+
+  @media(max-width: 768px) {
+    .about-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<div class="about-container">
+  <section class="hero-section">
+    <h1>About RedCart</h1>
+    <p>RedCart is built to make online shopping exciting, easy, and trusted. We bring the latest fashion, gadgets, and essentials together with fast support and delightful deals.</p>
+  </section>
+
+  <div class="about-grid">
+    <div class="about-card">
+      <h3>Who We Are</h3>
+      <p>RedCart is a modern online marketplace designed for smart buyers. We combine curated products, exclusive offers, and intuitive shopping tools so you can find what you need fast.</p>
+    </div>
+    <div class="about-card">
+      <h3>What We Believe</h3>
+      <p>Shopping should be joyful, secure, and affordable. We focus on transparent prices, reliable delivery, and a polished experience whether you're browsing on mobile or desktop.</p>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-number">{{ stats.products }}</div>
+      <div class="stat-label">Products Available</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">{{ stats.users }}</div>
+      <div class="stat-label">Registered Shoppers</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">{{ stats.orders }}</div>
+      <div class="stat-label">Orders Completed</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">{{ stats.countries }}</div>
+      <div class="stat-label">Countries Served</div>
+    </div>
+  </div>
+
+  <div class="about-grid">
+    <div class="about-card">
+      <h3>Our Promise</h3>
+      <p>We promise a polished store experience, support when you need it, and a commitment to keep improving with every update.</p>
+    </div>
+    <div class="about-card">
+      <h3>Contact & Support</h3>
+      <p>Need help? Reach us anytime at <strong>afolabiprosper329@gmail.com</strong>. Our support team is ready to help with orders, returns, and product questions.</p>
+    </div>
+  </div>
+
+  <h2 class="text-center fw-bold mb-4">Meet the Team</h2>
+  <div class="team-grid">
+    {% for member in team %}
+      <div class="team-card">
+        <h4>{{ member.name }}</h4>
+        <div class="role">{{ member.role }}</div>
+        <p>{{ member.bio }}</p>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

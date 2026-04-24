@@ -20,9 +20,9 @@
 
       [data-theme="dark"] {
         --main-color: #ff7070;
-        --text-color: #f5f5f5;
-        --bg-color: #121212;
-        --card-bg: #1e1e1e;
+        --text-color: #ffffff;
+        --bg-color: #090a0d;
+        --card-bg: #17181f;
       }
 
       /* Dark theme overrides for specific elements */
@@ -47,7 +47,7 @@
       }
 
       [data-theme="dark"] .text-muted {
-        color: #999 !important;
+        color: #bbbbbb !important;
       }
 
       [data-theme="dark"] input,
@@ -59,13 +59,13 @@
       }
 
       [data-theme="dark"] .btn-light {
-        background-color: #444;
-        color: #e0e0e0;
-        border-color: #555;
+        background-color: #3b4150;
+        color: #f5f5f5;
+        border-color: #4f5668;
       }
 
       [data-theme="dark"] .btn-light:hover {
-        background-color: #555;
+        background-color: #535a70;
         color: #fff;
       }
 
@@ -112,11 +112,46 @@
       }
 
       [data-theme="dark"] .form-control::-webkit-input-placeholder {
-        color: #777;
+        color: #b0b0b0;
       }
 
       [data-theme="dark"] .form-control::placeholder {
-        color: #777;
+        color: #b0b0b0;
+      }
+
+      [data-theme="dark"] .feature-card,
+      [data-theme="dark"] .offer-card,
+      [data-theme="dark"] .register-box,
+      [data-theme="dark"] .welcome-box,
+      [data-theme="dark"] .article-card,
+      [data-theme="dark"] .blog-stats,
+      [data-theme="dark"] .contact-section,
+      [data-theme="dark"] .product-card,
+      [data-theme="dark"] .navbar,
+      [data-theme="dark"] .dropdown-menu,
+      [data-theme="dark"] .dropdown-item {
+        background-color: #181a1f !important;
+        color: #ebebeb !important;
+        border-color: #333 !important;
+      }
+
+      [data-theme="dark"] .nav-link,
+      [data-theme="dark"] .dropdown-item {
+        color: #f7f7f7 !important;
+      }
+
+      [data-theme="dark"] .navbar {
+        background-color: #11121a;
+      }
+
+      [data-theme="dark"] .theme-toggle {
+        color: #ffffff;
+      }
+
+      [data-theme="dark"] .btn-light {
+        background-color: #3b4150;
+        color: #f5f5f5;
+        border-color: #4f5668;
       }
 
       body {
@@ -274,7 +309,7 @@
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark sticky-top shadow-sm">
       <div class="container">
-        <a class="navbar-brand" href="{% url 'products:product-list' %}">Red<span>Cart</span></a>
+        <a class="navbar-brand" href="{% url 'products:landing' %}">Red<span>Cart</span></a>
 
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
           <span class="navbar-toggler-icon"></span>
@@ -287,6 +322,12 @@
           </form>
 
           <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+            <li class="nav-item"><a class="nav-link" href="{% url 'products:landing' %}">Home</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'products:product-list' %}">Shop</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'products:offers' %}">Offers</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'products:blog' %}">Blog</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'products:about' %}">About</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'products:wishlist' %}"><i class="bi bi-heart"></i> Wishlist</a></li>
             <li class="nav-item"><a class="nav-link" href="{% url 'products:view-cart' %}"><i class="bi bi-cart3"></i> Cart</a></li>
             
             {% if user.is_authenticated %}
@@ -339,7 +380,6 @@
 
     <!-- Footer -->
     <footer class="footer">
-      <p>© 2025 RedCart. Built with ❤ by Peter Afolabi</p>
     </footer>
 
     <!-- JS -->
@@ -407,6 +447,3 @@
     </script>
   </body>
 </html>
-      main.style.opacity = 1;
-    }, 200);
-  }

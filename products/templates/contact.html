@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% block title %}Contact Us - RedCart{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+  <div class="row">
+    <div class="col-md-8 mx-auto">
+      <div class="card border-0 shadow-lg rounded-4 p-5 theme-card">
+        <h2 class="fw-bold mb-1 text-center text-gradient">📧 Contact Us</h2>
+        <p class="text-center text-muted mb-4">We'd love to hear from you. Send us a message!</p>
+
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-3" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+
+        <form method="post" novalidate>
+          {% csrf_token %}
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Full Name</label>
+            <input 
+              type="text" 
+              name="name" 
+              class="form-control form-control-lg rounded-pill px-4"
+              placeholder="Your name"
+              required
+            >
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Email Address</label>
+            <input 
+              type="email" 
+              name="email" 
+              class="form-control form-control-lg rounded-pill px-4"
+              placeholder="your@email.com"
+              required
+            >
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Subject</label>
+            <input 
+              type="text" 
+              name="subject" 
+              class="form-control form-control-lg rounded-pill px-4"
+              placeholder="How can we help?"
+              required
+            >
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label fw-semibold">Message</label>
+            <textarea 
+              name="message" 
+              class="form-control rounded-3 px-4 py-3"
+              placeholder="Tell us more about your inquiry..."
+              rows="6"
+              required
+            ></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-danger btn-lg w-100 rounded-pill fw-bold py-3">
+            📬 Send Message
+          </button>
+        </form>
+
+        <hr class="my-4">
+
+        <div class="row text-center">
+          <div class="col-md-4 mb-3">
+            <h5 class="fw-bold">📞 Phone</h5>
+            <p class="text-muted">+234 (0) 123 456 7890</p>
+          </div>
+          <div class="col-md-4 mb-3">
+            <h5 class="fw-bold">📧 Email</h5>
+            <p class="text-muted">support@redcart.com</p>
+          </div>
+          <div class="col-md-4 mb-3">
+            <h5 class="fw-bold">🕒 Hours</h5>
+            <p class="text-muted">Mon-Fri: 9AM-6PM</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .text-gradient {
+    background: linear-gradient(45deg, #ff6b6b, #ff9900);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+</style>
+{% endblock %}

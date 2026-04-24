@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block title %}Payment Methods - RedCart{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+  <div class="row">
+    <div class="col-md-10 mx-auto">
+      <h2 class="fw-bold text-gradient mb-4">💳 Payment Methods</h2>
+
+      {% if methods %}
+        <div class="row">
+          {% for method in methods %}
+          <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-lg rounded-4 p-4 theme-card">
+              <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                  {% if method.payment_type == 'card' %}
+                  <h5 class="fw-bold">💳 {{ method.card_brand|upper }}</h5>
+                  <p class="mb-0 text-muted">••••••••••••{{ method.card_last_four }}</p>
+                  {% elif method.payment_type == 'bank' %}
+                  <h5 class="fw-bold">🏦 {{ method.bank_name }}</h5>
+                  <p class="mb-0 text-muted">{{ method.account_number }}</p>
+                  {% else %}
+                  <h5 class="fw-bold">📱 Digital Wallet</h5>
+                  {% endif %}
+                </div>
+                {% if method.is_default %}
+                <span class="badge bg-danger">Default</span>
+                {% endif %}
+              </div>
+
+              {% if not method.is_active %}
+              <p class="text-muted small mb-3">⚠️ This payment method is inactive</p>
+              {% endif %}
+
+              <div class="d-flex gap-2">
+                <a href="#" class="btn btn-sm btn-outline-danger rounded-pill">Edit</a>
+                <a href="#" class="btn btn-sm btn-outline-secondary rounded-pill">Delete</a>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="text-center py-5">
+          <i class="bi bi-credit-card" style="font-size: 3rem; color: #ccc;"></i>
+          <p class="text-muted mt-3">No payment methods saved yet.</p>
+          <p class="text-muted small">You can add a payment method during checkout.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<style>
+  .text-gradient {
+    background: linear-gradient(45deg, #ff6b6b, #ff9900);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+</style>
+{% endblock %}

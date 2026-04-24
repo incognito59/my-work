@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block title %}Ticket #{{ ticket.id }} - RedCart{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+  <div class="row">
+    <div class="col-md-10 mx-auto">
+      <div class="mb-4">
+        <a href="{% url 'products:my-tickets' %}" class="btn btn-outline-secondary rounded-pill">← Back to Tickets</a>
+      </div>
+
+      <div class="card border-0 shadow-lg rounded-4 p-5 theme-card mb-4">
+        <div class="d-flex justify-content-between align-items-start mb-4">
+          <div>
+            <h2 class="fw-bold">Ticket #{{ ticket.id }}</h2>
+            <h4 class="text-muted">{{ ticket.title }}</h4>
+          </div>
+          <div class="text-end">
+            <span class="badge" style="background-color: {% if ticket.priority == 'urgent' %}#ff4747{% elif ticket.priority == 'high' %}#ff9900{% elif ticket.priority == 'medium' %}#f8c471{% else %}#6ab04c{% endif %}; padding: 8px 15px; font-size: 12px;">
+              {{ ticket.get_priority_display }} Priority
+            </span>
+            <br>
+            <span class="badge mt-2" style="background-color: {% if ticket.status == 'open' %}#3498db{% elif ticket.status == 'in_progress' %}#f8c471{% elif ticket.status == 'resolved' %}#6ab04c{% else %}#95a5a6{% endif %}; padding: 8px 15px; font-size: 12px;">
+              {{ ticket.get_status_display }}
+            </span>
+          </div>
+        </div>
+
+        <hr>
+
+        <div class="mb-4">
+          <h5 class="fw-bold">📝 Description</h5>
+          <p>{{ ticket.description }}</p>
+        </div>
+
+        {% if ticket.order %}
+        <div class="mb-4">
+          <h5 class="fw-bold">📦 Related Order</h5>
+          <p>Order #{{ ticket.order.id }} - {{ ticket.order.created_at|date:"M d, Y" }}</p>
+        </div>
+        {% endif %}
+
+        <div class="text-muted small">
+          <p>Created: {{ ticket.created_at|date:"M d, Y - g:i A" }}</p>
+          {% if ticket.resolved_at %}
+          <p>Resolved: {{ ticket.resolved_at|date:"M d, Y - g:i A" }}</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Replies -->
+      <div class="card border-0 shadow-lg rounded-4 p-5 theme-card">
+        <h5 class="fw-bold mb-4">💬 Conversation</h5>
+
+        {% for reply in replies %}
+        <div class="mb-4 pb-4 {% if not forloop.last %}border-bottom{% endif %}">
+          <div class="d-flex justify-content-between mb-2">
+            <strong>
+              {% if reply.is_admin_reply %}
+              <span class="badge bg-danger">RedCart Team</span>
+              {% else %}
+              {{ ticket.user.first_name|default:ticket.user.username }}
+              {% endif %}
+            </strong>
+            <small class="text-muted">{{ reply.created_at|date:"M d, Y - g:i A" }}</small>
+          </div>
+          <p>{{ reply.message }}</p>
+        </div>
+        {% empty %}
+        <p class="text-muted">No replies yet. We'll respond to your ticket shortly.</p>
+        {% endfor %}
+
+        <!-- Add Reply Form (for user) -->
+        {% if not ticket.status == 'closed' and user == ticket.user %}
+        <hr class="my-4">
+        
+        <form method="post" class="mt-4">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Your Reply</label>
+            <textarea 
+              name="message" 
+              class="form-control rounded-3"
+              placeholder="Add your reply..."
+              rows="4"
+              required
+            ></textarea>
+          </div>
+          <button type="submit" class="btn btn-danger rounded-pill fw-bold">Send Reply</button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

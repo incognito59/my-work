@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #6ab04c; color: white; padding: 20px; border-radius: 5px; }
+        .tracking { margin: 20px 0; padding: 15px; background-color: #f0f0f0; border-radius: 5px; }
+        .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📦 Your Order Has Shipped!</h1>
+            <p>Hi {{ user.first_name|default:user.username }},</p>
+        </div>
+
+        <p>Great news! Order #{{ order.id }} has been shipped and is on its way to you.</p>
+
+        <div class="tracking">
+            <h3>Tracking Information</h3>
+            <p><strong>Tracking Number:</strong> <code>{{ tracking_number }}</code></p>
+            <p>You can track your package using this number on our website or the shipping carrier's website.</p>
+        </div>
+
+        <div>
+            <h3>What to Expect</h3>
+            <ul>
+                <li>Your package is currently in transit</li>
+                <li>Estimated delivery: 3-5 business days</li>
+                <li>You will receive a delivery confirmation once it arrives</li>
+            </ul>
+        </div>
+
+        <div class="footer">
+            <p>Thank you for shopping at {{ site_name }}!</p>
+            <p>If you have any questions, please contact our support team.</p>
+        </div>
+    </div>
+</body>
+</html>

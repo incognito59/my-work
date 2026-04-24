@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Product Reviews - RedCart{% endblock %}
+
+{% block content %}
+<style>
+  .reviews-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 20px;
+  }
+
+  .reviews-hero {
+    background: linear-gradient(135deg, #ff4777 0%, #ff9a4d 100%);
+    color: white;
+    padding: 60px 40px;
+    border-radius: 24px;
+    text-align: center;
+    box-shadow: 0 25px 80px rgba(255, 71, 119, 0.2);
+    margin-bottom: 50px;
+  }
+
+  .reviews-hero h1 {
+    font-size: 3rem;
+    font-weight: 800;
+    margin-bottom: 15px;
+  }
+
+  .reviews-hero p {
+    font-size: 1.2rem;
+    opacity: 0.95;
+  }
+
+  .review-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    margin-top: 40px;
+  }
+
+  .summary-card {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.08);
+    text-align: center;
+  }
+
+  .summary-card h2 {
+    font-size: 2.5rem;
+    color: #ff4777;
+    margin-bottom: 10px;
+  }
+
+  .summary-card p {
+    color: #666;
+    font-size: 0.95rem;
+  }
+
+  .reviews-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 25px;
+  }
+
+  .review-card {
+    background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.9), #ffffff 40%);
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(255, 71, 119, 0.1);
+  }
+
+  .review-card h3 {
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+    color: #333;
+  }
+
+  .review-card p {
+    color: #555;
+    line-height: 1.7;
+  }
+
+  .review-card .rating {
+    color: #ffb400;
+    margin-bottom: 10px;
+    font-size: 1.05rem;
+    font-weight: 700;
+  }
+
+  .product-card-small {
+    display: grid;
+    grid-template-columns: 100px 1fr;
+    gap: 20px;
+    background: #fff;
+    border-radius: 18px;
+    align-items: center;
+    padding: 20px;
+    box-shadow: 0 14px 35px rgba(0, 0, 0, 0.06);
+  }
+
+  .product-card-small img {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 16px;
+  }
+
+  .product-card-small h4 {
+    margin-bottom: 6px;
+    font-size: 1rem;
+  }
+
+  .empty-state {
+    text-align: center;
+    color: #666;
+    padding: 40px;
+    font-size: 1rem;
+  }
+
+  @media (max-width: 768px) {
+    .reviews-hero h1 {
+      font-size: 2.2rem;
+    }
+
+    .review-summary {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  [data-theme="dark"] .reviews-hero {
+    background: linear-gradient(135deg, #4d3071 0%, #181b29 100%);
+  }
+
+  [data-theme="dark"] .summary-card,
+  [data-theme="dark"] .review-card,
+  [data-theme="dark"] .product-card-small {
+    background: #1f212a !important;
+    border-color: #333 !important;
+    color: #f0f0f0 !important;
+  }
+
+  [data-theme="dark"] .review-card p,
+  [data-theme="dark"] .empty-state {
+    color: #c7c7c7;
+  }
+</style>
+
+<div class="reviews-page">
+  <section class="reviews-hero">
+    <h1>⭐ Customer Reviews</h1>
+    <p>See what shoppers love about RedCart — real ratings, real feedback, and real product stories.</p>
+
+    <div class="review-summary">
+      <div class="summary-card">
+        <h2>{{ total_reviews }}</h2>
+        <p>Reviews shared by happy customers</p>
+      </div>
+      <div class="summary-card">
+        <h2>{{ average_rating }}/5</h2>
+        <p>Average product rating</p>
+      </div>
+      <div class="summary-card">
+        <h2>{{ products_with_reviews.count }}</h2>
+        <p>Reviewed products</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="text-center fw-bold mb-4">Top Rated Products</h2>
+    <div class="reviews-grid">
+      {% for product in products_with_reviews %}
+      <div class="product-card-small">
+        <img src="{{ product.image_src }}" alt="{{ product.name }}">
+        <div>
+          <h4>{{ product.name }}</h4>
+          <p class="mb-1 text-muted">{{ product.get_category_display }}</p>
+          <p class="fw-semibold">₦{{ product.price|floatformat:2 }}</p>
+          <a href="{% url 'products:product-detail' product.id %}" class="text-decoration-none text-danger fw-bold">View product →</a>
+        </div>
+      </div>
+      {% endfor %}
+
+      {% if not products_with_reviews %}
+        <div class="empty-state">No reviews available yet. Be the first to share your experience!</div>
+      {% endif %}
+    </div>
+  </section>
+
+  <section style="margin-top: 60px;">
+    <h2 class="text-center fw-bold mb-4">Latest Reviews</h2>
+    <div class="reviews-grid">
+      {% for comment in recent_reviews %}
+      <div class="review-card">
+        <div class="rating">{{ comment.rating }} / 5 ⭐</div>
+        <h3>{{ comment.name }} on {{ comment.product.name }}</h3>
+        <p>{{ comment.text|truncatechars:180 }}</p>
+        <p class="text-muted small">{{ comment.created_at|date:"M d, Y" }}</p>
+      </div>
+      {% endfor %}
+
+      {% if not recent_reviews %}
+        <div class="empty-state">No customer reviews have been added yet.</div>
+      {% endif %}
+    </div>
+  </section>
+</div>
+{% endblock %}

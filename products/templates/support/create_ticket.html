@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% block title %}Create Support Ticket - RedCart{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+  <div class="row">
+    <div class="col-md-8 mx-auto">
+      <div class="card border-0 shadow-lg rounded-4 p-5 theme-card">
+        <h2 class="fw-bold mb-1 text-center text-gradient">🎫 Create Support Ticket</h2>
+        <p class="text-center text-muted mb-4">Tell us how we can help you</p>
+
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-3" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+
+        <form method="post" novalidate>
+          {% csrf_token %}
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Title</label>
+            <input 
+              type="text" 
+              name="title" 
+              class="form-control form-control-lg rounded-pill px-4"
+              placeholder="Brief subject of your issue"
+              required
+            >
+          </div>
+
+          {% if orders %}
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Related Order (Optional)</label>
+            <select name="order_id" class="form-select form-select-lg rounded-pill px-4">
+              <option value="">Select an order...</option>
+              {% for order in orders %}
+              <option value="{{ order.id }}">Order #{{ order.id }} - {{ order.created_at|date:"M d, Y" }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          {% endif %}
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Priority</label>
+            <select name="priority" class="form-select form-select-lg rounded-pill px-4">
+              <option value="low">Low</option>
+              <option value="medium" selected>Medium</option>
+              <option value="high">High</option>
+              <option value="urgent">Urgent</option>
+            </select>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label fw-semibold">Description</label>
+            <textarea 
+              name="description" 
+              class="form-control rounded-3 px-4 py-3"
+              placeholder="Please describe your issue in detail..."
+              rows="6"
+              required
+            ></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-danger btn-lg w-100 rounded-pill fw-bold py-3">
+            🎫 Create Ticket
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .text-gradient {
+    background: linear-gradient(45deg, #ff6b6b, #ff9900);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+</style>
+{% endblock %}

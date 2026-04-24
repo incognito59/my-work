@@ -110,10 +110,31 @@ LOGOUT_REDIRECT_URL = '/'
 # Email backend for development
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
+# For production, use SMTP:
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+# EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+
+DEFAULT_FROM_EMAIL = 'afolabiprosper329@gmail.com'
+SERVER_EMAIL = 'afolabiprosper329@gmail.com'
+
 # Stripe keys (set via environment variables)
 import os
 STRIPE_PUBLISHABLE_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY', '')
 STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY', '')
+
+# Site ID for Django Sites Framework  
+SITE_ID = 1
+
+# Pagination
+ITEMS_PER_PAGE = 12
+
+# Currency (for Nigeria)
+CURRENCY = 'NGN'
+CURRENCY_SYMBOL = '₦'
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/

@@ -1,8 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
-{% load socialaccount %}
 
-{% block title %}Social Login - RedCart{% endblock %}
+{% block title %}Sign Up - RedCart{% endblock %}
 
 {% block content %}
 <div class="container my-5">
@@ -38,15 +37,66 @@
       <div class="card border-0 shadow-lg rounded-4 p-5 theme-card animate-card">
         <h3 class="fw-bold mb-4 text-center text-gradient">🔐 Get Started</h3>
 
-        <!-- Social Login Buttons -->
+        <!-- Email Login/Register Buttons -->
         <div class="d-grid gap-3 mb-4">
-          <a href="/products/login/" class="btn btn-outline-danger btn-lg rounded-pill fw-semibold py-3 social-btn" role="button">
-            <i class="bi bi-envelope me-2"></i> Sign in with Email
+          <a href="{% url 'products:register' %}" class="btn btn-danger btn-lg rounded-pill fw-semibold py-3">
+            <i class="bi bi-person-plus me-2"></i> Create Account
           </a>
+          
+          <p class="text-center text-muted my-3">Or</p>
+          
+          <a href="{% url 'products:login' %}" class="btn btn-outline-danger btn-lg rounded-pill fw-semibold py-3">
+            <i class="bi bi-box-arrow-in-right me-2"></i> Sign In
+          </a>
+        </div>
 
-          {% providers_media_js %}
-          {% if socialaccount_providers %}
-            {% for provider in socialaccount_providers %}
+        <hr>
+
+        <p class="text-center text-muted small mt-4">
+          🔒 Your account is secure. We use industry-standard encryption.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .text-gradient {
+    background: linear-gradient(45deg, #ff6b6b, #ff9900);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .theme-card {
+    background: white;
+    transition: all 0.3s ease;
+  }
+
+  .animate-card {
+    animation: slideInUp 0.8s ease;
+  }
+
+  @keyframes slideInUp {
+    from {
+      opacity: 0;
+      transform: translateY(50px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .btn {
+    transition: all 0.3s ease;
+  }
+
+  .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 71, 71, 0.2);
+  }
+</style>
+{% endblock %}
               <a href="{% provider_login_url provider.id %}" class="btn btn-outline-danger btn-lg rounded-pill fw-semibold py-3 social-btn" role="button">
                 <i class="bi bi-{{ provider.id }} me-2"></i> Continue with {{ provider.name }}
               </a>

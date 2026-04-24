@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Wishlist - Your Favorites | RedCart{% endblock %}
+
+{% block content %}
+<style>
+  .wishlist-page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px 20px;
+  }
+
+  .wishlist-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 35px;
+  }
+
+  .wishlist-header h1 {
+    font-size: 2.8rem;
+    font-weight: 800;
+    color: #ff4d6d;
+  }
+
+  .wishlist-header p {
+    color: #555;
+  }
+
+  .wishlist-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 25px;
+  }
+
+  .wishlist-item {
+    background: linear-gradient(135deg, #ffffff 0%, #f5f3ff 100%);
+    border-radius: 24px;
+    padding: 25px;
+    box-shadow: 0 22px 70px rgba(255, 77, 109, 0.12);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s ease;
+  }
+
+  .wishlist-item:hover {
+    transform: translateY(-4px);
+  }
+
+  .wishlist-item img {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    border-radius: 20px;
+    margin-bottom: 18px;
+  }
+
+  .wishlist-item h3 {
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+  }
+
+  .wishlist-item p {
+    color: #666;
+    margin-bottom: 12px;
+  }
+
+  .wishlist-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .wishlist-actions .btn {
+    border-radius: 999px;
+  }
+
+  .empty-wishlist {
+    text-align: center;
+    padding: 70px 30px;
+    border-radius: 24px;
+    background: white;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.06);
+  }
+
+  .empty-wishlist h2 {
+    font-size: 2rem;
+    margin-bottom: 15px;
+  }
+
+  .empty-wishlist p {
+    color: #666;
+    margin-bottom: 25px;
+  }
+
+  @media (max-width: 768px) {
+    .wishlist-header {
+      flex-direction: column;
+      text-align: center;
+    }
+  }
+
+  [data-theme="dark"] .wishlist-item,
+  [data-theme="dark"] .empty-wishlist {
+    background: #1e1e28 !important;
+    color: #f4f4f4;
+  }
+
+  [data-theme="dark"] .wishlist-item p,
+  [data-theme="dark"] .empty-wishlist p {
+    color: #c8cad1;
+  }
+</style>
+
+<div class="wishlist-page">
+  <div class="wishlist-header">
+    <div>
+      <h1>💖 Your Wishlist</h1>
+      <p>Save the products you love and come back anytime to purchase.</p>
+    </div>
+  </div>
+
+  {% if wishlist_items %}
+    <div class="wishlist-grid">
+      {% for item in wishlist_items %}
+        <div class="wishlist-item">
+          <img src="{{ item.product.image_src }}" alt="{{ item.product.name }}">
+          <h3>{{ item.product.name }}</h3>
+          <p>{{ item.product.get_category_display }} • ₦{{ item.product.price|floatformat:2 }}</p>
+          <div class="wishlist-actions">
+            <a href="{% url 'products:product-detail' item.product.id %}" class="btn btn-outline-danger btn-sm">View</a>
+            <a href="{% url 'products:add-to-cart' item.product.id %}" class="btn btn-danger btn-sm">Add to Cart</a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-wishlist">
+      <h2>Your wishlist is empty</h2>
+      <p>Browse popular products and add your favorites to save them for later.</p>
+      <a href="{% url 'products:product-list' %}" class="btn btn-danger btn-lg">Shop Now</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block title %}My Addresses - RedCart{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+  <div class="row">
+    <div class="col-md-10 mx-auto">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-gradient">🏠 Saved Addresses</h2>
+        <a href="{% url 'products:add-address' %}" class="btn btn-danger rounded-pill fw-bold">+ Add Address</a>
+      </div>
+
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-3" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      {% if addresses %}
+        <div class="row">
+          {% for address in addresses %}
+          <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-lg rounded-4 p-4 theme-card">
+              <div class="d-flex justify-content-between align-items-start mb-3">
+                <h5 class="fw-bold">{{ address.get_address_type_display|upper }}</h5>
+                {% if address.is_default %}
+                <span class="badge bg-danger">Default</span>
+                {% endif %}
+              </div>
+
+              <p class="mb-2">
+                <strong>{{ address.full_name }}</strong><br>
+                {{ address.street_address }}<br>
+                {{ address.city }}, {{ address.state }} {{ address.postal_code }}<br>
+                {{ address.country }}
+              </p>
+
+              <p class="text-muted mb-3">
+                <i class="bi bi-telephone"></i> {{ address.phone }}
+              </p>
+
+              <div class="d-flex gap-2">
+                <a href="#" class="btn btn-sm btn-outline-danger rounded-pill">Edit</a>
+                <a href="#" class="btn btn-sm btn-outline-secondary rounded-pill">Delete</a>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="text-center py-5">
+          <i class="bi bi-pin-map" style="font-size: 3rem; color: #ccc;"></i>
+          <p class="text-muted mt-3">No saved addresses yet.</p>
+          <a href="{% url 'products:add-address' %}" class="btn btn-danger rounded-pill fw-bold">Add Your First Address</a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<style>
+  .text-gradient {
+    background: linear-gradient(45deg, #ff6b6b, #ff9900);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+</style>
+{% endblock %}

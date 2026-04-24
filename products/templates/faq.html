@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block title %}FAQ - RedCart{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <h2 class="fw-bold mb-1 text-center text-gradient">❓ Frequently Asked Questions</h2>
+      <p class="text-center text-muted mb-4">Find answers to common questions</p>
+
+      {% if categories %}
+      <div class="mb-4 text-center">
+        <a href="{% url 'products:faq' %}" class="btn btn-outline-danger {% if not selected_category %}active{% endif %}">All</a>
+        {% for category in categories %}
+          <a href="?category={{ category }}" class="btn btn-outline-danger {% if selected_category == category %}active{% endif %}">{{ category|title }}</a>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <div class="accordion accordion-flush" id="faqAccordion">
+        {% for faq in faqs %}
+        <div class="accordion-item border-0 mb-3 rounded-3 shadow-sm">
+          <h2 class="accordion-header">
+            <button 
+              class="accordion-button fw-bold" 
+              type="button" 
+              data-bs-toggle="collapse" 
+              data-bs-target="#faq{{ faq.id }}" 
+              aria-expanded="false" 
+              aria-controls="faq{{ faq.id }}"
+            >
+              {{ faq.question }}
+            </button>
+          </h2>
+          <div 
+            id="faq{{ faq.id }}" 
+            class="accordion-collapse collapse" 
+            data-bs-parent="#faqAccordion"
+          >
+            <div class="accordion-body">
+              {{ faq.answer|safe }}
+            </div>
+          </div>
+        </div>
+        {% empty %}
+        <div class="text-center py-5">
+          <p class="text-muted">No FAQs found in this category.</p>
+        </div>
+        {% endfor %}
+      </div>
+
+      <div class="mt-5 p-4 bg-light rounded-3 text-center">
+        <h5 class="fw-bold">Still have questions?</h5>
+        <p class="text-muted">We're here to help! <a href="{% url 'products:contact' %}" class="link-danger fw-bold">Contact us</a> for any other inquiries.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .text-gradient {
+    background: linear-gradient(45deg, #ff6b6b, #ff9900);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  .accordion-button {
+    color: #333;
+    padding: 1.5rem;
+  }
+  
+  .accordion-button:not(.collapsed) {
+    background-color: #fff3f3;
+    color: #ff4747;
+  }
+</style>
+{% endblock %}
