@@ -72,10 +72,21 @@
     justify-content: space-between;
     align-items: center;
     gap: 12px;
+    flex-wrap: wrap;
   }
 
   .wishlist-actions .btn {
     border-radius: 999px;
+  }
+
+  .wishlist-header-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .btn-wishlist {
+    min-width: 140px;
   }
 
   .empty-wishlist {
@@ -121,9 +132,22 @@
       <h1>💖 Your Wishlist</h1>
       <p>Save the products you love and come back anytime to purchase.</p>
     </div>
+    {% if user.is_authenticated and wishlist_items %}
+      <div class="wishlist-header-actions">
+        <a href="{% url 'products:checkout' %}" class="btn btn-danger btn-lg">Checkout</a>
+        <a href="{% url 'products:product-list' %}" class="btn btn-outline-danger btn-lg">Keep Shopping</a>
+      </div>
+    {% endif %}
   </div>
 
-  {% if wishlist_items %}
+  {% if not user.is_authenticated %}
+    <div class="empty-wishlist">
+      <h2>Log in to access your wishlist</h2>
+      <p>Save favorite products and pick up where you left off on any device.</p>
+      <a href="{% url 'products:login' %}?next={% url 'products:wishlist' %}" class="btn btn-danger btn-lg">Login</a>
+      <a href="{% url 'products:register' %}" class="btn btn-outline-danger btn-lg">Register</a>
+    </div>
+  {% elif wishlist_items %}
     <div class="wishlist-grid">
       {% for item in wishlist_items %}
         <div class="wishlist-item">
@@ -133,6 +157,9 @@
           <div class="wishlist-actions">
             <a href="{% url 'products:product-detail' item.product.id %}" class="btn btn-outline-danger btn-sm">View</a>
             <a href="{% url 'products:add-to-cart' item.product.id %}" class="btn btn-danger btn-sm">Add to Cart</a>
+            <button type="button" class="btn btn-wishlist btn-danger btn-sm" data-product-id="{{ item.product.id }}" title="Remove from wishlist">
+              <i class="bi bi-heart-fill"></i> Remove
+            </button>
           </div>
         </div>
       {% endfor %}

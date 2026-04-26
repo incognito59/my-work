@@ -21,8 +21,13 @@
 
     <!-- Main image in the center -->
     <div class="col-md-6">
-      <div class="main-img-container border rounded-4 shadow-sm overflow-hidden animate-img">
+      <div class="main-img-container border rounded-4 shadow-sm overflow-hidden animate-img position-relative">
         <img id="main-image" src="{{ product.image_src }}" class="img-fluid" alt="{{ product.name }}">
+        {% if product.is_out_of_stock %}
+          <div class="stock-badge stock-out">Out of Stock</div>
+        {% elif product.is_low_stock %}
+          <div class="stock-badge">Only {{ product.available_stock }} left!</div>
+        {% endif %}
       </div>
     </div>
 
@@ -57,12 +62,23 @@
         {% endif %}
 
         <div class="d-flex flex-column gap-2">
-          <a href="{% url 'products:add-to-cart' product.id %}" 
-             class="btn btn-warning w-100 fw-semibold text-dark btn-legendary">
-            🛒 Add to Cart
-          </a>
+          <button type="button" class="btn btn-wishlist {% if is_in_wishlist %}btn-danger{% else %}btn-outline-danger{% endif %}" data-product-id="{{ product.id }}" data-update-text="true" title="Save to wishlist">
+            <i class="bi {% if is_in_wishlist %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
+            {% if is_in_wishlist %}Saved{% else %}Save{% endif %}
+          </button>
+          {% if product.is_out_of_stock %}
+            <button type="button" class="btn btn-secondary w-100 fw-semibold text-light btn-legendary disabled" disabled>
+              🚫 Out of Stock
+            </button>
+          {% else %}
+            <a href="{% url 'products:add-to-cart' product.id %}" 
+               class="btn btn-warning w-100 fw-semibold text-dark btn-legendary">
+              🛒 Add to Cart
+            </a>
+          {% endif %}
           <a href="{% url 'products:buy-now' product.id %}" 
-             class="btn btn-dark w-100 fw-semibold btn-legendary">
+             class="btn btn-dark w-100 fw-semibold btn-legendary {% if product.is_out_of_stock %}disabled{% endif %}"
+             {% if product.is_out_of_stock %}aria-disabled="true" tabindex="-1"{% endif %}>
             ⚡ Buy Now
           </a>
         </div>
@@ -74,6 +90,31 @@
       </div>
     </div>
 
+  </div>
+
+  {% if ai_recommendations %}
+  <div class="mt-5 pt-4">
+    <h4 class="fw-bold mb-4">You might also like</h4>
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-3">
+      {% for rec in ai_recommendations %}
+      <div class="col">
+        <div class="card h-100 shadow-sm border-0">
+          <img src="{{ rec.image_src }}" class="card-img-top" alt="{{ rec.name }}">
+          <div class="card-body">
+            <h5 class="card-title">{{ rec.name|truncatechars:40 }}</h5>
+            <p class="card-text text-muted mb-2">₦{{ rec.price|floatformat:2 }}</p>
+            <a href="{% url 'products:product-detail' rec.id %}" class="btn btn-outline-danger btn-sm">View Product</a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div id="recently-viewed-wrapper" class="mt-5 pt-4">
+    <h4 class="fw-bold mb-4">Recently Viewed</h4>
+    <div id="recently-viewed-products" class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-3"></div>
   </div>
 
   <!-- Reviews Section -->
@@ -272,5 +313,4 @@
 
 <script src="{% static 'js/flash-sale-timer.js' %}"></script>
 
-{% endblock %}
 {% endblock %}

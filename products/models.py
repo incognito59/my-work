@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.templatetags.static import static
+from django.utils import timezone
 
 class Product(models.Model):
     CATEGORY_CHOICES = [
@@ -16,6 +17,7 @@ class Product(models.Model):
     name = models.CharField(max_length=255)
     price = models.FloatField()
     stock = models.IntegerField()
+    stock_quantity = models.IntegerField(null=True, blank=True, help_text='Physical stock quantity. Falls back to legacy stock when empty.')
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default='Other')
     image_url = models.CharField("Main Image", max_length=2083)
     description = models.TextField(blank=True)
@@ -52,17 +54,33 @@ class Product(models.Model):
     def has_active_sale(self):
         """Check if product has an active flash sale"""
         from django.utils import timezone
-        if self.sale_price and self.sale_ends_at:
+        if self.sale_price is not None and self.sale_ends_at and self.price > 0:
+            if self.sale_price >= self.price:
+                return False
             return self.sale_ends_at > timezone.now()
         return False
 
     @property
     def discount_percentage(self):
         """Calculate discount percentage"""
-        if self.sale_price and self.price > 0:
+        if self.sale_price is not None and self.price > 0 and self.sale_price < self.price:
             discount = ((self.price - self.sale_price) / self.price) * 100
-            return round(discount, 0)
+            return max(0, round(discount, 0))
         return 0
+
+    @property
+    def available_stock(self):
+        if self.stock_quantity is not None:
+            return self.stock_quantity
+        return self.stock
+
+    @property
+    def is_out_of_stock(self):
+        return self.available_stock <= 0
+
+    @property
+    def is_low_stock(self):
+        return 0 < self.available_stock <= 5
 
     def __str__(self):
         return self.name
@@ -74,6 +92,38 @@ class Offer(models.Model):
 
     def __str__(self):
         return self.code
+
+class Coupon(models.Model):
+    DISCOUNT_TYPE_CHOICES = [
+        ('percentage', 'Percentage'),
+        ('fixed', 'Fixed'),
+    ]
+
+    code = models.CharField(max_length=50, unique=True)
+    discount_type = models.CharField(max_length=20, choices=DISCOUNT_TYPE_CHOICES, default='fixed')
+    discount_value = models.FloatField()
+    min_order_amount = models.FloatField(default=0)
+    expiry_date = models.DateTimeField()
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.code.upper()
+
+    def is_valid(self, total=0):
+        if not self.is_active:
+            return False
+        if self.expiry_date <= timezone.now():
+            return False
+        if total < self.min_order_amount:
+            return False
+        return True
+
+    def calculate_discount(self, subtotal):
+        if self.discount_type == 'percentage':
+            return min(subtotal, subtotal * (self.discount_value / 100))
+        return min(subtotal, self.discount_value)
 
 class Comment(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='comments')
@@ -239,6 +289,17 @@ class Order(models.Model):
     @property
     def total(self):
         return self.subtotal + self.shipping_cost + self.tax - self.discount
+
+
+class AbandonedCart(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='abandoned_carts')
+    cart_data = models.JSONField(default=dict, blank=True)
+    last_updated = models.DateTimeField(auto_now=True)
+    email_sent_at = models.DateTimeField(null=True, blank=True)
+    active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"Abandoned cart for {self.user.username} at {self.last_updated}"
 
 
 class OrderItem(models.Model):

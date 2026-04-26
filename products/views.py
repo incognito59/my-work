@@ -3,9 +3,62 @@ from django.contrib import messages, auth
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
+from django.utils import timezone
+import json
+
 from django.urls import reverse
-from .models import Product, Comment, Order, Offer
+from django.http import JsonResponse
+from .models import Product, Comment, Order, Offer, Wishlist, Coupon, AbandonedCart
+from .utils import get_claude_product_recommendations, get_ai_chat_response
 from django.conf import settings
+
+
+def _get_coupon_context(request, subtotal):
+    coupon_code = request.session.get('coupon_code', '')
+    coupon = None
+    discount = 0
+    message = ''
+
+    if coupon_code:
+        coupon = Coupon.objects.filter(code__iexact=coupon_code).first()
+        if coupon and coupon.is_valid(subtotal):
+            discount = coupon.calculate_discount(subtotal)
+            message = f"Coupon '{coupon.code}' applied."
+        else:
+            discount = 0
+            request.session.pop('coupon_code', None)
+            if coupon:
+                if coupon.expiry_date <= timezone.now():
+                    message = 'This coupon has expired.'
+                elif subtotal < coupon.min_order_amount:
+                    message = f'Minimum order of ₦{coupon.min_order_amount:,.2f} required.'
+                else:
+                    message = 'This coupon is not valid for your order.'
+            else:
+                message = 'Coupon code not found.'
+
+    return {
+        'coupon_code': coupon_code,
+        'coupon_discount': discount,
+        'coupon_message': message,
+        'coupon': coupon,
+    }
+
+
+def _sync_abandoned_cart(request, cart):
+    if not request.user.is_authenticated:
+        return
+
+    if cart:
+        AbandonedCart.objects.update_or_create(
+            user=request.user,
+            defaults={
+                'cart_data': cart,
+                'active': True,
+            }
+        )
+    else:
+        AbandonedCart.objects.filter(user=request.user, active=True).update(active=False)
 
 try:
     import stripe
@@ -47,12 +100,17 @@ def index(request):
     latest_products = Product.objects.order_by('-id')[:8]
     best_deals = Offer.objects.all()[:4]
 
+    wishlisted_ids = []
+    if request.user.is_authenticated:
+        wishlisted_ids = list(Wishlist.objects.filter(user=request.user).values_list('product_id', flat=True))
+
     return render(request, 'index.html', {
         'products_by_category': products_by_category,
         'query': query,
         'available_categories': available_categories,
         'latest_products': latest_products,
         'best_deals': best_deals,
+        'wishlisted_ids': wishlisted_ids,
     })
 
 
@@ -348,11 +406,15 @@ def user_profile(request):
 # ➕ Add to Cart (Success Message)
 def add_to_cart(request, item_id):
     product = get_object_or_404(Product, id=item_id)
-    cart = request.session.get('cart', {})
+    if product.is_out_of_stock:
+        messages.error(request, f"⚠️ {product.name} is out of stock and cannot be added to the cart.")
+        return redirect('products:product-detail', product_id=product.id)
 
+    cart = request.session.get('cart', {})
     product_id = str(product.id)
     cart[product_id] = cart.get(product_id, 0) + 1
     request.session['cart'] = cart
+    _sync_abandoned_cart(request, cart)
 
     cart_url = reverse('products:view-cart')
     messages.success(
@@ -377,9 +439,17 @@ def view_cart(request):
         products.append(product)
         total += product.total_price
 
+    coupon_context = _get_coupon_context(request, total)
+    coupon_discount = coupon_context['coupon_discount']
+    total_after_coupon = max(0, total - coupon_discount)
+
     context = {
         'products': products,
         'total': total,
+        'total_after_coupon': total_after_coupon,
+        'coupon_discount': coupon_discount,
+        'coupon_code': coupon_context['coupon_code'],
+        'coupon_message': coupon_context['coupon_message'],
         'query': request.GET.get('q', ''),
     }
     return render(request, 'cart.html', context)
@@ -393,6 +463,7 @@ def delete_from_cart(request, product_id):
     if product_id in cart:
         del cart[product_id]
         request.session['cart'] = cart
+        _sync_abandoned_cart(request, cart)
         messages.info(request, "🗑️ Item removed from your cart successfully.")
     else:
         messages.warning(request, "Item not found in your cart.")
@@ -415,9 +486,17 @@ def checkout(request):
 
     total_kobo = int(total * 100)
 
+    coupon_context = _get_coupon_context(request, total)
+    coupon_discount = coupon_context['coupon_discount']
+    total_after_coupon = max(0, total - coupon_discount)
+
     context = {
         'products': products,
         'total': total,
+        'total_after_coupon': total_after_coupon,
+        'coupon_discount': coupon_discount,
+        'coupon_code': coupon_context['coupon_code'],
+        'coupon_message': coupon_context['coupon_message'],
         'total_kobo': total_kobo,
         'query': request.GET.get('q', ''),
     }
@@ -448,6 +527,8 @@ def confirm_payment(request):
     if request.method == 'POST':
         messages.success(request, "✅ Payment confirmed! Thank you for shopping with RedCart.")
         request.session['cart'] = {}
+        request.session.pop('coupon_code', None)
+        _sync_abandoned_cart(request, {})
         return redirect('products:product-list')
     return redirect('products:checkout')
 
@@ -467,18 +548,32 @@ def product_detail(request, product_id):
             messages.success(request, "💬 Thank you for your review!")
             return redirect('products:product-detail', product_id=product.id)
 
+    is_in_wishlist = False
+    if request.user.is_authenticated:
+        is_in_wishlist = Wishlist.objects.filter(user=request.user, product=product).exists()
+
+    ai_recommendations = get_claude_product_recommendations(product, limit=4)
+
     return render(request, 'product_detail.html', {
         'product': product,
         'comments': comments,
         'additional_images': additional_images,
         'query': request.GET.get('q', ''),
+        'is_in_wishlist': is_in_wishlist,
+        'ai_recommendations': ai_recommendations,
     })
 
 
 # ⚡ Buy Now (Direct Checkout)
 def buy_now(request, product_id):
     product = get_object_or_404(Product, id=product_id)
-    request.session['cart'] = {str(product.id): 1}
+    if product.is_out_of_stock:
+        messages.error(request, f"⚠️ {product.name} is out of stock.")
+        return redirect('products:product-detail', product_id=product.id)
+
+    cart = {str(product.id): 1}
+    request.session['cart'] = cart
+    _sync_abandoned_cart(request, cart)
     return redirect('products:checkout')
 
 
@@ -910,18 +1005,150 @@ def reviews_page(request):
     })
 
 
+# 💖 Wishlist toggle endpoint
+def toggle_wishlist(request, product_id):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid method.'}, status=405)
+
+    if not request.user.is_authenticated:
+        login_url = reverse('products:login') + '?next=' + reverse('products:wishlist')
+        return JsonResponse({'success': False, 'login_url': login_url}, status=401)
+
+    product = get_object_or_404(Product, id=product_id)
+    wishlist_item, created = Wishlist.objects.get_or_create(user=request.user, product=product)
+    if not created:
+        wishlist_item.delete()
+        action = 'removed'
+    else:
+        action = 'added'
+
+    return JsonResponse({
+        'success': True,
+        'action': action,
+        'product_id': product_id,
+    })
+
+
+# 🤖 AI Shopping Assistant Chat Endpoint
+def ai_chat(request):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid method.'}, status=405)
+
+    try:
+        payload = json.loads(request.body.decode('utf-8') or '{}')
+    except ValueError:
+        payload = {}
+
+    message = payload.get('message') or request.POST.get('message')
+    if not message:
+        return JsonResponse({'success': False, 'error': 'Message is required.'}, status=400)
+
+    reply = get_ai_chat_response(message)
+    return JsonResponse({'success': True, 'reply': reply})
+
+
+def apply_coupon(request):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid method.'}, status=405)
+
+    try:
+        payload = json.loads(request.body.decode('utf-8') or '{}')
+    except ValueError:
+        payload = {}
+
+    code = (payload.get('code') or '').strip()
+    if not code:
+        return JsonResponse({'success': False, 'error': 'Coupon code required.'}, status=400)
+
+    cart = request.session.get('cart', {})
+    if not cart:
+        return JsonResponse({'success': False, 'error': 'Your cart is empty.'}, status=400)
+
+    subtotal = 0
+    for product_id, quantity in cart.items():
+        product = Product.objects.filter(id=product_id).first()
+        if product:
+            subtotal += product.price * quantity
+
+    coupon = Coupon.objects.filter(code__iexact=code).first()
+    if not coupon:
+        return JsonResponse({'success': False, 'error': 'Coupon not found.'}, status=404)
+
+    if coupon.expiry_date <= timezone.now() or not coupon.is_active:
+        return JsonResponse({'success': False, 'error': 'This coupon is not active or has expired.'}, status=400)
+
+    if subtotal < coupon.min_order_amount:
+        return JsonResponse({
+            'success': False,
+            'error': f'Minimum order amount is ₦{coupon.min_order_amount:,.2f}.',
+        }, status=400)
+
+    discount = coupon.calculate_discount(subtotal)
+    request.session['coupon_code'] = coupon.code
+
+    return JsonResponse({
+        'success': True,
+        'discount': discount,
+        'coupon_code': coupon.code,
+        'message': f"Coupon '{coupon.code}' applied successfully.",
+    })
+
+
+def recently_viewed(request):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid method.'}, status=405)
+
+    try:
+        payload = json.loads(request.body.decode('utf-8') or '{}')
+    except ValueError:
+        payload = {}
+
+    ids = payload.get('ids', [])
+    if not isinstance(ids, list):
+        return JsonResponse({'success': False, 'error': 'Invalid ids list.'}, status=400)
+
+    products = []
+    seen = set()
+    for raw_id in ids:
+        try:
+            product_id = int(raw_id)
+        except (ValueError, TypeError):
+            continue
+        if product_id in seen:
+            continue
+        seen.add(product_id)
+        product = Product.objects.filter(id=product_id).first()
+        if product:
+            products.append({
+                'id': product.id,
+                'name': product.name,
+                'image_src': product.image_src,
+                'price': f"{product.price:.2f}",
+                'is_out_of_stock': product.is_out_of_stock,
+            })
+        if len(products) >= 6:
+            break
+
+    return JsonResponse({'success': True, 'recently_viewed': products})
+
+
 # 💖 Wishlist / Favorites Page
-@login_required(login_url='products:login')
 def wishlist_page(request):
     """User's wishlist/favorites page"""
-    # Get user's wishlist items
-    from .models import Wishlist
-    wishlist_items = Wishlist.objects.filter(user=request.user).select_related('product')
-    
+    wishlist_items = []
+    message = None
+
+    if request.user.is_authenticated:
+        wishlist_items = Wishlist.objects.filter(user=request.user).select_related('product')
+        if not wishlist_items:
+            message = 'Your wishlist is empty. Start adding products!'
+    else:
+        message = 'Log in to view and save your wishlist items.'
+
     context = {
         'wishlist_items': wishlist_items,
-        'total_wishlist': wishlist_items.count(),
-        'message': 'Your wishlist is empty. Start adding products!' if not wishlist_items else None,
+        'total_wishlist': wishlist_items.count() if request.user.is_authenticated else 0,
+        'message': message,
     }
     return render(request, 'wishlist.html', context)
 

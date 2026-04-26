@@ -35,9 +35,227 @@
     margin-bottom: 25px;
   }
 
+  .hero-section {
+    display: grid;
+    grid-template-columns: minmax(0, 1.9fr) minmax(280px, 1fr);
+    gap: 28px;
+    padding: 36px 32px;
+    margin-bottom: 40px;
+    border-radius: 32px;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.12), rgba(255, 255, 255, 0.95));
+    box-shadow: 0 24px 80px rgba(102, 126, 234, 0.12);
+  }
+
+  .hero-eyebrow {
+    display: inline-flex;
+    padding: 10px 18px;
+    border-radius: 999px;
+    background: rgba(102, 126, 234, 0.14);
+    color: #1d2b56;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    margin-bottom: 18px;
+  }
+
+  .hero-section h1 {
+    font-size: 3.2rem;
+    line-height: 1.03;
+    margin-bottom: 18px;
+    color: #1d2b56;
+  }
+
+  .hero-section p {
+    font-size: 1rem;
+    color: #4f5d84;
+    max-width: 610px;
+    margin-bottom: 26px;
+  }
+
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+
+  .hero-btn {
+    padding: 14px 24px;
+    border-radius: 999px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .hero-btn:hover {
+    transform: translateY(-2px);
+  }
+
+  .hero-btn-primary {
+    background: #667eea;
+    color: #fff;
+  }
+
+  .hero-btn-outline {
+    background: #fff;
+    color: #334155;
+    border: 1px solid rgba(102, 126, 234, 0.24);
+  }
+
+  .hero-highlights {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+  }
+
+  .highlight-card {
+    padding: 22px 20px;
+    border-radius: 22px;
+    background: #ffffff;
+    border: 1px solid rgba(102, 126, 234, 0.12);
+    box-shadow: 0 14px 30px rgba(102, 126, 234, 0.08);
+  }
+
+  .highlight-card strong {
+    display: block;
+    font-size: 1.75rem;
+    margin-bottom: 8px;
+    color: #1f2d63;
+  }
+
+  .highlight-card span {
+    color: #556386;
+    font-size: 0.95rem;
+  }
+
+  .filter-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 22px;
+    flex-wrap: wrap;
+  }
+
+  .filter-summary {
+    color: #667eea;
+    font-weight: 700;
+    min-width: 220px;
+  }
+
   .search-box {
-    max-width: 600px;
-    margin: 0 auto 30px;
+    flex: 1;
+    min-width: 320px;
+  }
+
+  .search-box input {
+    width: 100%;
+    padding: 16px 22px;
+    border: 2px solid #667eea;
+    border-radius: 28px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+  }
+
+  .search-box input:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.16);
+    border-color: #764ba2;
+  }
+
+  .category-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 18px;
+    border-radius: 999px;
+    border: 1px solid rgba(102, 126, 234, 0.25);
+    background: rgba(255, 255, 255, 0.95);
+    color: #333;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s ease;
+  }
+
+  .category-chip.active,
+  .category-chip:hover {
+    background: #667eea;
+    color: #fff;
+    border-color: #667eea;
+  }
+
+  .category-nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 30px;
+  }
+
+  .product-card .original-price {
+    text-decoration: line-through;
+    color: #9ca3af;
+    font-size: 0.9rem;
+    margin-right: 10px;
+  }
+
+  .sale-price-display {
+    color: #d63384;
+    font-weight: 800;
+    margin-right: 8px;
+  }
+
+  .sale-price-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: #ff4d4f;
+    color: #fff;
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+
+  .product-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .no-products {
+    text-align: center;
+    padding: 40px;
+    color: #64748b;
+    background: #f8fafc;
+    border-radius: 14px;
+    margin: 20px 0;
+  }
+
+  @media (max-width: 992px) {
+    .hero-section {
+      grid-template-columns: 1fr;
+      padding: 28px 22px;
+    }
+
+    .hero-highlights {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .shop-header h1 {
+      font-size: 1.8rem;
+    }
+
+    .products-grid {
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+
+    .category-section {
+      padding: 20px;
+    }
   }
 
   .search-box input {
@@ -418,26 +636,47 @@
 </style>
 
 <div class="shop-container">
-  <!-- Header -->
-  <div class="shop-header">
-    <h1>🛍️ Shop by Category</h1>
-    <p>Browse our complete collection organized by category</p>
-  </div>
+  <section class="hero-section">
+    <div class="hero-copy">
+      <span class="hero-eyebrow">Premium shop experience</span>
+      <h1>Shop smarter with curated categories and instant search.</h1>
+      <p>Explore top products, flash savings, and personal recommendations powered by Claude AI.</p>
+      <div class="hero-actions">
+        <a href="{% url 'products:wishlist' %}" class="hero-btn hero-btn-primary">View Wishlist</a>
+        <a href="{% url 'products:offers' %}" class="hero-btn hero-btn-outline">See Offers</a>
+      </div>
+    </div>
+    <div class="hero-highlights">
+      <div class="highlight-card">
+        <strong>650+</strong>
+        <span>Products in stock</span>
+      </div>
+      <div class="highlight-card">
+        <strong>24/7</strong>
+        <span>AI shopping assistance</span>
+      </div>
+      <div class="highlight-card">
+        <strong>Fast</strong>
+        <span>Live search & filters</span>
+      </div>
+    </div>
+  </section>
 
-  <!-- Search Bar -->
-  <div class="search-box">
-    <form method="GET">
-      <input type="text" name="q" placeholder="🔍 Search products..." value="{{ query }}" />
-    </form>
-  </div>
+  <section class="filter-bar">
+    <div class="search-box">
+      <form method="GET" onsubmit="return false;">
+        <input id="live-search" type="text" placeholder="Search products by name, category or feature..." value="{{ query }}" autocomplete="off" />
+      </form>
+    </div>
+    <div class="filter-summary">Filter by category or search to narrow results.</div>
+  </section>
 
-  <!-- Category Navigation -->
   <div class="category-nav">
     {% for category_code, category_name in available_categories %}
-      <a href="#category-{{ category_code|slugify }}" class="category-chip">
+      <button type="button" class="category-chip" data-category="{{ category_code|default:'Uncategorized'|slugify }}">
         {% if category_code == 'Electronics' %}📱{% elif category_code == 'Clothing' %}👕{% elif category_code == 'Home' %}🏠{% elif category_code == 'Sports' %}⚽{% elif category_code == 'Books' %}📚{% elif category_code == 'Toys' %}🎮{% else %}🧰{% endif %}
         {{ category_name|default:'Uncategorized' }}
-      </a>
+      </button>
     {% endfor %}
   </div>
 
@@ -491,7 +730,7 @@
   <!-- Products by Category -->
   {% for category_code, category_data in products_by_category.items %}
     {% if category_data.products %}
-    <div class="category-section" id="category-{{ category_code|lower|cut:" "|cut:"&"|cut:"/" }}">
+    <div class="category-section" id="category-{{ category_code|default:'Uncategorized'|slugify }}">
       <h2 class="category-title">
         {% if category_code == 'Electronics' %}📱
         {% elif category_code == 'Clothing' %}👕
@@ -505,7 +744,7 @@
       
       <div class="products-grid">
         {% for product in category_data.products %}
-        <div class="product-card {% if product.has_active_sale %}has-sale{% endif %}">
+        <div class="product-card animate-card {% if product.has_active_sale %}has-sale{% endif %}" data-category="{{ category_code|default:'Uncategorized'|slugify }}" data-name="{{ product.name|lower }}">
           <img src="{{ product.image_src }}" alt="{{ product.name }}" class="product-image">
           
           {% if product.has_active_sale %}
@@ -532,6 +771,9 @@
             </div>
             
             <div class="product-actions">
+              <button type="button" class="btn btn-wishlist {% if product.id in wishlisted_ids %}btn-danger{% else %}btn-outline-danger{% endif %}" data-product-id="{{ product.id }}" title="Save to wishlist">
+                <i class="bi {% if product.id in wishlisted_ids %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
+              </button>
               <a href="{% url 'products:product-detail' product.id %}" class="btn-view">👁️ View</a>
               <a href="{% url 'products:add-to-cart' product.id %}" class="btn-add">🛒 Add</a>
             </div>
@@ -550,6 +792,11 @@
     <p>Try adjusting your search or <a href="{% url 'products:product-list' %}">browse all products</a>.</p>
   </div>
   {% endif %}
+
+  <div id="filter-no-products" class="no-products" style="display:none;">
+    <h3>📦 No products match your filters</h3>
+    <p>Clear the search or select a different category to reveal more items.</p>
+  </div>
 </div>
 
 <style>
@@ -624,6 +871,76 @@
   color: #e0e0e0;
 }
 </style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const searchInput = document.getElementById('live-search');
+    const chips = Array.from(document.querySelectorAll('.category-chip'));
+    const cards = Array.from(document.querySelectorAll('.product-card'));
+    const noProducts = document.getElementById('filter-no-products') || document.querySelector('.no-products');
+    const filterSummary = document.querySelector('.filter-summary');
+
+    const normalize = value => (value || '').toString().trim().toLowerCase();
+    let activeCategory = '';
+
+    const updateSummary = (count, category, query) => {
+      let text = `${count} product${count === 1 ? '' : 's'} found`;
+      if (category) text += ` in "${category.replace(/-/g, ' ')}"`;
+      if (query) text += ` matching "${query}"`;
+      if (filterSummary) filterSummary.textContent = text;
+    };
+
+    const applyFilters = () => {
+      const query = normalize(searchInput?.value || '');
+      let visibleCount = 0;
+
+      cards.forEach(card => {
+        const name = normalize(card.dataset.name);
+        const category = normalize(card.dataset.category);
+        const matchesCategory = !activeCategory || category === activeCategory;
+        const matchesSearch = !query || name.includes(query) || category.includes(query);
+        const visible = matchesCategory && matchesSearch;
+
+        card.style.display = visible ? '' : 'none';
+        if (visible) visibleCount += 1;
+      });
+
+      if (noProducts) {
+        noProducts.style.display = visibleCount ? 'none' : '';
+      }
+      updateSummary(visibleCount, activeCategory, query);
+    };
+
+    const clearChipStates = () => chips.forEach(chip => chip.classList.remove('active'));
+
+    chips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        const category = chip.dataset.category;
+        if (activeCategory === category) {
+          activeCategory = '';
+          chip.classList.remove('active');
+        } else {
+          activeCategory = category;
+          clearChipStates();
+          chip.classList.add('active');
+        }
+        applyFilters();
+        if (activeCategory) {
+          const section = document.getElementById(`category-${activeCategory}`);
+          if (section) {
+            section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }
+      });
+    });
+
+    if (searchInput) {
+      searchInput.addEventListener('input', applyFilters);
+    }
+
+    applyFilters();
+  });
+</script>
 
 <script src="{% static 'js/flash-sale-timer.js' %}"></script>
 

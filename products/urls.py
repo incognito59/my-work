@@ -53,6 +53,9 @@ urlpatterns = [
     # � Blog & Content Pages
     path('blog/', views.blog_page, name='blog'),
     path('reviews/', views.reviews_page, name='reviews'),
+    path('api/chat/', views.ai_chat, name='api-chat'),
+    path('ai-chat/', views.ai_chat, name='ai-chat'),
+    path('wishlist/toggle/<int:product_id>/', views.toggle_wishlist, name='toggle-wishlist'),
     path('wishlist/', views.wishlist_page, name='wishlist'),
     path('about/', views.about_page, name='about'),
     

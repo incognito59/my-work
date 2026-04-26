@@ -1,11 +1,16 @@
 """
 Utility functions for RedCart e-commerce
 """
+import json
+import re
+import urllib.request
+import urllib.error
+
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.conf import settings
 from django.utils.html import strip_tags
-from .models import EmailLog, EmailTemplate
+from .models import EmailLog, EmailTemplate, Product
 import logging
 
 logger = logging.getLogger(__name__)
@@ -219,9 +224,146 @@ def get_product_recommendations(product, limit=4):
         return recommendation.frequently_bought_with.all()[:limit]
     except ProductRecommendation.DoesNotExist:
         # If no recommendations exist, return related category products
-        return product.objects.filter(
+        return Product.objects.filter(
             category=product.category
         ).exclude(id=product.id)[:limit]
+
+
+def _call_claude(prompt, max_tokens=250):
+    """Send a prompt to Claude and return the assistant completion."""
+    api_key = getattr(settings, 'CLAUDE_API_KEY', '')
+    endpoint = getattr(settings, 'CLAUDE_API_URL', 'https://api.anthropic.com/v1/complete')
+
+    if not api_key:
+        raise RuntimeError('Claude API key is not configured.')
+
+    payload = {
+        'model': 'claude-sonnet-4-20250514',
+        'prompt': f'Human: {prompt}\n\nAssistant:',
+        'max_tokens_to_sample': max_tokens,
+        'temperature': 0.3,
+        'top_p': 1,
+        'stop_sequences': ['\n\nHuman:'],
+    }
+
+    request_data = json.dumps(payload).encode('utf-8')
+    request = urllib.request.Request(
+        endpoint,
+        data=request_data,
+        headers={
+            'Content-Type': 'application/json',
+            'x-api-key': api_key,
+        },
+        method='POST'
+    )
+
+    try:
+        with urllib.request.urlopen(request, timeout=20) as response:
+            body = json.loads(response.read().decode('utf-8'))
+            return body.get('completion', '').strip()
+    except urllib.error.HTTPError as exc:
+        logger.error('Claude API error (%s): %s', exc.code, exc.read().decode('utf-8'))
+        return ''
+    except Exception as exc:
+        logger.error('Claude API request failed: %s', exc)
+        return ''
+
+
+def _parse_claude_items(text, limit=4):
+    """Parse a plain-text Claude response into a list of product names."""
+    if not text:
+        return []
+
+    candidates = []
+    for part in re.split(r'[\r\n;]+', text):
+        line = part.strip()
+        if not line:
+            continue
+        line = re.sub(r'^[\d\s\-\.\)]+', '', line).strip()
+        if line:
+            candidates.append(line)
+        if len(candidates) >= limit:
+            break
+    return candidates
+
+
+def get_claude_product_recommendations(product, limit=4):
+    """Ask Claude for smart recommendations using catalog data."""
+    try:
+        candidates = list(Product.objects.filter(category=product.category).exclude(id=product.id)[:20])
+        if not candidates:
+            return get_product_recommendations(product, limit)
+
+        candidate_lines = []
+        for candidate in candidates:
+            candidate_lines.append(
+                f"{candidate.name} — ₦{candidate.price:,.2f} — {candidate.description[:80].strip()}"
+            )
+
+        prompt = (
+            f"You are a helpful shopping assistant for RedCart. The customer is viewing the following product:\n"
+            f"Name: {product.name}\n"
+            f"Category: {product.category}\n"
+            f"Price: ₦{product.price:,.2f}\n"
+            f"Description: {product.description.strip()}\n\n"
+            f"From this catalog of similar products, recommend up to {limit} products the customer is most likely to like. "
+            f"Return only the exact product names from the list below, one per line.\n\n"
+            f"Catalog:\n" + '\n'.join(candidate_lines)
+        )
+
+        response_text = _call_claude(prompt, max_tokens=220)
+        selected_names = _parse_claude_items(response_text, limit=limit)
+
+        recommendations = []
+        for name in selected_names:
+            matched = Product.objects.filter(name__iexact=name).first()
+            if matched and matched.id != product.id:
+                recommendations.append(matched)
+            if len(recommendations) >= limit:
+                break
+
+        if recommendations:
+            return recommendations
+
+    except RuntimeError:
+        pass
+    except Exception as exc:
+        logger.error('Error fetching Claude recommendations: %s', exc)
+
+    return get_product_recommendations(product, limit)
+
+
+def get_ai_chat_response(message, limit=4):
+    """Build a Claude chat response using product catalog context."""
+    try:
+        products = list(Product.objects.all().order_by('-id')[:25])
+        product_lines = []
+        for product in products:
+            product_lines.append(
+                f"{product.name} — Category: {product.category} — ₦{product.price:,.2f} — {product.description[:80].strip()}"
+            )
+
+        prompt = (
+            f"You are the RedCart AI shopping assistant. Use only the product details provided below to answer customer questions. "
+            f"If the customer asks for products, recommend only actual available items from the catalog. Do not invent products.\n\n"
+            f"Catalog:\n" + '\n'.join(product_lines) + "\n\n"
+            f"User question: {message}\n\n"
+            f"Answer clearly, mention product names and prices when relevant, and if nothing matches, say that no exact match exists while suggesting other available items."
+        )
+
+        response_text = _call_claude(prompt, max_tokens=320)
+        if response_text:
+            return response_text
+    except RuntimeError:
+        pass
+    except Exception as exc:
+        logger.error('AI chat failed: %s', exc)
+
+    # Fallback response if Claude isn't configured or fails
+    return (
+        'Sorry, the AI assistant is unavailable right now. ' 
+        'Browse our product categories or use the search bar to find items.'
+    )
 
 
 # ============ ANALYTICS UTILITIES ============

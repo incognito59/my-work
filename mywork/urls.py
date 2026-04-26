@@ -19,12 +19,14 @@ from django.urls import path, include
 from django.views.generic import RedirectView
 from django.conf import settings
 from django.conf.urls.static import static
+from products import views as product_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
 
     # Django auth URLs (for password reset)
     path('auth/', include('django.contrib.auth.urls')),
+    path('api/chat/', product_views.ai_chat, name='api-chat-root'),
 
     # Primary product routes under /products/ (namespaced)
     path('products/', include(('products.urls', 'products'), namespace='products')),
