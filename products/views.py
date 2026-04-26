@@ -9,7 +9,7 @@ import json
 from django.urls import reverse
 from django.http import JsonResponse
 from .models import Product, Comment, Order, Offer, Wishlist, Coupon, AbandonedCart
-from .utils import get_claude_product_recommendations, get_ai_chat_response
+from .utils import get_product_recommendations_ai, get_ai_chat_response
 from django.conf import settings
 
 
@@ -72,7 +72,6 @@ def index(request):
     """Shop page with products organized by category"""
     query = request.GET.get('q') or request.GET.get('search')
 
-    # Build categories dynamically from actual product data
     category_values = Product.objects.order_by('category').values_list('category', flat=True).distinct()
 
     products_by_category = {}
@@ -117,10 +116,7 @@ def index(request):
 # 🎯 Landing Page with Registration
 def landing_page(request):
     """Landing page with featured products, offers, and registration"""
-    # Get featured products (newest first)
     featured_products = Product.objects.all().order_by('-id')[:6]
-    
-    # Get active offers
     offers = Offer.objects.all()[:4]
     
     if request.user.is_authenticated:
@@ -134,7 +130,6 @@ def landing_page(request):
         password = request.POST.get('password', '')
         password_confirm = request.POST.get('password_confirm', '')
 
-        # Validation
         if not username or len(username) < 3:
             messages.error(request, "❌ Username must be at least 3 characters.")
             return render(request, 'landing.html')
@@ -159,7 +154,6 @@ def landing_page(request):
             messages.error(request, "❌ Passwords do not match.")
             return render(request, 'landing.html')
 
-        # Create user
         user = User.objects.create_user(
             username=username,
             email=email,
@@ -169,7 +163,6 @@ def landing_page(request):
         user.last_name = last_name
         user.save()
         
-        # Send welcome email
         try:
             from .utils import send_welcome_email
             send_welcome_email(user)
@@ -188,20 +181,20 @@ def landing_page(request):
 def offers_page(request):
     """Display active offers and sample products with discounted prices"""
     offers = Offer.objects.all()
-    products = Product.objects.all().order_by('-id')  # newest first
+    products = Product.objects.all().order_by('-id')
 
     return render(request, 'offers.html', {
         'offers': offers,
         'products': products,
     })
 
+
 # Login Page
 def login_page(request):
-    # DEPRECATED: Use login_enhanced instead
     return login_enhanced(request)
 
 
-# � Enhanced Login Page
+# 🔐 Enhanced Login Page
 def login_enhanced(request):
     if request.user.is_authenticated:
         return redirect('products:product-list')
@@ -217,14 +210,11 @@ def login_enhanced(request):
             return render(request, 'auth/login_enhanced.html')
 
         try:
-            # Try to find user by email first (case-insensitive)
             user_obj = User.objects.filter(email__iexact=username_or_email).first()
             
             if user_obj:
-                # Found by email, authenticate with username
                 user = authenticate(request, username=user_obj.username, password=password)
             else:
-                # Not found by email, try as username
                 user = authenticate(request, username=username_or_email, password=password)
                 
         except Exception as e:
@@ -246,7 +236,7 @@ from django.contrib.auth.views import PasswordResetView, PasswordResetConfirmVie
 from django.urls import reverse_lazy
 
 
-#  Password Reset Page
+# Password Reset Page
 class CustomPasswordResetView(PasswordResetView):
     template_name = 'auth/password_reset.html'
     success_url = reverse_lazy('products:password-reset-done')
@@ -255,7 +245,7 @@ class CustomPasswordResetView(PasswordResetView):
     from_email = 'afolabiprosper329@gmail.com'
 
 
-# 📧 Password Reset Done Page (Check Email)
+# 📧 Password Reset Done Page
 class CustomPasswordResetDoneView(PasswordResetDoneView):
     template_name = 'auth/password_reset_done.html'
 
@@ -267,7 +257,7 @@ class CustomPasswordResetConfirmView(PasswordResetConfirmView):
     post_reset_login = True
 
 
-# �📝 Register Page
+# 📝 Register Page
 def register_page(request):
     if request.user.is_authenticated:
         return redirect('products:product-list')
@@ -275,26 +265,22 @@ def register_page(request):
     if request.method == 'POST':
         first_name = request.POST.get('first_name', '').strip()
         last_name = request.POST.get('last_name', '').strip()
-        full_name = f"{first_name} {last_name}".strip()
         email = request.POST.get('email')
-        phone = request.POST.get('phone')
         password1 = request.POST.get('password') or request.POST.get('password1')
         password2 = request.POST.get('password_confirm')
 
-        # Derive a username from email or full_name
         username = request.POST.get('username', '').strip()
 
         if not username:
             messages.error(request, "Username is required.")
             return render(request, 'register.html')
-        # ensure username uniqueness
+
         base_username = username
         counter = 1
         while User.objects.filter(username=username).exists():
             username = f"{base_username}{counter}"
             counter += 1
         
-        # Validation
         if not all([username, email, password1, password2]):
             messages.error(request, "All required fields must be filled.")
             return render(request, 'register.html')
@@ -311,13 +297,11 @@ def register_page(request):
             messages.error(request, "Email already registered.")
             return render(request, 'register.html')
 
-        # Create user
         user = User.objects.create_user(
             username=username,
             email=email,
             password=password1,
         )
-        # set name and optional phone
         user.first_name = first_name
         user.last_name = last_name
         user.save()
@@ -327,7 +311,7 @@ def register_page(request):
     return render(request, 'register.html')
 
 
-# � Enhanced Register Page
+# 📝 Enhanced Register Page
 def register_enhanced(request):
     if request.user.is_authenticated:
         return redirect('products:product-list')
@@ -340,7 +324,6 @@ def register_enhanced(request):
         password = request.POST.get('password', '')
         password_confirm = request.POST.get('password_confirm', '')
 
-        # Validation
         if not username or len(username) < 3:
             messages.error(request, "❌ Username must be at least 3 characters.")
             return render(request, 'auth/register_enhanced.html')
@@ -365,7 +348,6 @@ def register_enhanced(request):
             messages.error(request, "❌ Passwords do not match.")
             return render(request, 'auth/register_enhanced.html')
 
-        # Create user
         user = User.objects.create_user(
             username=username,
             email=email,
@@ -381,7 +363,7 @@ def register_enhanced(request):
     return render(request, 'auth/register_enhanced.html')
 
 
-# �🚪 Logout
+# 🚪 Logout
 def logout_page(request):
     logout(request)
     messages.success(request, "You have been logged out.")
@@ -403,7 +385,7 @@ def user_profile(request):
     return render(request, 'profile.html', context)
 
 
-# ➕ Add to Cart (Success Message)
+# ➕ Add to Cart
 def add_to_cart(request, item_id):
     product = get_object_or_404(Product, id=item_id)
     if product.is_out_of_stock:
@@ -501,7 +483,6 @@ def checkout(request):
         'query': request.GET.get('q', ''),
     }
 
-    # If Stripe keys are configured, create a test PaymentIntent and provide client secret
     if stripe_api_available and settings.STRIPE_SECRET_KEY:
         stripe.api_key = settings.STRIPE_SECRET_KEY
         try:
@@ -513,12 +494,11 @@ def checkout(request):
             context['stripe_publishable_key'] = settings.STRIPE_PUBLISHABLE_KEY
             context['stripe_client_secret'] = intent.client_secret
         except Exception:
-            # fall back quietly to manual payment if stripe call fails
             pass
     else:
-        # expose publishable key if set (even if stripe package not installed)
         if getattr(settings, 'STRIPE_PUBLISHABLE_KEY', ''):
             context['stripe_publishable_key'] = settings.STRIPE_PUBLISHABLE_KEY
+
     return render(request, 'checkout.html', context)
 
 
@@ -552,7 +532,8 @@ def product_detail(request, product_id):
     if request.user.is_authenticated:
         is_in_wishlist = Wishlist.objects.filter(user=request.user, product=product).exists()
 
-    ai_recommendations = get_claude_product_recommendations(product, limit=4)
+    # ✅ Updated to use new function name
+    ai_recommendations = get_product_recommendations_ai(product, limit=4)
 
     return render(request, 'product_detail.html', {
         'product': product,
@@ -564,7 +545,7 @@ def product_detail(request, product_id):
     })
 
 
-# ⚡ Buy Now (Direct Checkout)
+# ⚡ Buy Now
 def buy_now(request, product_id):
     product = get_object_or_404(Product, id=product_id)
     if product.is_out_of_stock:
@@ -577,7 +558,7 @@ def buy_now(request, product_id):
     return redirect('products:checkout')
 
 
-# ============ NEW FEATURES (Phase 1-3) ============
+# ============ NEW FEATURES ============
 
 # 📧 Contact Form
 def contact_us(request):
@@ -617,21 +598,17 @@ def faq(request):
     })
 
 
-# 🎫 Support Tickets (User)
+# 🎫 Support Tickets
 @login_required(login_url='products:login')
 def my_tickets(request):
     from .models import SupportTicket
     tickets = SupportTicket.objects.filter(user=request.user).order_by('-created_at')
-    
-    return render(request, 'support/my_tickets.html', {
-        'tickets': tickets,
-    })
+    return render(request, 'support/my_tickets.html', {'tickets': tickets})
 
 
 @login_required(login_url='products:login')
 def create_ticket(request):
     from .models import SupportTicket
-    from .utils import track_product_view
     
     if request.method == 'POST':
         title = request.POST.get('title', '').strip()
@@ -660,9 +637,7 @@ def create_ticket(request):
             messages.error(request, "❌ Please fill in all required fields.")
     
     orders = Order.objects.filter(user=request.user)
-    return render(request, 'support/create_ticket.html', {
-        'orders': orders,
-    })
+    return render(request, 'support/create_ticket.html', {'orders': orders})
 
 
 @login_required(login_url='products:login')
@@ -671,7 +646,6 @@ def ticket_detail(request, ticket_id):
     
     ticket = get_object_or_404(SupportTicket, id=ticket_id)
     
-    # Check if user is the ticket owner or admin
     if not (request.user == ticket.user or request.user.is_staff):
         messages.error(request, "❌ You don't have permission to view this ticket.")
         return redirect('products:my-tickets')
@@ -700,10 +674,7 @@ def ticket_detail(request, ticket_id):
 def addresses(request):
     from .models import UserAddress
     addresses = UserAddress.objects.filter(user=request.user)
-    
-    return render(request, 'account/addresses.html', {
-        'addresses': addresses,
-    })
+    return render(request, 'account/addresses.html', {'addresses': addresses})
 
 
 @login_required(login_url='products:login')
@@ -745,15 +716,11 @@ def add_address(request):
 def payment_methods(request):
     from .models import PaymentMethod
     methods = PaymentMethod.objects.filter(user=request.user)
-    
-    return render(request, 'account/payment_methods.html', {
-        'methods': methods,
-    })
+    return render(request, 'account/payment_methods.html', {'methods': methods})
 
 
-# 📊 Dashboard/Analytics
+# 📊 Analytics Dashboard
 def analytics_dashboard(request):
-    """Admin analytics dashboard"""
     if not request.user.is_staff:
         messages.error(request, "❌ You don't have permission to access this page.")
         return redirect('products:product-list')
@@ -766,7 +733,6 @@ def analytics_dashboard(request):
     total_products = Product.objects.count()
     total_views = ProductView.objects.count()
     
-    # Trending products
     trending = ProductView.objects.values('product__name').annotate(
         view_count=Count('id')
     ).order_by('-view_count')[:5]
@@ -800,46 +766,16 @@ def newsletter_signup(request):
     return redirect('products:product-list')
 
 
-# 🏷️ Offers & Discounts Page
-def offers_page(request):
-    """Display all offers with discounted products"""
-    from .models import Offer
-    
-    # Get all active offers
-    offers = Offer.objects.all()
-    
-    # Get products by category
-    categories = Product.CATEGORY_CHOICES
-    products_by_category = {}
-    
-    for category_code, category_name in categories:
-        products_by_category[category_name] = Product.objects.filter(category=category_code)[:6]
-    
-    context = {
-        'offers': offers,
-        'products_by_category': products_by_category,
-        'categories': categories,
-    }
-    
-    return render(request, 'offers.html', context)
-
-
-# ============ EMAIL TEMPLATE PREVIEW (Development/Testing) ============
+# ============ EMAIL TEMPLATE PREVIEWS ============
 
 def preview_email_welcome(request):
-    """Preview welcome email template"""
-    context = {
-        'site_name': 'RedCart',
-        'username': 'John Doe',
-    }
+    context = {'site_name': 'RedCart', 'username': 'John Doe'}
     return render(request, 'emails/welcome.html', context)
 
 
 def preview_email_order_confirmation(request):
-    """Preview order confirmation email template"""
     from django.utils import timezone
     
-    # Create sample context
     sample_order = type('Order', (), {
         'id': 12345,
         'created_at': timezone.now(),
@@ -858,18 +794,13 @@ def preview_email_order_confirmation(request):
         'order': sample_order,
         'items': [sample_item],
         'site_name': 'RedCart',
-        'user': type('User', (), {
-            'first_name': 'John',
-            'username': 'johndoe'
-        }),
+        'user': type('User', (), {'first_name': 'John', 'username': 'johndoe'}),
     }
     return render(request, 'emails/order_confirmation.html', context)
 
 
 def preview_email_order_shipped(request):
-    """Preview order shipped email template"""
     from django.utils import timezone
-    
     context = {
         'order': type('Order', (), {
             'id': 12345,
@@ -877,51 +808,38 @@ def preview_email_order_shipped(request):
             'tracking_number': 'TRK123456789',
         }),
         'site_name': 'RedCart',
-        'user': type('User', (), {
-            'first_name': 'John',
-            'username': 'johndoe'
-        }),
+        'user': type('User', (), {'first_name': 'John', 'username': 'johndoe'}),
     }
     return render(request, 'emails/order_shipped.html', context)
 
 
 def preview_email_order_delivered(request):
-    """Preview order delivered email template"""
     from django.utils import timezone
-    
     context = {
         'order': type('Order', (), {
             'id': 12345,
             'delivered_date': timezone.now(),
         }),
         'site_name': 'RedCart',
-        'user': type('User', (), {
-            'first_name': 'John',
-            'username': 'johndoe'
-        }),
+        'user': type('User', (), {'first_name': 'John', 'username': 'johndoe'}),
     }
     return render(request, 'emails/order_delivered.html', context)
 
 
 def preview_email_contact_reply(request):
-    """Preview contact form reply email template"""
     context = {
         'name': 'John Doe',
         'subject': 'Question about shipping costs',
-        'reply': 'Thank you for contacting us. We appreciate your inquiry. Our standard shipping costs are based on weight and destination...',
+        'reply': 'Thank you for contacting us...',
         'site_name': 'RedCart',
     }
     return render(request, 'emails/contact_reply.html', context)
 
 
 def preview_email_password_reset(request):
-    """Preview password reset email template"""
     context = {
         'site_name': 'RedCart',
-        'user': type('User', (), {
-            'first_name': 'John',
-            'username': 'johndoe'
-        }),
+        'user': type('User', (), {'first_name': 'John', 'username': 'johndoe'}),
         'reset_link': 'http://127.0.0.1:8000/products/password-reset/',
     }
     return render(request, 'emails/password_reset.html', context)
@@ -929,10 +847,8 @@ def preview_email_password_reset(request):
 
 # ============ NEW PAGES ============
 
-# 📝 Blog / Articles Page
+# 📝 Blog Page
 def blog_page(request):
-    """Blog page with articles about products and shopping tips"""
-    # Sample blog articles data (in production, would come from a Blog model)
     articles = [
         {
             'id': 1,
@@ -982,30 +898,24 @@ def blog_page(request):
     })
 
 
-# ⭐ Product Reviews Showcase Page
+# ⭐ Reviews Page
 def reviews_page(request):
-    """Page showcasing customer reviews and ratings"""
-    # Get products with reviews
     products_with_reviews = Product.objects.filter(
         comment__isnull=False
     ).distinct()[:8]
     
-    # Get all reviews/comments
     all_comments = Comment.objects.all().order_by('-created_at')[:20]
-    
-    # Summary stats
     total_reviews = Comment.objects.count()
-    avg_rating = 4.5  # Would calculate from actual data in production
     
     return render(request, 'reviews.html', {
         'products_with_reviews': products_with_reviews,
         'recent_reviews': all_comments,
         'total_reviews': total_reviews,
-        'average_rating': avg_rating,
+        'average_rating': 4.5,
     })
 
 
-# 💖 Wishlist toggle endpoint
+# 💖 Wishlist Toggle
 def toggle_wishlist(request, product_id):
     if request.method != 'POST':
         return JsonResponse({'success': False, 'error': 'Invalid method.'}, status=405)
@@ -1022,14 +932,10 @@ def toggle_wishlist(request, product_id):
     else:
         action = 'added'
 
-    return JsonResponse({
-        'success': True,
-        'action': action,
-        'product_id': product_id,
-    })
+    return JsonResponse({'success': True, 'action': action, 'product_id': product_id})
 
 
-# 🤖 AI Shopping Assistant Chat Endpoint
+# 🤖 AI Chat Endpoint
 def ai_chat(request):
     if request.method != 'POST':
         return JsonResponse({'success': False, 'error': 'Invalid method.'}, status=405)
@@ -1132,9 +1038,8 @@ def recently_viewed(request):
     return JsonResponse({'success': True, 'recently_viewed': products})
 
 
-# 💖 Wishlist / Favorites Page
+# 💖 Wishlist Page
 def wishlist_page(request):
-    """User's wishlist/favorites page"""
     wishlist_items = []
     message = None
 
@@ -1153,9 +1058,8 @@ def wishlist_page(request):
     return render(request, 'wishlist.html', context)
 
 
-# ℹ️ About & Store Info Page
+# ℹ️ About Page
 def about_page(request):
-    """About RedCart and store information page"""
     company_info = {
         'name': 'RedCart',
         'tagline': 'Shop Smart, Live Better',
@@ -1177,30 +1081,10 @@ def about_page(request):
     }
     
     team_members = [
-        {
-            'name': 'John Afolabi',
-            'role': 'Founder & CEO',
-            'bio': 'Visionary leader with 15+ years in e-commerce',
-            'emoji': '👨‍💼'
-        },
-        {
-            'name': 'Sarah Johnson',
-            'role': 'Head of Operations',
-            'bio': 'Ensuring smooth operations and customer satisfaction',
-            'emoji': '👩‍💼'
-        },
-        {
-            'name': 'Michael Smith',
-            'role': 'Lead Developer',
-            'bio': 'Building the technology that powers RedCart',
-            'emoji': '👨‍💻'
-        },
-        {
-            'name': 'Emma Wilson',
-            'role': 'Customer Success',
-            'bio': 'Making sure every customer gets the best experience',
-            'emoji': '👩‍💼'
-        },
+        {'name': 'John Afolabi', 'role': 'Founder & CEO', 'bio': 'Visionary leader with 15+ years in e-commerce', 'emoji': '👨‍💼'},
+        {'name': 'Sarah Johnson', 'role': 'Head of Operations', 'bio': 'Ensuring smooth operations and customer satisfaction', 'emoji': '👩‍💼'},
+        {'name': 'Michael Smith', 'role': 'Lead Developer', 'bio': 'Building the technology that powers RedCart', 'emoji': '👨‍💻'},
+        {'name': 'Emma Wilson', 'role': 'Customer Success', 'bio': 'Making sure every customer gets the best experience', 'emoji': '👩‍💼'},
     ]
     
     return render(request, 'about.html', {

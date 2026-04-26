@@ -3,8 +3,7 @@ Utility functions for RedCart e-commerce
 """
 import json
 import re
-import urllib.request
-import urllib.error
+import requests
 
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
@@ -21,7 +20,7 @@ logger = logging.getLogger(__name__)
 def send_email(user, email_type, context=None, recipient_email=None):
     """
     Send email using templates
-    
+
     Args:
         user: User object
         email_type: Type of email (e.g., 'order_confirmation')
@@ -30,25 +29,21 @@ def send_email(user, email_type, context=None, recipient_email=None):
     """
     if context is None:
         context = {}
-    
+
     try:
-        # Get email template
         template = EmailTemplate.objects.filter(email_type=email_type, is_active=True).first()
         if not template:
             logger.warning(f"Email template not found: {email_type}")
             return False
-        
+
         recipient = recipient_email or user.email
-        
-        # Add user to context
+
         context['user'] = user
         context['site_name'] = 'RedCart'
-        
-        # Render HTML template
+
         html_message = render_to_string(f'emails/{email_type}.html', context)
         plain_message = strip_tags(html_message)
-        
-        # Send email
+
         send_mail(
             subject=template.subject,
             message=plain_message,
@@ -57,8 +52,7 @@ def send_email(user, email_type, context=None, recipient_email=None):
             html_message=html_message,
             fail_silently=False,
         )
-        
-        # Log email
+
         EmailLog.objects.create(
             user=user,
             email_type=email_type,
@@ -66,14 +60,13 @@ def send_email(user, email_type, context=None, recipient_email=None):
             subject=template.subject,
             status='sent'
         )
-        
+
         logger.info(f"Email sent: {email_type} to {recipient}")
         return True
-        
+
     except Exception as e:
         logger.error(f"Error sending email {email_type}: {str(e)}")
-        
-        # Log failed email
+
         EmailLog.objects.create(
             user=user,
             email_type=email_type,
@@ -116,14 +109,14 @@ def send_welcome_email(user):
 
 
 def send_contact_reply_email(contact_submission, reply_message):
-    """Send reply to contact form"""
+    """Send reply to contact form submission"""
     context = {
         'name': contact_submission.name,
         'subject': contact_submission.subject,
         'reply': reply_message,
     }
     return send_email(
-        user=None,  # Contact forms might not have user account
+        user=None,
         email_type='contact_reply',
         context=context,
         recipient_email=contact_submission.email
@@ -135,30 +128,28 @@ def send_contact_reply_email(contact_submission, reply_message):
 def update_stock(product, quantity, reason='adjustment'):
     """
     Update product stock with tracking
-    
+
     Args:
         product: Product instance
         quantity: Amount to change (positive or negative)
         reason: Reason for change ('sale', 'return', 'restock', 'adjustment')
     """
     from .models import InventoryLog
-    
+
     product.stock += quantity
     product.save()
-    
-    # Log the change
+
     InventoryLog.objects.create(
         product=product,
         quantity_changed=quantity,
         reason=reason
     )
-    
+
     logger.info(f"Stock updated for {product.name}: {quantity} ({reason})")
-    
-    # Check if stock is low
+
     if product.stock < 5:
         logger.warning(f"Low stock alert for {product.name}: {product.stock} remaining")
-    
+
     return product
 
 
@@ -185,30 +176,30 @@ def calculate_tax(subtotal, tax_rate=0.075):
 def apply_discount_code(code, subtotal):
     """
     Apply discount code and return discount amount
-    
+
     Returns:
         (discount_amount, error_message) tuple
     """
     from .models import DiscountCode
-    
+
     try:
         discount = DiscountCode.objects.get(code__iexact=code)
-        
+
         if not discount.is_valid:
             return 0, "This discount code is no longer valid"
-        
+
         if subtotal < discount.min_purchase:
             return 0, f"Minimum purchase of ₦{discount.min_purchase:,.2f} required"
-        
+
         if discount.discount_type == 'percentage':
             discount_amount = subtotal * (discount.discount_value / 100)
-        else:  # fixed
+        else:
             discount_amount = discount.discount_value
-        
-        discount_amount = min(discount_amount, subtotal)  # Can't exceed subtotal
-        
+
+        discount_amount = min(discount_amount, subtotal)
+
         return discount_amount, None
-        
+
     except DiscountCode.DoesNotExist:
         return 0, "Invalid discount code"
 
@@ -218,59 +209,62 @@ def apply_discount_code(code, subtotal):
 def get_product_recommendations(product, limit=4):
     """Get recommended products for a given product"""
     from .models import ProductRecommendation
-    
+
     try:
         recommendation = ProductRecommendation.objects.get(product=product)
         return recommendation.frequently_bought_with.all()[:limit]
     except ProductRecommendation.DoesNotExist:
-        # If no recommendations exist, return related category products
         return Product.objects.filter(
             category=product.category
         ).exclude(id=product.id)[:limit]
 
 
-def _call_claude(prompt, max_tokens=250):
-    """Send a prompt to Claude and return the assistant completion."""
-    api_key = getattr(settings, 'CLAUDE_API_KEY', '')
-    endpoint = getattr(settings, 'CLAUDE_API_URL', 'https://api.anthropic.com/v1/complete')
+# ============ AI UTILITIES (Groq) ============
+
+def _call_groq(prompt, max_tokens=250):
+    """Send a prompt to Groq and return the assistant response."""
+    api_key = getattr(settings, 'GROQ_API_KEY', '')
 
     if not api_key:
-        raise RuntimeError('Claude API key is not configured.')
+        raise RuntimeError('Groq API key is not configured.')
 
     payload = {
-        'model': 'claude-sonnet-4-20250514',
-        'prompt': f'Human: {prompt}\n\nAssistant:',
-        'max_tokens_to_sample': max_tokens,
+        'model': 'llama-3.1-8b-instant',
+        'max_tokens': max_tokens,
+        'messages': [
+            {'role': 'user', 'content': prompt}
+        ],
         'temperature': 0.3,
-        'top_p': 1,
-        'stop_sequences': ['\n\nHuman:'],
     }
 
-    request_data = json.dumps(payload).encode('utf-8')
-    request = urllib.request.Request(
-        endpoint,
-        data=request_data,
-        headers={
-            'Content-Type': 'application/json',
-            'x-api-key': api_key,
-        },
-        method='POST'
-    )
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': f'Bearer {api_key}',
+        'User-Agent': 'Mozilla/5.0',
+    }
 
     try:
-        with urllib.request.urlopen(request, timeout=20) as response:
-            body = json.loads(response.read().decode('utf-8'))
-            return body.get('completion', '').strip()
-    except urllib.error.HTTPError as exc:
-        logger.error('Claude API error (%s): %s', exc.code, exc.read().decode('utf-8'))
+        response = requests.post(
+            'https://api.groq.com/openai/v1/chat/completions',
+            json=payload,
+            headers=headers,
+            timeout=20
+        )
+        response.raise_for_status()
+        return response.json()['choices'][0]['message']['content'].strip()
+    except requests.exceptions.HTTPError as exc:
+        logger.error('Groq API error (%s): %s', exc.response.status_code, exc.response.text)
+        return ''
+    except (KeyError, IndexError) as exc:
+        logger.error('Unexpected Groq API response structure: %s', exc)
         return ''
     except Exception as exc:
-        logger.error('Claude API request failed: %s', exc)
+        logger.error('Groq API request failed: %s', exc)
         return ''
 
 
-def _parse_claude_items(text, limit=4):
-    """Parse a plain-text Claude response into a list of product names."""
+def _parse_ai_items(text, limit=4):
+    """Parse a plain-text AI response into a list of product names."""
     if not text:
         return []
 
@@ -287,32 +281,31 @@ def _parse_claude_items(text, limit=4):
     return candidates
 
 
-def get_claude_product_recommendations(product, limit=4):
-    """Ask Claude for smart recommendations using catalog data."""
+def get_product_recommendations_ai(product, limit=4):
+    """Ask Groq AI for smart product recommendations using catalog data."""
     try:
         candidates = list(Product.objects.filter(category=product.category).exclude(id=product.id)[:20])
         if not candidates:
             return get_product_recommendations(product, limit)
 
-        candidate_lines = []
-        for candidate in candidates:
-            candidate_lines.append(
-                f"{candidate.name} — ₦{candidate.price:,.2f} — {candidate.description[:80].strip()}"
-            )
+        candidate_lines = [
+            f"{c.name} — ₦{c.price:,.2f} — {c.description[:80].strip()}"
+            for c in candidates
+        ]
 
         prompt = (
-            f"You are a helpful shopping assistant for RedCart. The customer is viewing the following product:\n"
+            f"You are a helpful shopping assistant for RedCart. The customer is viewing:\n"
             f"Name: {product.name}\n"
             f"Category: {product.category}\n"
             f"Price: ₦{product.price:,.2f}\n"
             f"Description: {product.description.strip()}\n\n"
-            f"From this catalog of similar products, recommend up to {limit} products the customer is most likely to like. "
-            f"Return only the exact product names from the list below, one per line.\n\n"
+            f"From the catalog below, recommend up to {limit} products the customer is most likely to like. "
+            f"Return only the exact product names, one per line.\n\n"
             f"Catalog:\n" + '\n'.join(candidate_lines)
         )
 
-        response_text = _call_claude(prompt, max_tokens=220)
-        selected_names = _parse_claude_items(response_text, limit=limit)
+        response_text = _call_groq(prompt, max_tokens=220)
+        selected_names = _parse_ai_items(response_text, limit=limit)
 
         recommendations = []
         for name in selected_names:
@@ -328,30 +321,30 @@ def get_claude_product_recommendations(product, limit=4):
     except RuntimeError:
         pass
     except Exception as exc:
-        logger.error('Error fetching Claude recommendations: %s', exc)
+        logger.error('Error fetching AI recommendations: %s', exc)
 
     return get_product_recommendations(product, limit)
 
 
 def get_ai_chat_response(message, limit=4):
-    """Build a Claude chat response using product catalog context."""
+    """Build an AI chat response using product catalog context."""
     try:
         products = list(Product.objects.all().order_by('-id')[:25])
-        product_lines = []
-        for product in products:
-            product_lines.append(
-                f"{product.name} — Category: {product.category} — ₦{product.price:,.2f} — {product.description[:80].strip()}"
-            )
+        product_lines = [
+            f"{p.name} — Category: {p.category} — ₦{p.price:,.2f} — {p.description[:80].strip()}"
+            for p in products
+        ]
 
         prompt = (
-            f"You are the RedCart AI shopping assistant. Use only the product details provided below to answer customer questions. "
-            f"If the customer asks for products, recommend only actual available items from the catalog. Do not invent products.\n\n"
+            f"You are the RedCart AI shopping assistant. Use only the product details below to answer customer questions. "
+            f"Recommend only actual items from the catalog. Do not invent products.\n\n"
             f"Catalog:\n" + '\n'.join(product_lines) + "\n\n"
             f"User question: {message}\n\n"
-            f"Answer clearly, mention product names and prices when relevant, and if nothing matches, say that no exact match exists while suggesting other available items."
+            f"Answer clearly, mention product names and prices when relevant. "
+            f"If nothing matches, say so and suggest available alternatives."
         )
 
-        response_text = _call_claude(prompt, max_tokens=320)
+        response_text = _call_groq(prompt, max_tokens=320)
         if response_text:
             return response_text
     except RuntimeError:
@@ -359,9 +352,8 @@ def get_ai_chat_response(message, limit=4):
     except Exception as exc:
         logger.error('AI chat failed: %s', exc)
 
-    # Fallback response if Claude isn't configured or fails
     return (
-        'Sorry, the AI assistant is unavailable right now. ' 
+        'Sorry, the AI assistant is unavailable right now. '
         'Browse our product categories or use the search bar to find items.'
     )
 
@@ -380,9 +372,9 @@ def get_trending_products(days=30, limit=10):
     from django.utils import timezone
     from datetime import timedelta
     from django.db.models import Count
-    
+
     recent_date = timezone.now() - timedelta(days=days)
-    
+
     return ProductView.objects.filter(
         viewed_at__gte=recent_date
     ).values('product').annotate(
@@ -395,19 +387,19 @@ def get_trending_products(days=30, limit=10):
 def paginate_queryset(queryset, page, items_per_page=None):
     """
     Paginate a queryset
-    
+
     Returns:
         (paginated_items, total_pages, current_page) tuple
     """
     if items_per_page is None:
         items_per_page = settings.ITEMS_PER_PAGE
-    
+
     total_items = queryset.count()
     total_pages = (total_items + items_per_page - 1) // items_per_page
-    
+
     start = (page - 1) * items_per_page
     end = start + items_per_page
-    
+
     paginated = queryset[start:end]
-    
+
     return paginated, total_pages, page

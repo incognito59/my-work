@@ -152,10 +152,8 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-# Claude AI / Anthropic integration
-CLAUDE_API_KEY = os.environ.get('CLAUDE_API_KEY', '')
-CLAUDE_API_URL = os.environ.get('CLAUDE_API_URL', 'https://api.anthropic.com/v1/complete')
-
+# Groq AI integration
+GROQ_API_KEY = os.environ.get('GROQ_API_KEY', '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')
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
