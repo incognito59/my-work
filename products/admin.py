@@ -23,7 +23,7 @@ class ProductVariantInline(admin.TabularInline):
 
 
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('name', 'price', 'stock', 'category', 'stock_status')
+    list_display = ('name', 'price', 'stock', 'category', 'stock_status', 'flash_sale_status')
     list_filter = ('category',)
     search_fields = ('name', 'description')
     inlines = [ProductVariantInline]
@@ -31,6 +31,7 @@ class ProductAdmin(admin.ModelAdmin):
         ('Basic Info', {'fields': ('name', 'description', 'price', 'category')}),
         ('Images', {'fields': ('image_url', 'image_2', 'image_3')}),
         ('Inventory', {'fields': ('stock',)}),
+        ('Flash Sale', {'fields': ('sale_price', 'sale_ends_at'), 'classes': ('collapse',), 'description': 'Set a flash sale price and end time for this product. Leave empty to disable flash sale.'}),
     )
     
     def stock_status(self, obj):
@@ -48,6 +49,21 @@ class ProductAdmin(admin.ModelAdmin):
             color, status
         )
     stock_status.short_description = 'Stock Status'
+
+    def flash_sale_status(self, obj):
+        if obj.has_active_sale:
+            return format_html(
+                '<span style="color: green; font-weight: bold;">⚡ Active Sale</span>'
+            )
+        elif obj.sale_price and obj.sale_ends_at:
+            return format_html(
+                '<span style="color: orange; font-weight: bold;">⏰ Sale Ended</span>'
+            )
+        else:
+            return format_html(
+                '<span style="color: gray;">No Sale</span>'
+            )
+    flash_sale_status.short_description = 'Flash Sale Status'
 
 
 class InventoryLogAdmin(admin.ModelAdmin):

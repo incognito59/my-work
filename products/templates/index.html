@@ -4,6 +4,7 @@
 {% block title %}Shop - Browse Products by Category - RedCart{% endblock %}
 
 {% block content %}
+<link rel="stylesheet" href="{% static 'css/flash-sale-timer.css' %}">
 <style>
   .shop-container {
     max-width: 1200px;
@@ -504,12 +505,31 @@
       
       <div class="products-grid">
         {% for product in category_data.products %}
-        <div class="product-card">
+        <div class="product-card {% if product.has_active_sale %}has-sale{% endif %}">
           <img src="{{ product.image_src }}" alt="{{ product.name }}" class="product-image">
+          
+          {% if product.has_active_sale %}
+          <div class="flash-sale-badge" data-product-id="{{ product.id }}" data-sale-ends-at="{{ product.sale_ends_at|date:'c' }}">
+            <div class="flash-sale-banner">
+              <div class="flash-sale-label">⚡ Flash Sale</div>
+              <div class="flash-sale-timer" data-product-id="{{ product.id }}" data-sale-ends-at="{{ product.sale_ends_at|date:'c' }}">
+                --:--:--
+              </div>
+            </div>
+          </div>
+          {% endif %}
           
           <div class="product-info">
             <div class="product-name">{{ product.name }}</div>
-            <div class="product-price">₦{{ product.price|floatformat:2 }}</div>
+            <div class="product-price">
+              {% if product.has_active_sale %}
+                <span class="original-price">₦{{ product.price|floatformat:2 }}</span>
+                <span class="sale-price-display">₦{{ product.sale_price|floatformat:2 }}</span>
+                <span class="sale-price-badge">-{{ product.discount_percentage|floatformat:0 }}%</span>
+              {% else %}
+                ₦{{ product.price|floatformat:2 }}
+              {% endif %}
+            </div>
             
             <div class="product-actions">
               <a href="{% url 'products:product-detail' product.id %}" class="btn-view">👁️ View</a>
@@ -604,5 +624,7 @@
   color: #e0e0e0;
 }
 </style>
+
+<script src="{% static 'js/flash-sale-timer.js' %}"></script>
 
 {% endblock content %}

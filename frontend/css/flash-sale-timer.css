@@ -1,0 +1,252 @@
+/* Flash Sale Timer Styles */
+
+.flash-sale-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+    animation: badgeEntry 0.3s ease-out;
+}
+
+@keyframes badgeEntry {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.flash-sale-banner {
+    background: linear-gradient(135deg, #ff4757 0%, #ee5a6f 100%);
+    color: white;
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(255, 71, 87, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+}
+
+.flash-sale-badge-icon {
+    font-size: 1.2rem;
+    margin-right: 6px;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+.flash-sale-label {
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    opacity: 0.9;
+}
+
+.flash-sale-timer {
+    display: block;
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    transition: all 0.2s ease;
+}
+
+/* Timer urgency states */
+.flash-sale-timer.timer-normal {
+    color: white;
+}
+
+.flash-sale-timer.timer-warning {
+    animation: warmingGlow 1s ease-in-out infinite;
+}
+
+@keyframes warmingGlow {
+    0%, 100% {
+        text-shadow: 0 0 4px rgba(255, 255, 255, 0.5);
+    }
+    50% {
+        text-shadow: 0 0 12px rgba(255, 255, 255, 0.8);
+    }
+}
+
+.flash-sale-timer.timer-urgent {
+    animation: urgentPulse 0.6s ease-in-out infinite;
+}
+
+@keyframes urgentPulse {
+    0%, 100% {
+        transform: scale(1);
+        color: #fff;
+        text-shadow: 0 0 4px rgba(255, 255, 255, 0.5);
+    }
+    50% {
+        transform: scale(1.05);
+        color: #ffeb3b;
+        text-shadow: 0 0 12px rgba(255, 235, 59, 0.8);
+    }
+}
+
+.flash-sale-timer.timer-expired {
+    color: rgba(255, 255, 255, 0.6);
+    animation: none;
+}
+
+/* Product card with sale badge */
+.product-card.has-sale,
+.latest-card.has-sale {
+    border: 1px solid rgba(255, 71, 87, 0.3);
+    background: linear-gradient(135deg, #fff 0%, #fff5f5 100%);
+}
+
+.product-card.has-sale:hover,
+.latest-card.has-sale:hover {
+    border-color: rgba(255, 71, 87, 0.5);
+    box-shadow: 0 8px 24px rgba(255, 71, 87, 0.2);
+}
+
+[data-theme="dark"] .product-card.has-sale,
+[data-theme="dark"] .latest-card.has-sale {
+    background: linear-gradient(135deg, #1e1e1e 0%, #2a1a1a 100%);
+    border-color: rgba(255, 71, 87, 0.3);
+}
+
+.sale-price-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #ff4757 0%, #ee5a6f 100%);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin-left: 8px;
+}
+
+/* Product detail page - large timer */
+.product-detail-sale {
+    background: linear-gradient(135deg, #ff4757 0%, #ee5a6f 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 16px;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 24px rgba(255, 71, 87, 0.25);
+}
+
+.sale-status-icon {
+    font-size: 2rem;
+    margin-bottom: 8px;
+}
+
+.sale-original-price {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    text-decoration: line-through;
+    margin-bottom: 8px;
+}
+
+.sale-current-price {
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin-bottom: 12px;
+}
+
+.sale-discount-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.sale-discount-percentage {
+    font-size: 1.4rem;
+    font-weight: 700;
+}
+
+.sale-ends-label {
+    font-size: 0.85rem;
+    opacity: 0.9;
+}
+
+.sale-timer-display {
+    font-size: 1.3rem;
+    font-weight: 700;
+}
+
+/* Price display variations */
+.original-price {
+    text-decoration: line-through;
+    opacity: 0.7;
+    font-size: 0.95rem;
+}
+
+.sale-price-display {
+    color: #ff4757;
+    font-weight: 700;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .flash-sale-badge {
+        top: 8px;
+        right: 8px;
+    }
+
+    .flash-sale-banner {
+        padding: 10px 12px;
+        font-size: 0.8rem;
+    }
+
+    .flash-sale-label {
+        font-size: 0.7rem;
+    }
+
+    .flash-sale-timer {
+        font-size: 0.85rem;
+    }
+
+    .product-detail-sale {
+        padding: 16px;
+    }
+
+    .sale-current-price {
+        font-size: 1.5rem;
+    }
+
+    .sale-discount-percentage {
+        font-size: 1.2rem;
+    }
+
+    .sale-timer-display {
+        font-size: 1.1rem;
+    }
+}
+
+/* Dark theme adjustments */
+[data-theme="dark"] .flash-sale-banner {
+    background: linear-gradient(135deg, #e84c3d 0%, #b94226 100%);
+}
+
+[data-theme="dark"] .product-detail-sale {
+    background: linear-gradient(135deg, #e84c3d 0%, #b94226 100%);
+}
+
+[data-theme="dark"] .sale-discount-info {
+    border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .sale-price-display {
+    color: #ff7a85;
+}

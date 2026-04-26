@@ -24,6 +24,10 @@ class Product(models.Model):
     image_2 = models.CharField("Image 2", max_length=2083, blank=True, null=True)
     image_3 = models.CharField("Image 3", max_length=2083, blank=True, null=True)
 
+    # Flash Sale Fields
+    sale_price = models.FloatField(null=True, blank=True, help_text="Sale price for flash sale")
+    sale_ends_at = models.DateTimeField(null=True, blank=True, help_text="End time for flash sale")
+
     @property
     def image_src(self):
         if self.image_url:
@@ -43,6 +47,22 @@ class Product(models.Model):
             else:
                 images.append(static(img))
         return images
+
+    @property
+    def has_active_sale(self):
+        """Check if product has an active flash sale"""
+        from django.utils import timezone
+        if self.sale_price and self.sale_ends_at:
+            return self.sale_ends_at > timezone.now()
+        return False
+
+    @property
+    def discount_percentage(self):
+        """Calculate discount percentage"""
+        if self.sale_price and self.price > 0:
+            discount = ((self.price - self.sale_price) / self.price) * 100
+            return round(discount, 0)
+        return 0
 
     def __str__(self):
         return self.name

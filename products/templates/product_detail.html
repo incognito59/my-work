@@ -4,6 +4,7 @@
 {% block title %}{{ product.name }} - MyStore{% endblock %}
 
 {% block content %}
+<link rel="stylesheet" href="{% static 'css/flash-sale-timer.css' %}">
 <div class="container my-5">
 
   <div class="row g-4 align-items-start">
@@ -31,7 +32,29 @@
         <h3 class="fw-bold mb-2">{{ product.name }}</h3>
         <p class="text-muted mb-3">{{ product.description }}</p>
 
+        {% if product.has_active_sale %}
+        <!-- Flash Sale Banner -->
+        <div class="product-detail-sale">
+          <div class="sale-status-icon">⚡</div>
+          <div class="sale-ends-label">Flash Sale Ends In</div>
+          <div class="sale-timer-display" data-product-id="{{ product.id }}" data-sale-ends-at="{{ product.sale_ends_at|date:'c' }}">
+            Loading...
+          </div>
+          
+          <div class="sale-discount-info">
+            <div>
+              <div class="sale-ends-label">Save</div>
+              <div class="sale-discount-percentage">{{ product.discount_percentage|floatformat:0 }}%</div>
+            </div>
+            <div style="text-align: right;">
+              <div class="sale-original-price">₦{{ product.price|floatformat:2 }}</div>
+              <div class="sale-current-price">₦{{ product.sale_price|floatformat:2 }}</div>
+            </div>
+          </div>
+        </div>
+        {% else %}
         <h4 class="fw-bold animated-price text-danger mb-4">₦{{ product.price|floatformat:2 }}</h4>
+        {% endif %}
 
         <div class="d-flex flex-column gap-2">
           <a href="{% url 'products:add-to-cart' product.id %}" 
@@ -246,4 +269,8 @@
     color: #e0e0e0;
   }
 </style>
+
+<script src="{% static 'js/flash-sale-timer.js' %}"></script>
+
+{% endblock %}
 {% endblock %}
