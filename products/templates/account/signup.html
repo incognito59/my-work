@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}Complete Sign Up - RedCart{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+  <div class="row justify-content-center">
+    <div class="col-md-5">
+      <div class="card border-0 shadow-lg rounded-4 p-5">
+        <h2 class="fw-bold mb-1 text-center">Almost there!</h2>
+        <p class="text-center text-muted mb-4">Confirm your email to complete sign up</p>
+
+        <form method="post" action="{% url 'socialaccount_signup' %}">
+          {% csrf_token %}
+          {{ form.as_p }}
+          <button type="submit" class="btn btn-danger btn-lg w-100 rounded-pill fw-bold py-3">
+            Complete Sign Up
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
