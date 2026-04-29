@@ -1,17 +1,18 @@
-// Firebase configuration
-// IMPORTANT: Replace with your real Firebase config from https://console.firebase.google.com
-// Get config: Project Settings → Your Apps → Web → Copy config
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
+import { getAuth, GoogleAuthProvider } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js';
+
 const firebaseConfig = {
-  apiKey: "AIzaSyAwGuVeLd3qQ7nX8Y-2K9R3n9SPnX8Y-9Qg",
-  authDomain: "retail-auth-demo.firebaseapp.com",
-  projectId: "retail-auth-demo",
-  storageBucket: "retail-auth-demo.appspot.com",
-  messagingSenderId: "246802468024",
-  appId: "1:246802468024:web:abc123def456abc123def4"
+  apiKey: "AIzaSyDrJYsqt6s0l9XxFuxzK4k340AoumMu4Fg",
+  authDomain: "redcart-d792b.firebaseapp.com",
+  projectId: "redcart-d792b",
+  storageBucket: "redcart-d792b.firebasestorage.app",
+  messagingSenderId: "803296445904",
+  appId: "1:803296445904:web:ad07772f2c7ee7148fa5d5"
 };
 
-// DEMO MODE: If real Firebase isn't configured, use this for testing
-export const DEMO_MODE = true;
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const googleProvider = new GoogleAuthProvider();
 
-// Export for auth.js
-export { firebaseConfig };
+export const DEMO_MODE = false;
+export { auth, googleProvider, firebaseConfig };

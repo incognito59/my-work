@@ -4,6 +4,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 import json
 
 from django.urls import reverse
@@ -67,9 +68,88 @@ except Exception:
     stripe_api_available = False
 
 
+# ============ FIREBASE AUTH ============
+
+@csrf_exempt
+def firebase_auth_callback(request):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid method.'}, status=405)
+
+    try:
+        payload = json.loads(request.body.decode('utf-8') or '{}')
+    except ValueError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON.'}, status=400)
+
+    id_token = payload.get('token')
+    if not id_token:
+        return JsonResponse({'success': False, 'error': 'Token required.'}, status=400)
+
+    try:
+        import urllib.request
+        import urllib.error
+
+        # Verify token with Google
+        verify_url = f'https://oauth2.googleapis.com/tokeninfo?id_token={id_token}'
+        with urllib.request.urlopen(verify_url) as response:
+            token_data = json.loads(response.read().decode())
+
+        # Check token belongs to your Firebase project
+        expected_audience = '774139839237-3e62lmii9cvo2ju690b5hsb79cksol4e.apps.googleusercontent.com'
+        if token_data.get('aud') != expected_audience:
+            return JsonResponse({'success': False, 'error': 'Invalid token audience.'}, status=401)
+
+        email = token_data.get('email')
+        name = token_data.get('name', '')
+        if not email:
+            return JsonResponse({'success': False, 'error': 'No email in token.'}, status=400)
+
+        # Get or create Django user
+        user = User.objects.filter(email__iexact=email).first()
+        created = False
+
+        if not user:
+            created = True
+            base_username = email.split('@')[0]
+            username = base_username
+            counter = 1
+            while User.objects.filter(username=username).exists():
+                username = f"{base_username}{counter}"
+                counter += 1
+
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=None,
+            )
+
+        # Update name if available and not already set
+        if name and not user.first_name:
+            parts = name.split(' ', 1)
+            user.first_name = parts[0]
+            user.last_name = parts[1] if len(parts) > 1 else ''
+            user.save()
+
+        # Log user into Django session
+        user.backend = 'django.contrib.auth.backends.ModelBackend'
+        login(request, user)
+
+        return JsonResponse({
+            'success': True,
+            'created': created,
+            'email': email,
+            'redirect': '/products/',
+        })
+
+    except urllib.error.URLError:
+        return JsonResponse({'success': False, 'error': 'Token verification failed.'}, status=401)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+# ============ PAGES ============
+
 # 🏠 Home / Search Page
 def index(request):
-    """Shop page with products organized by category"""
     query = request.GET.get('q') or request.GET.get('search')
 
     category_values = Product.objects.order_by('category').values_list('category', flat=True).distinct()
@@ -113,15 +193,14 @@ def index(request):
     })
 
 
-# 🎯 Landing Page with Registration
+# 🎯 Landing Page
 def landing_page(request):
-    """Landing page with featured products, offers, and registration"""
     featured_products = Product.objects.all().order_by('-id')[:6]
     offers = Offer.objects.all()[:4]
-    
+
     if request.user.is_authenticated:
         return redirect('products:product-list')
-    
+
     if request.method == 'POST':
         first_name = request.POST.get('first_name', '').strip()
         last_name = request.POST.get('last_name', '').strip()
@@ -162,16 +241,16 @@ def landing_page(request):
         user.first_name = first_name
         user.last_name = last_name
         user.save()
-        
+
         try:
             from .utils import send_welcome_email
             send_welcome_email(user)
         except Exception as e:
             print(f"Email error: {e}")
-        
+
         messages.success(request, f"✅ Account created! Welcome, {username}. Please log in.")
         return redirect('products:login')
-    
+
     return render(request, 'landing.html', {
         'featured_products': featured_products,
         'offers': offers,
@@ -179,7 +258,6 @@ def landing_page(request):
 
 
 def offers_page(request):
-    """Display active offers and sample products with discounted prices"""
     offers = Offer.objects.all()
     products = Product.objects.all().order_by('-id')
 
@@ -189,34 +267,33 @@ def offers_page(request):
     })
 
 
-# Login Page
+# 🔐 Login Page
 def login_page(request):
     return login_enhanced(request)
 
 
-# 🔐 Enhanced Login Page
 def login_enhanced(request):
     if request.user.is_authenticated:
         return redirect('products:product-list')
-    
+
     if request.method == 'POST':
         username_or_email = request.POST.get('username_or_email', '').strip()
         password = request.POST.get('password', '').strip()
 
         user = None
-        
+
         if not username_or_email or not password:
             messages.error(request, "Both email/username and password are required.")
             return render(request, 'auth/login_enhanced.html')
 
         try:
             user_obj = User.objects.filter(email__iexact=username_or_email).first()
-            
+
             if user_obj:
                 user = authenticate(request, username=user_obj.username, password=password)
             else:
                 user = authenticate(request, username=username_or_email, password=password)
-                
+
         except Exception as e:
             messages.error(request, f"Login error: {str(e)}")
             return render(request, 'auth/login_enhanced.html')
@@ -228,7 +305,7 @@ def login_enhanced(request):
             return redirect(next_url)
         else:
             messages.error(request, "Invalid email/username or password.")
-    
+
     return render(request, 'auth/login_enhanced.html')
 
 
@@ -236,7 +313,6 @@ from django.contrib.auth.views import PasswordResetView, PasswordResetConfirmVie
 from django.urls import reverse_lazy
 
 
-# Password Reset Page
 class CustomPasswordResetView(PasswordResetView):
     template_name = 'auth/password_reset.html'
     success_url = reverse_lazy('products:password-reset-done')
@@ -245,12 +321,10 @@ class CustomPasswordResetView(PasswordResetView):
     from_email = 'afolabiprosper329@gmail.com'
 
 
-# 📧 Password Reset Done Page
 class CustomPasswordResetDoneView(PasswordResetDoneView):
     template_name = 'auth/password_reset_done.html'
 
 
-# 🔐 Password Reset Confirm Page
 class CustomPasswordResetConfirmView(PasswordResetConfirmView):
     template_name = 'auth/password_reset_confirm.html'
     success_url = reverse_lazy('products:login')
@@ -261,7 +335,7 @@ class CustomPasswordResetConfirmView(PasswordResetConfirmView):
 def register_page(request):
     if request.user.is_authenticated:
         return redirect('products:product-list')
-    
+
     if request.method == 'POST':
         first_name = request.POST.get('first_name', '').strip()
         last_name = request.POST.get('last_name', '').strip()
@@ -280,7 +354,7 @@ def register_page(request):
         while User.objects.filter(username=username).exists():
             username = f"{base_username}{counter}"
             counter += 1
-        
+
         if not all([username, email, password1, password2]):
             messages.error(request, "All required fields must be filled.")
             return render(request, 'register.html')
@@ -307,15 +381,14 @@ def register_page(request):
         user.save()
         messages.success(request, "Account created! Please log in.")
         return redirect('products:login')
-    
+
     return render(request, 'register.html')
 
 
-# 📝 Enhanced Register Page
 def register_enhanced(request):
     if request.user.is_authenticated:
         return redirect('products:product-list')
-    
+
     if request.method == 'POST':
         first_name = request.POST.get('first_name', '').strip()
         last_name = request.POST.get('last_name', '').strip()
@@ -356,10 +429,10 @@ def register_enhanced(request):
         user.first_name = first_name
         user.last_name = last_name
         user.save()
-        
+
         messages.success(request, f"✅ Account created! Welcome, {username}. Please log in.")
         return redirect('products:login')
-    
+
     return render(request, 'auth/register_enhanced.html')
 
 
@@ -370,19 +443,17 @@ def logout_page(request):
     return redirect('products:product-list')
 
 
-# 👤 User Profile Page
+# 👤 Profile
 @login_required(login_url='products:login')
 def user_profile(request):
     user = request.user
     orders = Order.objects.filter(user=user).order_by('-created_at')
-    
-    context = {
+
+    return render(request, 'profile.html', {
         'user': user,
         'orders': orders,
         'order_count': orders.count(),
-    }
-    
-    return render(request, 'profile.html', context)
+    })
 
 
 # ➕ Add to Cart
@@ -408,7 +479,7 @@ def add_to_cart(request, item_id):
     return redirect('products:product-list')
 
 
-# 🛒 View Cart Page
+# 🛒 View Cart
 def view_cart(request):
     cart = request.session.get('cart', {})
     products = []
@@ -425,7 +496,7 @@ def view_cart(request):
     coupon_discount = coupon_context['coupon_discount']
     total_after_coupon = max(0, total - coupon_discount)
 
-    context = {
+    return render(request, 'cart.html', {
         'products': products,
         'total': total,
         'total_after_coupon': total_after_coupon,
@@ -433,11 +504,10 @@ def view_cart(request):
         'coupon_code': coupon_context['coupon_code'],
         'coupon_message': coupon_context['coupon_message'],
         'query': request.GET.get('q', ''),
-    }
-    return render(request, 'cart.html', context)
+    })
 
 
-# ❌ Delete Item from Cart
+# ❌ Delete from Cart
 def delete_from_cart(request, product_id):
     cart = request.session.get('cart', {})
     product_id = str(product_id)
@@ -453,7 +523,7 @@ def delete_from_cart(request, product_id):
     return redirect('products:view-cart')
 
 
-# 💳 Checkout Page
+# 💳 Checkout
 def checkout(request):
     cart = request.session.get('cart', {})
     products = []
@@ -467,7 +537,6 @@ def checkout(request):
         total += product.total_price
 
     total_kobo = int(total * 100)
-
     coupon_context = _get_coupon_context(request, total)
     coupon_discount = coupon_context['coupon_discount']
     total_after_coupon = max(0, total - coupon_discount)
@@ -513,7 +582,7 @@ def confirm_payment(request):
     return redirect('products:checkout')
 
 
-# 📦 Product Detail Page + Comments
+# 📦 Product Detail
 def product_detail(request, product_id):
     product = get_object_or_404(Product, id=product_id)
     additional_images = getattr(product, 'additional_images', [])
@@ -532,7 +601,6 @@ def product_detail(request, product_id):
     if request.user.is_authenticated:
         is_in_wishlist = Wishlist.objects.filter(user=request.user, product=product).exists()
 
-    # ✅ Updated to use new function name
     ai_recommendations = get_product_recommendations_ai(product, limit=4)
 
     return render(request, 'product_detail.html', {
@@ -558,8 +626,6 @@ def buy_now(request, product_id):
     return redirect('products:checkout')
 
 
-# ============ NEW FEATURES ============
-
 # 📧 Contact Form
 def contact_us(request):
     from .models import ContactFormSubmission
@@ -568,7 +634,7 @@ def contact_us(request):
         email = request.POST.get('email', '').strip()
         subject = request.POST.get('subject', '').strip()
         message = request.POST.get('message', '').strip()
-        
+
         if all([name, email, subject, message]):
             ContactFormSubmission.objects.create(
                 name=name, email=email, subject=subject, message=message
@@ -577,20 +643,20 @@ def contact_us(request):
             return redirect('products:contact')
         else:
             messages.error(request, "❌ Please fill in all fields.")
-    
+
     return render(request, 'contact.html')
 
 
-# ❓ FAQ Page
+# ❓ FAQ
 def faq(request):
     from .models import FAQ
     faqs = FAQ.objects.filter(is_active=True).order_by('order')
     categories = set(faq.category for faq in faqs)
-    
+
     category = request.GET.get('category')
     if category:
         faqs = faqs.filter(category=category)
-    
+
     return render(request, 'faq.html', {
         'faqs': faqs,
         'categories': categories,
@@ -609,13 +675,13 @@ def my_tickets(request):
 @login_required(login_url='products:login')
 def create_ticket(request):
     from .models import SupportTicket
-    
+
     if request.method == 'POST':
         title = request.POST.get('title', '').strip()
         description = request.POST.get('description', '').strip()
         priority = request.POST.get('priority', 'medium')
         order_id = request.POST.get('order_id')
-        
+
         if title and description:
             order = None
             if order_id:
@@ -623,7 +689,7 @@ def create_ticket(request):
                     order = Order.objects.get(id=order_id, user=request.user)
                 except Order.DoesNotExist:
                     pass
-            
+
             ticket = SupportTicket.objects.create(
                 user=request.user,
                 order=order,
@@ -635,7 +701,7 @@ def create_ticket(request):
             return redirect('products:ticket-detail', ticket_id=ticket.id)
         else:
             messages.error(request, "❌ Please fill in all required fields.")
-    
+
     orders = Order.objects.filter(user=request.user)
     return render(request, 'support/create_ticket.html', {'orders': orders})
 
@@ -643,15 +709,15 @@ def create_ticket(request):
 @login_required(login_url='products:login')
 def ticket_detail(request, ticket_id):
     from .models import SupportTicket, TicketReply
-    
+
     ticket = get_object_or_404(SupportTicket, id=ticket_id)
-    
+
     if not (request.user == ticket.user or request.user.is_staff):
         messages.error(request, "❌ You don't have permission to view this ticket.")
         return redirect('products:my-tickets')
-    
+
     replies = ticket.replies.all().order_by('created_at')
-    
+
     if request.method == 'POST' and request.user == ticket.user:
         message = request.POST.get('message', '').strip()
         if message:
@@ -662,7 +728,7 @@ def ticket_detail(request, ticket_id):
             )
             messages.success(request, "✅ Your reply has been added.")
             return redirect('products:ticket-detail', ticket_id=ticket.id)
-    
+
     return render(request, 'support/ticket_detail.html', {
         'ticket': ticket,
         'replies': replies,
@@ -680,7 +746,7 @@ def addresses(request):
 @login_required(login_url='products:login')
 def add_address(request):
     from .models import UserAddress
-    
+
     if request.method == 'POST':
         full_name = request.POST.get('full_name', '').strip()
         phone = request.POST.get('phone', '').strip()
@@ -690,7 +756,7 @@ def add_address(request):
         postal_code = request.POST.get('postal_code', '').strip()
         address_type = request.POST.get('address_type', 'home')
         is_default = request.POST.get('is_default') == 'on'
-        
+
         if all([full_name, phone, street_address, city, state, postal_code]):
             UserAddress.objects.create(
                 user=request.user,
@@ -707,7 +773,7 @@ def add_address(request):
             return redirect('products:addresses')
         else:
             messages.error(request, "❌ Please fill in all required fields.")
-    
+
     return render(request, 'account/add_address.html')
 
 
@@ -724,28 +790,26 @@ def analytics_dashboard(request):
     if not request.user.is_staff:
         messages.error(request, "❌ You don't have permission to access this page.")
         return redirect('products:product-list')
-    
+
     from .models import Order, Product, ProductView
     from django.db.models import Count, Sum
-    
+
     total_orders = Order.objects.count()
     total_revenue = Order.objects.filter(is_paid=True).aggregate(Sum('subtotal'))['subtotal__sum'] or 0
     total_products = Product.objects.count()
     total_views = ProductView.objects.count()
-    
+
     trending = ProductView.objects.values('product__name').annotate(
         view_count=Count('id')
     ).order_by('-view_count')[:5]
-    
-    context = {
+
+    return render(request, 'admin/dashboard.html', {
         'total_orders': total_orders,
         'total_revenue': total_revenue,
         'total_products': total_products,
         'total_views': total_views,
         'trending_products': trending,
-    }
-    
-    return render(request, 'admin/dashboard.html', context)
+    })
 
 
 # 🏷️ Newsletter Signup
@@ -753,7 +817,7 @@ def newsletter_signup(request):
     if request.method == 'POST':
         from .models import Newsletter
         email = request.POST.get('email', '').strip()
-        
+
         if email:
             newsletter, created = Newsletter.objects.get_or_create(email=email)
             if created:
@@ -761,47 +825,45 @@ def newsletter_signup(request):
             else:
                 messages.info(request, "📧 You're already subscribed!")
             return redirect('products:product-list')
-    
+
     messages.error(request, "❌ Please provide a valid email address.")
     return redirect('products:product-list')
 
 
-# ============ EMAIL TEMPLATE PREVIEWS ============
+# ============ EMAIL PREVIEWS ============
 
 def preview_email_welcome(request):
-    context = {'site_name': 'RedCart', 'username': 'John Doe'}
-    return render(request, 'emails/welcome.html', context)
+    return render(request, 'emails/welcome.html', {'site_name': 'RedCart', 'username': 'John Doe'})
 
 
 def preview_email_order_confirmation(request):
     from django.utils import timezone
-    
+
     sample_order = type('Order', (), {
         'id': 12345,
         'created_at': timezone.now(),
         'get_status_display': 'Pending',
         'total': 150.00,
     })()
-    
+
     sample_item = type('OrderItem', (), {
         'product': type('Product', (), {'name': 'Sample Product'}),
         'quantity': 2,
         'price': 75.00,
         'total_price': 150.00,
     })()
-    
-    context = {
+
+    return render(request, 'emails/order_confirmation.html', {
         'order': sample_order,
         'items': [sample_item],
         'site_name': 'RedCart',
         'user': type('User', (), {'first_name': 'John', 'username': 'johndoe'}),
-    }
-    return render(request, 'emails/order_confirmation.html', context)
+    })
 
 
 def preview_email_order_shipped(request):
     from django.utils import timezone
-    context = {
+    return render(request, 'emails/order_shipped.html', {
         'order': type('Order', (), {
             'id': 12345,
             'shipped_date': timezone.now(),
@@ -809,45 +871,40 @@ def preview_email_order_shipped(request):
         }),
         'site_name': 'RedCart',
         'user': type('User', (), {'first_name': 'John', 'username': 'johndoe'}),
-    }
-    return render(request, 'emails/order_shipped.html', context)
+    })
 
 
 def preview_email_order_delivered(request):
     from django.utils import timezone
-    context = {
+    return render(request, 'emails/order_delivered.html', {
         'order': type('Order', (), {
             'id': 12345,
             'delivered_date': timezone.now(),
         }),
         'site_name': 'RedCart',
         'user': type('User', (), {'first_name': 'John', 'username': 'johndoe'}),
-    }
-    return render(request, 'emails/order_delivered.html', context)
+    })
 
 
 def preview_email_contact_reply(request):
-    context = {
+    return render(request, 'emails/contact_reply.html', {
         'name': 'John Doe',
         'subject': 'Question about shipping costs',
         'reply': 'Thank you for contacting us...',
         'site_name': 'RedCart',
-    }
-    return render(request, 'emails/contact_reply.html', context)
+    })
 
 
 def preview_email_password_reset(request):
-    context = {
+    return render(request, 'emails/password_reset.html', {
         'site_name': 'RedCart',
         'user': type('User', (), {'first_name': 'John', 'username': 'johndoe'}),
         'reset_link': 'http://127.0.0.1:8000/products/password-reset/',
-    }
-    return render(request, 'emails/password_reset.html', context)
+    })
 
 
 # ============ NEW PAGES ============
 
-# 📝 Blog Page
 def blog_page(request):
     articles = [
         {
@@ -891,22 +948,21 @@ def blog_page(request):
             'slug': 'seasonal-sales-guide'
         },
     ]
-    
+
     return render(request, 'blog.html', {
         'articles': articles,
         'total_articles': len(articles),
     })
 
 
-# ⭐ Reviews Page
 def reviews_page(request):
     products_with_reviews = Product.objects.filter(
         comment__isnull=False
     ).distinct()[:8]
-    
+
     all_comments = Comment.objects.all().order_by('-created_at')[:20]
     total_reviews = Comment.objects.count()
-    
+
     return render(request, 'reviews.html', {
         'products_with_reviews': products_with_reviews,
         'recent_reviews': all_comments,
@@ -935,7 +991,7 @@ def toggle_wishlist(request, product_id):
     return JsonResponse({'success': True, 'action': action, 'product_id': product_id})
 
 
-# 🤖 AI Chat Endpoint
+# 🤖 AI Chat
 def ai_chat(request):
     if request.method != 'POST':
         return JsonResponse({'success': False, 'error': 'Invalid method.'}, status=405)
@@ -1050,15 +1106,14 @@ def wishlist_page(request):
     else:
         message = 'Log in to view and save your wishlist items.'
 
-    context = {
+    return render(request, 'wishlist.html', {
         'wishlist_items': wishlist_items,
         'total_wishlist': wishlist_items.count() if request.user.is_authenticated else 0,
         'message': message,
-    }
-    return render(request, 'wishlist.html', context)
+    })
 
 
-# ℹ️ About Page
+# ℹ️ About
 def about_page(request):
     company_info = {
         'name': 'RedCart',
@@ -1072,21 +1127,21 @@ def about_page(request):
             {'city': 'Abuja', 'address': '45 Business Park, Central Business District'},
         ]
     }
-    
+
     stats = {
         'products': Product.objects.count(),
         'users': User.objects.count(),
         'orders': Order.objects.count(),
         'countries': 1,
     }
-    
+
     team_members = [
         {'name': 'John Afolabi', 'role': 'Founder & CEO', 'bio': 'Visionary leader with 15+ years in e-commerce', 'emoji': '👨‍💼'},
         {'name': 'Sarah Johnson', 'role': 'Head of Operations', 'bio': 'Ensuring smooth operations and customer satisfaction', 'emoji': '👩‍💼'},
         {'name': 'Michael Smith', 'role': 'Lead Developer', 'bio': 'Building the technology that powers RedCart', 'emoji': '👨‍💻'},
         {'name': 'Emma Wilson', 'role': 'Customer Success', 'bio': 'Making sure every customer gets the best experience', 'emoji': '👩‍💼'},
     ]
-    
+
     return render(request, 'about.html', {
         'company': company_info,
         'stats': stats,

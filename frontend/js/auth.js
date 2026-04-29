@@ -1,168 +1,139 @@
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, FacebookAuthProvider, GithubAuthProvider, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js';
-import { firebaseConfig, DEMO_MODE } from './firebase-config.js';
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
+         signInWithPopup, GoogleAuthProvider, FacebookAuthProvider,
+         GithubAuthProvider, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js';
+import { auth } from './firebase-config.js';
 
-// Initialize Firebase
-let app, auth;
-try {
-  app = initializeApp(firebaseConfig);
-  auth = getAuth(app);
-  console.log('✓ Firebase initialized successfully');
-} catch(e) {
-  console.warn('Firebase init issue (demo mode enabled):', e.message);
+// Utilities
+function $(sel) { return document.querySelector(sel) }
+function showMessage(el, type, text) {
+  if (el) el.innerHTML = `<div class="message ${type}">${text}</div>`;
+}
+function setLoading(form, on = true) {
+  if (form) on ? form.classList.add('loading') : form.classList.remove('loading');
 }
 
-// Utilities for UI
-function $(sel){return document.querySelector(sel)}
-function showMessage(el, type, text){
-  el.innerHTML = `<div class="message ${type}">${text}</div>`;
-}
-function setLoading(form, on=true){
-  if(on) form.classList.add('loading'); else form.classList.remove('loading');
+// Get Django CSRF token from cookie
+function getCookie(name) {
+  const val = document.cookie.split('; ').find(r => r.startsWith(name + '='));
+  return val ? val.split('=')[1] : '';
 }
 
-// Demo sign-in (for testing without real Firebase)
-async function demoSocialSignIn(provider) {
-  const providerName = provider.providerId ? provider.providerId.split('.')[0] : 'provider';
-  const email = `demo-${providerName}-${Date.now()}@redcart.com`;
-  const displayName = providerName.charAt(0).toUpperCase() + providerName.slice(1);
-  console.log('✓ Demo Sign-in:', {email, displayName});
-  localStorage.setItem('user', JSON.stringify({email, name: `${displayName} User`, provider: providerName}));
-  return {user: {email, displayName: `${displayName} User`}};
-}
+// Send Firebase ID token to Django backend
+async function syncWithBackend(user) {
+  try {
+    const idToken = await user.getIdToken();
+    const res = await fetch('/auth/google/callback/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token: idToken })
+    });
 
-// Login flow
-export async function initLogin(){
-  const form = $('#login-form');
-  const msg = $('#login-msg');
-  const googleBtn = $('#btn-google');
-  const fbBtn = $('#btn-facebook');
-  const ghBtn = $('#btn-github');
+    const data = await res.json();
 
-  console.log('✓ Setting up login handlers...');
-  
-  if(googleBtn) {
-    googleBtn.addEventListener('click', async ()=> {
-      console.log('Google clicked');
-      await socialSignIn(new GoogleAuthProvider());
-    });
-  }
-  if(fbBtn) {
-    fbBtn.addEventListener('click', async ()=> {
-      console.log('Facebook clicked');
-      await socialSignIn(new FacebookAuthProvider());
-    });
-  }
-  if(ghBtn) {
-    ghBtn.addEventListener('click', async ()=> {
-      console.log('GitHub clicked');
-      await socialSignIn(new GithubAuthProvider());
-    });
-  }
-
-  if(form) {
-    form.addEventListener('submit', async (e)=>{
-      e.preventDefault();
-      showMessage(msg,'','');
-      setLoading(form,true);
-      const email = $('#login-email').value.trim();
-      const password = $('#login-password').value.trim();
-      try{
-        if (!email || !password) throw new Error('Email and password required');
-        if (!auth) throw new Error('Firebase not initialized');
-        const res = await signInWithEmailAndPassword(auth, email, password);
-        showMessage(msg,'success','✓ Login successful — redirecting...');
-        localStorage.setItem('user', JSON.stringify({email:res.user.email, name:res.user.displayName||res.user.email}));
-        setTimeout(()=> location.href = 'payment.html',800);
-      }catch(err){
-        showMessage(msg,'error', err.message);
-      }finally{setLoading(form,false)}
-    });
-  }
-}
-
-// Register flow
-export async function initRegister(){
-  const form = $('#register-form');
-  const msg = $('#register-msg');
-  const googleBtn = $('#reg-google');
-  const fbBtn = $('#reg-facebook');
-  const ghBtn = $('#reg-github');
-
-  console.log('✓ Setting up register handlers...');
-
-  if(googleBtn) {
-    googleBtn.addEventListener('click', async ()=> {
-      console.log('Reg: Google clicked');
-      await socialSignIn(new GoogleAuthProvider());
-    });
-  }
-  if(fbBtn) {
-    fbBtn.addEventListener('click', async ()=> {
-      console.log('Reg: Facebook clicked');
-      await socialSignIn(new FacebookAuthProvider());
-    });
-  }
-  if(ghBtn) {
-    ghBtn.addEventListener('click', async ()=> {
-      console.log('Reg: GitHub clicked');
-      await socialSignIn(new GithubAuthProvider());
-    });
-  }
-
-  if(form) {
-    form.addEventListener('submit', async (e)=>{
-      e.preventDefault();
-      showMessage(msg,'','');
-      setLoading(form,true);
-      const name = $('#reg-name').value.trim();
-      const email = $('#reg-email').value.trim();
-      const password = $('#reg-password').value.trim();
-      try{
-        if (!name || !email || !password) throw new Error('All fields required');
-        if (password.length < 6) throw new Error('Password must be 6+ characters');
-        if (!auth) throw new Error('Firebase not initialized');
-        const res = await createUserWithEmailAndPassword(auth, email, password);
-        showMessage(msg,'success','✓ Account created — redirecting...');
-        localStorage.setItem('user', JSON.stringify({email:res.user.email, name:name||res.user.email}));
-        setTimeout(()=> location.href = 'payment.html',900);
-      }catch(err){
-        showMessage(msg,'error', err.message);
-      }finally{setLoading(form,false)}
-    });
+    if (data.success) {
+      localStorage.setItem('user', JSON.stringify({
+        email: user.email,
+        name: user.displayName || user.email
+      }));
+      window.location.href = data.redirect || '/products/';
+    } else {
+      console.error('Backend error:', data.error);
+      alert('Login failed: ' + data.error);
+    }
+  } catch (err) {
+    console.error('Backend sync error:', err.message);
+    alert('Connection error. Please try again.');
   }
 }
 
 // Social sign-in helper
-async function socialSignIn(provider){
-  const pname = provider.providerId;
-  console.log('↓ Attempting sign-in with:', pname);
-  try{
-    if (DEMO_MODE || !auth) {
-      console.log('→ Using DEMO mode');
-      const result = await demoSocialSignIn(provider);
-      const user = result.user;
-      localStorage.setItem('user', JSON.stringify({email:user.email, name:user.displayName||user.email}));
-      setTimeout(()=> location.href = 'payment.html', 600);
+async function socialSignIn(provider) {
+  console.log('Signing in with:', provider.providerId);
+  try {
+    const result = await signInWithPopup(auth, provider);
+    await syncWithBackend(result.user);
+  } catch (err) {
+    console.error('Sign-in error:', err.code, err.message);
+    if (err.code === 'auth/popup-closed-by-user') {
+      console.log('Popup closed by user.');
       return;
     }
-    
-    console.log('→ Using real Firebase');
-    const result = await signInWithPopup(auth, provider);
-    const user = result.user;
-    localStorage.setItem('user', JSON.stringify({email:user.email, name:user.displayName||user.email}));
-    setTimeout(()=> location.href = 'payment.html', 600);
-  }catch(err){
-    console.error('✗ Error:', err.code, err.message);
+    if (err.code === 'auth/popup-blocked') {
+      alert('Popup was blocked by your browser. Please allow popups for this site.');
+      return;
+    }
     alert('Sign-in failed: ' + err.message);
   }
 }
 
+// Login flow
+export async function initLogin() {
+  const form = $('#login-form');
+  const msg = $('#login-msg');
+
+  $('#btn-google')?.addEventListener('click', () => socialSignIn(new GoogleAuthProvider()));
+  $('#btn-facebook')?.addEventListener('click', () => socialSignIn(new FacebookAuthProvider()));
+  $('#btn-github')?.addEventListener('click', () => socialSignIn(new GithubAuthProvider()));
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    showMessage(msg, '', '');
+    setLoading(form, true);
+    const email = $('#login-email').value.trim();
+    const password = $('#login-password').value.trim();
+    try {
+      if (!email || !password) throw new Error('Email and password required');
+      const res = await signInWithEmailAndPassword(auth, email, password);
+      await syncWithBackend(res.user);
+    } catch (err) {
+      showMessage(msg, 'error', err.message);
+    } finally {
+      setLoading(form, false);
+    }
+  });
+}
+
+// Register flow
+export async function initRegister() {
+  const form = $('#register-form');
+  const msg = $('#register-msg');
+
+  $('#reg-google')?.addEventListener('click', () => socialSignIn(new GoogleAuthProvider()));
+  $('#reg-facebook')?.addEventListener('click', () => socialSignIn(new FacebookAuthProvider()));
+  $('#reg-github')?.addEventListener('click', () => socialSignIn(new GithubAuthProvider()));
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    showMessage(msg, '', '');
+    setLoading(form, true);
+    const name = $('#reg-name').value.trim();
+    const email = $('#reg-email').value.trim();
+    const password = $('#reg-password').value.trim();
+    try {
+      if (!name || !email || !password) throw new Error('All fields required');
+      if (password.length < 6) throw new Error('Password must be 6+ characters');
+      const res = await createUserWithEmailAndPassword(auth, email, password);
+      await syncWithBackend(res.user);
+    } catch (err) {
+      showMessage(msg, 'error', err.message);
+    } finally {
+      setLoading(form, false);
+    }
+  });
+}
+
 // Observe auth state
-export function observeAuth(){
-  if (!auth) return;
+export function observeAuth() {
   onAuthStateChanged(auth, user => {
-    if(user) localStorage.setItem('user', JSON.stringify({email:user.email, name:user.displayName||user.email}));
-    else localStorage.removeItem('user');
+    if (user) {
+      localStorage.setItem('user', JSON.stringify({
+        email: user.email,
+        name: user.displayName || user.email
+      }));
+    } else {
+      localStorage.removeItem('user');
+    }
   });
 }
