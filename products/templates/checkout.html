@@ -1,39 +1,56 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Checkout - MyStore{% endblock %}
+{% block title %}Checkout - RedCart{% endblock %}
 
 {% block content %}
 <div class="container py-5">
   <div class="row g-4">
-    <!-- LEFT: Checkout Instructions -->
+    <!-- LEFT: Checkout -->
     <div class="col-lg-8">
       <div class="card border-0 shadow-sm p-4 rounded-4 theme-card">
         <h3 class="fw-bold mb-3 text-gradient">🛍 Checkout</h3>
         <p class="fs-5 mb-4">Review your order and complete payment securely.</p>
 
-        <div class="alert alert-warning border-0 rounded-4 shadow-sm">
-          <h5 class="fw-bold mb-2"><i class="bi bi-credit-card"></i> Manual Payment Details</h5>
-          <ul class="list-unstyled mb-2">
-            <li><strong>Account Name:</strong> Peter Afolabi</li>
-            <li><strong>OPay Number:</strong> 08012345678</li>
-          </ul>
-          <p class="mb-0 text-muted">After making your payment, click <strong>“I Have Paid”</strong> to confirm your order.</p>
+        <!-- Customer Email (for Paystack) -->
+        <div class="mb-3">
+          <label class="form-label fw-semibold">📧 Email Address</label>
+          <input type="email" id="customer-email" class="form-control rounded-pill px-4"
+            value="{{ request.user.email }}"
+            placeholder="your@email.com" required>
         </div>
 
-        <form method="post" action="{% url 'products:confirm-payment' %}" class="mt-4">
-          {% csrf_token %}
-          {% if stripe_publishable_key and stripe_client_secret %}
-          <div id="payment-element"></div>
-          <button id="submit-payment" class="btn btn-success w-100 py-3 fw-semibold rounded-pill shadow-sm btn-glow mt-3">
-            Pay securely
-          </button>
-          {% else %}
-          <button type="submit" class="btn btn-success w-100 py-3 fw-semibold rounded-pill shadow-sm btn-glow">
-            ✅ I Have Paid
-          </button>
-          {% endif %}
-        </form>
+        <!-- Customer Name -->
+        <div class="mb-4">
+          <label class="form-label fw-semibold">👤 Full Name</label>
+          <input type="text" id="customer-name" class="form-control rounded-pill px-4"
+            value="{{ request.user.get_full_name }}"
+            placeholder="Your full name" required>
+        </div>
+
+        <!-- Paystack Pay Button -->
+        {% if products %}
+        <button id="paystack-btn" class="btn btn-success w-100 py-3 fw-semibold rounded-pill shadow-sm btn-glow">
+          💳 Pay ₦{{ total_after_coupon|default:total|floatformat:2 }} with Paystack
+        </button>
+        {% endif %}
+
+        <!-- Manual Payment Fallback -->
+        <div class="alert alert-warning border-0 rounded-4 shadow-sm mt-4">
+          <h5 class="fw-bold mb-2"><i class="bi bi-phone"></i> Pay via Transfer / OPay</h5>
+          <ul class="list-unstyled mb-2">
+            <li><strong>Account Name:</strong> Peter Afolabi</li>
+            <li><strong>OPay Number:</strong> 08137649314</li>
+          </ul>
+          <p class="mb-2 text-muted">After transferring, click below to confirm your order.</p>
+          <form method="post" action="{% url 'products:confirm-payment' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-success rounded-pill fw-semibold w-100">
+              ✅ I Have Paid via Transfer
+            </button>
+          </form>
+        </div>
+
       </div>
     </div>
 
@@ -57,9 +74,16 @@
 
         <hr>
 
+        {% if coupon_discount %}
+        <div class="d-flex justify-content-between text-success mb-1">
+          <span>Coupon Discount:</span>
+          <span>-₦{{ coupon_discount|floatformat:2 }}</span>
+        </div>
+        {% endif %}
+
         <div class="d-flex justify-content-between fw-bold fs-5">
           <span>Total:</span>
-          <span class="text-danger color-changing">₦{{ total|floatformat:2 }}</span>
+          <span class="text-danger color-changing">₦{{ total_after_coupon|default:total|floatformat:2 }}</span>
         </div>
         {% else %}
         <p class="text-muted text-center mt-3">No items in your order.</p>
@@ -70,46 +94,35 @@
 </div>
 
 <style>
-  body {
-    transition: background 0.4s ease, color 0.4s ease;
-  }
-
   .theme-card {
     background: #fff;
     border-radius: 20px;
     transition: all 0.4s ease;
   }
-
   .text-gradient {
     background: linear-gradient(90deg, #ff7b00, #ff0066);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
-
   .btn-success {
     background: linear-gradient(90deg, #28a745, #20c997);
     border: none;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
   }
-
   .btn-success:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 15px rgba(32, 201, 151, 0.4);
   }
-
   .btn-glow {
     animation: glowPulse 2s infinite alternate;
   }
-
   @keyframes glowPulse {
     0% { box-shadow: 0 0 10px rgba(40, 167, 69, 0.5); }
     100% { box-shadow: 0 0 25px rgba(32, 201, 151, 0.8); }
   }
-
   .color-changing {
     animation: colorShift 6s infinite alternate;
   }
-
   @keyframes colorShift {
     0% { color: #ff4747; }
     25% { color: #ffb400; }
@@ -117,53 +130,36 @@
     75% { color: #0097e6; }
     100% { color: #e84118; }
   }
-
   .alert-warning {
     background-color: #fff6e6;
     border-left: 4px solid #ffb400;
   }
-
-  /* Dark theme support */
   [data-theme="dark"] .theme-card {
     background-color: #1f1f1f !important;
     color: #e0e0e0 !important;
   }
-
-  [data-theme="dark"] h2,
-  [data-theme="dark"] h3,
-  [data-theme="dark"] h4,
-  [data-theme="dark"] h5,
-  [data-theme="dark"] label,
-  [data-theme="dark"] p {
-    color: #e0e0e0;
-  }
-
-  [data-theme="dark"] .text-muted,
-  [data-theme="dark"] small {
-    color: #aaa;
-  }
-
-  [data-theme="dark"] .form-control,
-  [data-theme="dark"] .form-select {
-    background-color: #2a2a2a;
-    color: #e0e0e0;
-    border-color: #444;
-  }
-
   [data-theme="dark"] .alert-warning {
     background-color: #332200;
     border-left-color: #ffb400;
     color: #ddd;
   }
-
-  [data-theme="dark"] .color-changing {
-    color: #66b3ff;
+  [data-theme="dark"] .form-control {
+    background-color: #2a2a2a;
+    color: #e0e0e0;
+    border-color: #444;
   }
+  [data-theme="dark"] .color-changing { color: #66b3ff; }
+  [data-theme="dark"] h2,[data-theme="dark"] h3,
+  [data-theme="dark"] h4,[data-theme="dark"] h5,
+  [data-theme="dark"] label,[data-theme="dark"] p { color: #e0e0e0; }
+  [data-theme="dark"] .text-muted, [data-theme="dark"] small { color: #aaa; }
 </style>
 
+<!-- Paystack Script -->
+<script src="https://js.paystack.co/v1/inline.js"></script>
 <script>
-  // Auto fade-in animation
   document.addEventListener('DOMContentLoaded', () => {
+    // Card fade in
     document.querySelectorAll('.theme-card').forEach((card, i) => {
       card.style.opacity = '0';
       setTimeout(() => {
@@ -171,31 +167,52 @@
         card.style.opacity = '1';
       }, i * 150);
     });
-  });
-</script>
 
-{% if stripe_publishable_key and stripe_client_secret %}
-<script src="https://js.stripe.com/v3/"></script>
-<script>
-  const stripe = Stripe('{{ stripe_publishable_key }}');
-  const elements = stripe.elements({clientSecret: '{{ stripe_client_secret }}'});
-  const paymentElement = elements.create('payment');
-  paymentElement.mount('#payment-element');
+    const paystackBtn = document.getElementById('paystack-btn');
+    if (!paystackBtn) return;
 
-  const submitBtn = document.getElementById('submit-payment');
-  submitBtn.addEventListener('click', async (e) => {
-    e.preventDefault();
-    submitBtn.disabled = true;
-    const {error} = await stripe.confirmPayment({
-      elements,
-      confirmParams: {return_url: window.location.href},
+    paystackBtn.addEventListener('click', () => {
+      const email = document.getElementById('customer-email').value.trim();
+      const name  = document.getElementById('customer-name').value.trim();
+
+      if (!email) {
+        alert('Please enter your email address.');
+        return;
+      }
+
+      // Amount in kobo (Paystack requires kobo)
+      const totalText = paystackBtn.textContent.replace(/[^0-9.]/g, '');
+      const amountNaira = parseFloat(totalText) || 0;
+      const amountKobo  = Math.round(amountNaira * 100);
+
+      if (amountKobo <= 0) {
+        alert('Invalid order amount.');
+        return;
+      }
+
+      const handler = PaystackPop.setup({
+        key: '{{ paystack_public_key }}',
+        email: email,
+        amount: amountKobo,
+        currency: 'NGN',
+        ref: 'REDCART-' + Math.floor(Math.random() * 1000000000),
+        metadata: {
+          custom_fields: [
+            { display_name: 'Customer Name', variable_name: 'customer_name', value: name }
+          ]
+        },
+        callback: function(response) {
+          // Payment successful — verify and confirm order
+          window.location.href = '/products/payment/verify/?reference=' + response.reference;
+        },
+        onClose: function() {
+          console.log('Payment window closed.');
+        }
+      });
+
+      handler.openIframe();
     });
-    if (error) {
-      alert(error.message || 'Payment failed');
-      submitBtn.disabled = false;
-    }
   });
 </script>
-{% endif %}
 
 {% endblock %}

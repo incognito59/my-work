@@ -1,0 +1,53 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Register — RedCart</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="container center">
+    <div class="card form">
+      <h2>🚀 Create Account</h2>
+      <p class="lead">Join RedCart for fast checkout and exclusive deals</p>
+
+      <div id="register-msg"></div>
+
+      <p style="font-weight:600;margin-bottom:10px;color:#111;">Sign up with</p>
+      <div class="social-row">
+        <div id="reg-google" class="social-btn" title="Sign up with Google"><img src="https://www.svgrepo.com/show/355037/google.svg" alt="Google" onerror="this.remove()"><span>🔍 Google</span></div>
+        <div id="reg-facebook" class="social-btn" title="Sign up with Facebook"><img src="https://www.svgrepo.com/show/475654/facebook-color.svg" alt="Facebook" onerror="this.remove()"><span>f Facebook</span></div>
+        <div id="reg-github" class="social-btn" title="Sign up with GitHub"><img src="https://www.svgrepo.com/show/354202/github.svg" alt="GitHub" onerror="this.remove()"><span>⚙️ GitHub</span></div>
+      </div>
+
+      <div style="display:flex;align-items:center;margin:16px 0;gap:10px;opacity:0.6;">
+        <div style="flex:1;height:1px;background:#ddd;"></div>
+        <span style="font-size:0.85rem;">OR</span>
+        <div style="flex:1;height:1px;background:#ddd;"></div>
+      </div>
+
+      <form id="register-form">
+        <label class="small">👤 Full Name</label>
+        <input id="reg-name" class="input" type="text" placeholder="John Doe" required>
+        
+        <label class="small">📧 Email Address</label>
+        <input id="reg-email" class="input" type="email" placeholder="you@example.com" required>
+        
+        <label class="small">🔐 Password</label>
+        <input id="reg-password" class="input" type="password" placeholder="••••••••" minlength="6" required>
+        
+        <button class="btn block" type="submit" style="margin-top:16px;">Create Account</button>
+      </form>
+
+      <p class="muted" style="text-align:center;margin-top:16px;">Already have an account? <a class="link" href="index.html">Sign in here</a></p>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initRegister, observeAuth } from './js/auth.js';
+    observeAuth();
+    initRegister();
+  </script>
+</body>
+</html>

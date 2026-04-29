@@ -1,0 +1,116 @@
+/* Modern ecommerce auth & payment styles (Amazon/Jumia like) */
+:root{
+  --primary:#ff6b00;
+  --accent:#ff4757;
+  --bg:#f5f7fb;
+  --card:#ffffff;
+  --muted:#6c757d;
+  --border:#e6e9ef;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{font-family:'Segoe UI',Inter,system-ui,Arial,sans-serif;background:var(--bg);margin:0;color:#111;line-height:1.5}
+
+/* Container & Card */
+.container{max-width:980px;margin:40px auto;padding:20px}
+.container.center{display:flex;align-items:center;justify-content:center;min-height:100vh}
+.card{background:var(--card);border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.08);padding:32px;transition:all 0.3s ease}
+.card:hover{box-shadow:0 8px 24px rgba(0,0,0,0.12)}
+
+/* Form */
+.form{width:100%;max-width:420px}
+.form h2{margin:0 0 8px;font-size:1.8rem;font-weight:700;color:#111}
+.form p.lead{margin:0 0 24px;color:var(--muted);font-size:0.98rem}
+
+/* Input Fields */
+.input{
+  width:100%;padding:12px 14px;border-radius:8px;
+  border:1px solid var(--border);
+  background:#fff;font-size:0.98rem;margin-bottom:12px;
+  transition:all 0.2s ease;color:#111
+}
+.input:focus{outline:0;border-color:var(--primary);box-shadow:0 0 0 3px rgba(255,107,0,0.1)}
+.input::placeholder{color:#ccc}
+
+/* Buttons */
+.btn{
+  display:inline-block;padding:12px 20px;border-radius:8px;
+  border:0;background:var(--primary);color:#fff;font-weight:600;
+  cursor:pointer;font-size:0.98rem;transition:all 0.2s ease;text-align:center
+}
+.btn:hover{background:#e55a00;transform:translateY(-1px);box-shadow:0 4px 12px rgba(255,107,0,0.3)}
+.btn:active{transform:translateY(0)}
+.btn.secondary{background:#fff;color:var(--primary);border:2px solid var(--primary)}
+.btn.secondary:hover{background:#fff9f4}
+.btn.block{width:100%;display:block}
+
+/* Social Auth Row */
+.social-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.social-btn{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:16px 14px;border-radius:8px;border:2px solid var(--border);
+  background:#fff;cursor:pointer;transition:all 0.3s ease;
+  font-size:0.85rem;font-weight:600;color:#111;min-height:80px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.06);position:relative;
+  user-select:none;-webkit-tap-highlight-color:transparent;
+}
+.social-btn:hover{
+  border-color:var(--primary);
+  background:#fff9f4;
+  transform:translateY(-3px);
+  box-shadow:0 6px 16px rgba(255,107,0,0.2);
+}
+.social-btn:active{
+  transform:translateY(-1px);
+  box-shadow:0 2px 6px rgba(255,107,0,0.15);
+}
+.social-btn img{
+  width:22px;height:22px;margin-bottom:8px;object-fit:contain;
+  filter:drop-shadow(0 0.5px 1px rgba(0,0,0,0.1));
+}
+.social-btn span{
+  display:block;font-size:0.8rem;font-weight:600;
+}
+
+/* Message Alerts */
+.message{
+  padding:12px 14px;border-radius:8px;margin-bottom:14px;
+  font-size:0.95rem;border-left:4px solid
+}
+.message.success{
+  background:#ecf8f2;color:#0c6b3a;border-left-color:#10b981
+}
+.message.error{
+  background:#fff0f0;color:#9b1b1b;border-left-color:#ef4444
+}
+
+/* Utilities */
+.muted{color:var(--muted);font-size:0.95rem}
+.link{color:var(--primary);text-decoration:none;font-weight:600;transition:color 0.2s}
+.link:hover{color:#e55a00;text-decoration:underline}
+.small{font-size:0.88rem;color:#666;margin-bottom:6px}
+.loading{opacity:0.6;pointer-events:none}
+
+/* Payment Section */
+.cards{display:flex;gap:12px;align-items:center;margin-bottom:20px;padding:12px;border-radius:8px;background:#f9fafb;flex-wrap:wrap}
+.card-icon{
+  width:60px;height:40px;border-radius:6px;
+  background:#fff;border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  padding:4px;transition:all 0.2s
+}
+.card-icon:hover{border-color:var(--primary);background:#fff9f4}
+.card-icon img{width:100%;height:100%;object-fit:contain}
+
+/* Labels */
+label{display:block;margin-top:14px;margin-bottom:8px;font-weight:600;color:#111}
+
+/* Responsive */
+@media (max-width:600px){
+  .social-row{grid-template-columns:repeat(2,1fr);gap:10px}
+  .form{padding:0}
+  .card{padding:24px}
+  .form h2{font-size:1.5rem}
+  .input{padding:11px 12px;font-size:16px}
+  .btn{padding:11px 16px}
+}

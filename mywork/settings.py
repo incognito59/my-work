@@ -124,8 +124,13 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_FROM_EMAIL = 'afolabiprosper329@gmail.com'
 SERVER_EMAIL = 'afolabiprosper329@gmail.com'
 
+# Stripe (keep for later)
 STRIPE_PUBLISHABLE_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY', '')
 STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY', '')
+
+# Paystack
+PAYSTACK_PUBLIC_KEY = 'pk_test_4dc9ad4b7bac517bcfd33fb8398a1c3b865e6a2d'
+PAYSTACK_SECRET_KEY = 'sk_test_d34aee0fbe64455129b2062c4dcdbd4e87018b64'
 
 SITE_ID = 1
 ITEMS_PER_PAGE = 12
@@ -138,6 +143,8 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_DIRS = [BASE_DIR / 'frontend']
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 

@@ -11,13 +11,16 @@ urlpatterns = [
     # Django auth URLs (password reset etc.)
     path('auth/', include('django.contrib.auth.urls')),
 
-    # ✅ Firebase token verification endpoint (called by frontend after Google sign-in)
+    # Firebase token verification endpoint
     path('auth/google/callback/', product_views.firebase_auth_callback, name='firebase-auth-callback'),
 
     # Allauth URLs (Google, Facebook, GitHub login)
     path('accounts/', include('allauth.urls')),
 
     path('api/chat/', product_views.ai_chat, name='api-chat-root'),
+
+    # Paystack payment verification
+    path('products/payment/verify/', product_views.paystack_verify, name='paystack-verify'),
 
     # Primary product routes
     path('products/', include(('products.urls', 'products'), namespace='products')),

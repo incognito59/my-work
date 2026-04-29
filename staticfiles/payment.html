@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Checkout — RedCart</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="container center">
+    <div class="card form" style="max-width:520px;">
+      <h2>💳 Checkout</h2>
+      <p class="lead">Complete your purchase securely</p>
+
+      <div id="payment-msg"></div>
+
+      <div style="margin-bottom:20px;">
+        <p style="font-weight:600;margin-bottom:10px;color:#111;">Accepted Payment Methods</p>
+        <div class="cards">
+          <div class="card-icon" title="Visa"><img src="https://www.svgrepo.com/show/331432/visa.svg" alt="Visa"></div>
+          <div class="card-icon" title="Mastercard"><img src="https://www.svgrepo.com/show/331431/mastercard.svg" alt="Mastercard"></div>
+          <div class="card-icon" title="Verve"><img src="https://www.svgrepo.com/show/43479/verve.svg" alt="Verve"></div>
+          <div class="card-icon" title="Bank Transfer"><img src="https://www.svgrepo.com/show/321394/bank.svg" alt="Bank" style="width:24px;"></div>
+        </div>
+      </div>
+
+      <form id="payment-form">
+        <label class="small">📧 Email Address</label>
+        <input id="pay-email" class="input" type="email" placeholder="you@example.com" required>
+
+        <label class="small">💰 Amount to Pay (NGN)</label>
+        <div style="display:flex;gap:8px;">
+          <input id="pay-amount" class="input" type="number" placeholder="5000" min="1" step="100" style="flex:1;" required>
+          <span style="padding:12px 14px;background:#f0f0f0;border-radius:8px;white-space:nowrap;font-weight:600;">₦</span>
+        </div>
+
+        <button class="btn block" type="submit" style="margin-top:20px;padding:14px;">🔒 Pay Now</button>
+      </form>
+
+      <p style="text-align:center;margin-top:20px;color:var(--muted);font-size:0.9rem;">🔐 Your payment is secured by Paystack</p>
+    </div>
+  </div>
+
+  <script src="https://js.paystack.co/v1/inline.js"></script>
+  <script type="module">
+    import { initPayment } from './js/payment.js';
+    try{ initPayment(); } catch(e){ console.error(e); alert('Payment module failed: '+e.message)}
+  </script>
+</body>
+</html>
