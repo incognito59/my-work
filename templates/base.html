@@ -385,11 +385,20 @@
 
       window.showToast = showToast;
 
-      // ============ NOTIFICATION BELL ============
+      // ============ NOTIFICATION BELL (WORKS FOR GUESTS) ============
       async function updateNotificationBell() {
-        {% if user.is_authenticated %}
         try {
           const response = await fetch('/products/api/notifications/unread/count/');
+          
+          // If response is 401 (unauthorized), user is not logged in
+          if (response.status === 401) {
+            const badge = document.getElementById('notification-badge');
+            const dropdownBadge = document.getElementById('dropdown-badge');
+            if (badge) badge.style.display = 'none';
+            if (dropdownBadge) dropdownBadge.style.display = 'none';
+            return;
+          }
+          
           const data = await response.json();
           
           if (data.success && data.unread_count > 0) {
@@ -415,8 +424,12 @@
           }
         } catch(e) {
           console.log('Error updating notification bell:', e);
+          // Hide badges on error (user likely not logged in)
+          const badge = document.getElementById('notification-badge');
+          const dropdownBadge = document.getElementById('dropdown-badge');
+          if (badge) badge.style.display = 'none';
+          if (dropdownBadge) dropdownBadge.style.display = 'none';
         }
-        {% endif %}
       }
 
       // ============ LOADER ============

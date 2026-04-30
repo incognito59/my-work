@@ -50,39 +50,25 @@
   .highlight-card strong { display: block; font-size: 1.5rem; margin-bottom: 6px; color: #1f2d63; }
   .highlight-card span   { color: #556386; font-size: 0.88rem; }
 
-  /* ── FILTER BAR ── */
+  /* ── FILTER BAR (REMOVED SECONDARY SEARCH - KEPT ONLY CATEGORY FILTERS) ── */
   .filter-bar { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 18px; flex-wrap: wrap; }
   .filter-summary { color: #667eea; font-weight: 700; min-width: 200px; font-size: 0.92rem; }
-  .search-box { flex: 1; min-width: 280px; }
-  .search-box input {
-    width: 100%; padding: 14px 20px; border: 2px solid #667eea; border-radius: 28px;
-    font-size: 0.97rem; transition: all 0.3s ease; box-sizing: border-box; background: #fff;
-  }
-  .search-box input:focus { outline: none; box-shadow: 0 0 0 3px rgba(102,126,234,0.16); border-color: #764ba2; }
 
-  /* ── CATEGORY CHIPS ── */
+  /* ── CATEGORY CHIPS WITH MODERN SVG ICONS ── */
   .category-nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 28px; }
   .category-chip {
-    display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px;
+    display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px;
     border-radius: 999px; border: 1px solid rgba(102,126,234,0.25); background: #fff;
     color: #333; font-weight: 600; font-size: 0.88rem; cursor: pointer; transition: all 0.22s ease;
   }
+  .category-chip svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; }
   .category-chip.active, .category-chip:hover {
     background: #667eea; color: #fff; border-color: #667eea;
     transform: translateY(-1px); box-shadow: 0 4px 12px rgba(102,126,234,0.25);
   }
 
-  /* ── DEALS ROW ── */
-  .deals-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px,1fr)); gap: 16px; margin-bottom: 32px; }
-  .deal-card { background: #fff; border-radius: 16px; border: 1px solid #e8effb; box-shadow: 0 6px 20px rgba(0,0,0,0.05); overflow: hidden; transition: transform 0.22s ease, box-shadow 0.22s ease; }
-  .deal-card:hover { transform: translateY(-5px); box-shadow: 0 12px 30px rgba(102,126,234,0.14); }
-  .deal-body { padding: 20px; }
-  .deal-label { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; color: #667eea; margin-bottom: 8px; }
-  .deal-title { font-size: 1.3rem; font-weight: 800; margin-bottom: 10px; color: #1d2b56; }
-  .deal-description { color: #555; line-height: 1.55; margin-bottom: 16px; font-size: 0.9rem; }
-  .deal-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-  .deal-cta { padding: 9px 16px; border-radius: 999px; background: #667eea; color: #fff; text-decoration: none; font-weight: 700; font-size: 0.88rem; transition: background 0.2s; }
-  .deal-cta:hover { background: #5a6edc; }
+  /* ── DEALS ROW (REMOVED - MOVED TO OFFERS PAGE) ── */
+  /* Deals section completely removed from homepage */
 
   /* ── LATEST ROW ── */
   .latest-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: 16px; margin-bottom: 36px; }
@@ -223,21 +209,56 @@
   /* FLASH SALE BAR */
   .flash-sale-banner { display: flex; align-items: center; justify-content: space-between; padding: 4px 8px; background: linear-gradient(90deg,#f90,#ff4500); font-size: 0.72rem; color: #fff; font-weight: 700; }
 
-  /* NO PRODUCTS */
-  .no-products { text-align: center; padding: 40px; color: #999; background: #fff; border-radius: 10px; margin: 20px 0; border: 1px solid #eee; }
+  /* NO PRODUCTS - IMPROVED EMPTY STATE */
+  .no-products {
+    text-align: center;
+    padding: 60px 40px;
+    background: #fff;
+    border-radius: 16px;
+    margin: 40px 0;
+    border: 1px solid #eee;
+  }
+  .no-products svg {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 20px;
+    opacity: 0.5;
+  }
+  .no-products h3 {
+    font-size: 1.5rem;
+    margin-bottom: 12px;
+    color: #333;
+  }
+  .no-products p {
+    color: #666;
+    margin-bottom: 20px;
+  }
+  .clear-filters-btn {
+    display: inline-block;
+    padding: 10px 24px;
+    background: #667eea;
+    color: #fff;
+    border-radius: 999px;
+    text-decoration: none;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .clear-filters-btn:hover {
+    background: #5a6edc;
+  }
 
   /* ── DARK THEME ── */
   [data-theme="dark"] .shop-container { background: #13131a; }
   [data-theme="dark"] .category-section,
   [data-theme="dark"] .product-card,
-  [data-theme="dark"] .deal-card,
   [data-theme="dark"] .latest-card,
   [data-theme="dark"] .search-info,
   [data-theme="dark"] .no-products { background: #1c1c24; color: #ddd; border-color: #333; box-shadow: none; }
   [data-theme="dark"] .product-img-wrap { background: #252530; border-color: #333; }
   [data-theme="dark"] .product-name    { color: #e0e0e0; }
   [data-theme="dark"] .product-price   { color: #f0f0f0; }
-  [data-theme="dark"] .search-box input { background: #1c1c24; border-color: #444; color: #ddd; }
   [data-theme="dark"] .category-header { border-color: #333; }
   [data-theme="dark"] .category-title  { color: #e0e0e0; }
   [data-theme="dark"] .wishlist-icon-btn { background: #252530; border-color: #444; }
@@ -245,6 +266,8 @@
   [data-theme="dark"] .highlight-card  { background: #252530; border-color: #333; }
   [data-theme="dark"] .highlight-card strong { color: #c8d4ff; }
   [data-theme="dark"] .highlight-card span   { color: #9aabcc; }
+  [data-theme="dark"] .no-products h3 { color: #e0e0e0; }
+  [data-theme="dark"] .no-products p { color: #aaa; }
 
   /* ── RESPONSIVE ── */
   @media (max-width: 992px) {
@@ -291,46 +314,40 @@
     </div>
   </section>
 
-  <!-- FILTER BAR -->
-  <section class="filter-bar">
-    <div class="search-box">
-      <form method="GET" onsubmit="return false;">
-        <input id="live-search" type="text" placeholder="Search products by name, category or feature..." value="{{ query }}" autocomplete="off" />
-      </form>
-    </div>
-    <div class="filter-summary">Filter by category or search to narrow results.</div>
-  </section>
+  <!-- FILTER BAR (NO SECONDARY SEARCH - ONLY CATEGORY SUMMARY) -->
+  <div class="filter-bar">
+    <div class="filter-summary">Filter by category to find your perfect product.</div>
+  </div>
 
-  <!-- CATEGORY CHIPS -->
+  <!-- CATEGORY CHIPS (REMOVED EMOJIS - USING SVG ICONS) -->
   <div class="category-nav">
+    <button type="button" class="category-chip" data-category="">
+      <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+      All
+    </button>
     {% for category_code, category_name in available_categories %}
       <button type="button" class="category-chip" data-category="{{ category_code|default:'Uncategorized'|slugify }}">
-        {% if category_code == 'Electronics' %}📱{% elif category_code == 'Clothing' %}👕{% elif category_code == 'Home' %}🏠{% elif category_code == 'Sports' %}⚽{% elif category_code == 'Books' %}📚{% elif category_code == 'Toys' %}🎮{% else %}🧰{% endif %}
+        {% if category_code == 'Electronics' %}
+          <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><rect x="2" y="6" width="20" height="12" rx="2"></rect><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+        {% elif category_code == 'Clothing' %}
+          <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><path d="M12 2v4M12 2l-2 4h4l-2-4zM18 10v10a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V10l6-4 6 4z"></path></svg>
+        {% elif category_code == 'Home' %}
+          <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        {% elif category_code == 'Sports' %}
+          <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="2" x2="12" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line><path d="M4 4 L20 20 M4 20 L20 4"></path></svg>
+        {% elif category_code == 'Books' %}
+          <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><path d="M4 4h16v16H4z"></path><line x1="8" y1="9" x2="16" y2="9"></line><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="12" y2="17"></line></svg>
+        {% elif category_code == 'Toys' %}
+          <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><rect x="2" y="7" width="20" height="14" rx="2"></rect><line x1="16" y1="3" x2="16" y2="7"></line><line x1="8" y1="3" x2="8" y2="7"></line></svg>
+        {% else %}
+          <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H5.78a1.65 1.65 0 0 0-1.51 1 1.65 1.65 0 0 0 .33 1.82l.06.07A12 12 0 0 0 12 17.2a12 12 0 0 0 6.2-2.2l.07-.07z"></path></svg>
+        {% endif %}
         {{ category_name|default:'Uncategorized' }}
       </button>
     {% endfor %}
   </div>
 
-  <!-- BEST DEALS -->
-  {% if best_deals %}
-  <div class="deals-row">
-    {% for offer in best_deals %}
-      <div class="deal-card">
-        <div class="deal-body">
-          <div class="deal-label">🔥 Best Deal</div>
-          <div class="deal-title">{{ offer.name|default:'Hot Offer' }}</div>
-          <p class="deal-description">{{ offer.description|default:'Save more on the latest items with this exclusive code.' }}</p>
-          <div class="deal-footer">
-            <span class="product-badge">{{ offer.discount|floatformat:0 }}% OFF</span>
-            <a href="{% url 'products:offers' %}" class="deal-cta">Use Offer</a>
-          </div>
-        </div>
-      </div>
-    {% endfor %}
-  </div>
-  {% endif %}
-
-  <!-- LATEST PRODUCTS -->
+  <!-- LATEST PRODUCTS (MOVED OFFERS TO /offers PAGE) -->
   {% if latest_products %}
   <div class="latest-row">
     {% for product in latest_products %}
@@ -360,15 +377,14 @@
   </div>
   {% endif %}
 
-  <!-- ════ PRODUCTS BY CATEGORY — JUMIA STYLE ════ -->
+  <!-- ════ PRODUCTS BY CATEGORY — ONLY REMAINING CATEGORIES (Home, Other, Sports REMOVED) ════ -->
   {% for category_code, category_data in products_by_category.items %}
-    {% if category_data.products %}
+    {% if category_code not in 'Home,Other,Sports' and category_data.products %}
     <div class="category-section" id="category-{{ category_code|default:'Uncategorized'|slugify }}">
 
       <div class="category-header">
         <h2 class="category-title">
           <span class="category-title-bar"></span>
-          {% if category_code == 'Electronics' %}📱{% elif category_code == 'Clothing' %}👕{% elif category_code == 'Home' %}🏠{% elif category_code == 'Sports' %}⚽{% elif category_code == 'Books' %}📚{% elif category_code == 'Toys' %}🎮{% else %}🧰{% endif %}
           {{ category_data.label|default:'Uncategorized' }}
         </h2>
         <a href="{% url 'products:product-list' %}" class="see-all-link">See All →</a>
@@ -447,24 +463,35 @@
     {% endif %}
   {% endfor %}
 
-  <!-- EMPTY STATE -->
+  <!-- IMPROVED EMPTY STATE WITH PROFESSIONAL ICON AND CLEAR BUTTON -->
+  <div id="filter-no-products" class="no-products" style="display:none;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="12" y1="8" x2="12" y2="12"></line>
+      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+    </svg>
+    <h3>No products match your filters</h3>
+    <p>Try adjusting your search criteria or browse all categories</p>
+    <button class="clear-filters-btn" onclick="clearAllFilters()">Clear All Filters</button>
+  </div>
+
+  <!-- ORIGINAL EMPTY STATE FOR NO SEARCH RESULTS -->
   {% if query and products_by_category.values|length == 0 %}
   <div class="no-products">
-    <h3>📦 No products found</h3>
-    <p>Try adjusting your search or <a href="{% url 'products:product-list' %}">browse all products</a>.</p>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <circle cx="11" cy="11" r="8"></circle>
+      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+    </svg>
+    <h3>No products found</h3>
+    <p>We couldn't find any products matching "<strong>{{ query }}</strong>"</p>
+    <a href="{% url 'products:product-list' %}" class="clear-filters-btn">Clear Search</a>
   </div>
   {% endif %}
-
-  <div id="filter-no-products" class="no-products" style="display:none;">
-    <h3>📦 No products match your filters</h3>
-    <p>Clear the search or select a different category to reveal more items.</p>
-  </div>
 
 </div>
 
 <script>
   document.addEventListener('DOMContentLoaded', () => {
-    const searchInput   = document.getElementById('live-search');
     const chips         = Array.from(document.querySelectorAll('.category-chip'));
     const cards         = Array.from(document.querySelectorAll('.product-card'));
     const noProducts    = document.getElementById('filter-no-products');
@@ -473,26 +500,22 @@
     const normalize = v => (v || '').toString().trim().toLowerCase();
     let activeCategory = '';
 
-    const updateSummary = (count, cat, q) => {
+    const updateSummary = (count, cat) => {
       let text = `${count} product${count === 1 ? '' : 's'} found`;
-      if (cat) text += ` in "${cat.replace(/-/g, ' ')}"`;
-      if (q)   text += ` matching "${q}"`;
+      if (cat && cat !== 'all') text += ` in "${cat.replace(/-/g, ' ')}"`;
       if (filterSummary) filterSummary.textContent = text;
     };
 
     const applyFilters = () => {
-      const q = normalize(searchInput?.value || '');
       let visible = 0;
       cards.forEach(card => {
-        const name     = normalize(card.dataset.name);
         const category = normalize(card.dataset.category);
-        const show = (!activeCategory || category === activeCategory) &&
-                     (!q || name.includes(q) || category.includes(q));
+        const show = (!activeCategory || activeCategory === 'all' || category === activeCategory);
         card.style.display = show ? '' : 'none';
         if (show) visible++;
       });
-      if (noProducts) noProducts.style.display = visible ? 'none' : '';
-      updateSummary(visible, activeCategory, q);
+      if (noProducts) noProducts.style.display = (visible === 0 && activeCategory) ? '' : 'none';
+      updateSummary(visible, activeCategory);
     };
 
     chips.forEach(chip => {
@@ -502,21 +525,31 @@
           activeCategory = '';
           chip.classList.remove('active');
         } else {
-          activeCategory = cat;
+          activeCategory = cat || 'all';
           chips.forEach(c => c.classList.remove('active'));
           chip.classList.add('active');
         }
         applyFilters();
-        if (activeCategory) {
+        if (activeCategory && activeCategory !== 'all') {
           const section = document.getElementById(`category-${activeCategory}`);
           if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
       });
     });
 
-    if (searchInput) searchInput.addEventListener('input', applyFilters);
     applyFilters();
   });
+
+  function clearAllFilters() {
+    const chips = document.querySelectorAll('.category-chip');
+    chips.forEach(chip => chip.classList.remove('active'));
+    const cards = document.querySelectorAll('.product-card');
+    cards.forEach(card => card.style.display = '');
+    document.getElementById('filter-no-products').style.display = 'none';
+    if (document.querySelector('.filter-summary')) {
+      document.querySelector('.filter-summary').textContent = `${cards.length} products found`;
+    }
+  }
 </script>
 
 <script src="{% static 'js/flash-sale-timer.js' %}"></script>

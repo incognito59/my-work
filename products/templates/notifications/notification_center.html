@@ -142,7 +142,6 @@ function renderNotifications(notifications) {
     });
 }
 
-// Get notification icon
 function getNotificationIcon(type) {
     const icons = {
         'success': '<i class="bi bi-check-circle-fill text-success me-2"></i>',
@@ -156,36 +155,29 @@ function getNotificationIcon(type) {
     return icons[type] || icons['info'];
 }
 
-// Mark as read
 async function markAsRead(notificationId) {
     try {
         const response = await fetch(`/products/api/notifications/mark-read/${notificationId}/`, {
             method: 'POST',
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken'),
-            }
+            headers: { 'X-CSRFToken': getCookie('csrftoken') }
         });
         
         if (response.ok) {
             loadNotifications();
             updateUnreadCount();
-            playSound('success');
         }
     } catch (error) {
         console.error('Error marking as read:', error);
     }
 }
 
-// Delete notification
 async function deleteNotification(notificationId) {
     if (!confirm('Delete this notification?')) return;
     
     try {
         const response = await fetch(`/products/api/notifications/delete/${notificationId}/`, {
             method: 'POST',
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken'),
-            }
+            headers: { 'X-CSRFToken': getCookie('csrftoken') }
         });
         
         if (response.ok) {
@@ -198,37 +190,30 @@ async function deleteNotification(notificationId) {
     }
 }
 
-// Mark all as read
 document.getElementById('mark-all-read')?.addEventListener('click', async () => {
     try {
         const response = await fetch('/products/api/notifications/mark-all-read/', {
             method: 'POST',
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken'),
-            }
+            headers: { 'X-CSRFToken': getCookie('csrftoken') }
         });
         
         if (response.ok) {
             loadNotifications();
             updateUnreadCount();
             showToast('All notifications marked as read', 'success');
-            playSound('success');
         }
     } catch (error) {
         console.error('Error:', error);
     }
 });
 
-// Clear all
 document.getElementById('clear-all')?.addEventListener('click', async () => {
     if (!confirm('Delete ALL notifications? This cannot be undone.')) return;
     
     try {
         const response = await fetch('/products/api/notifications/clear-all/', {
             method: 'POST',
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken'),
-            }
+            headers: { 'X-CSRFToken': getCookie('csrftoken') }
         });
         
         if (response.ok) {
@@ -241,28 +226,6 @@ document.getElementById('clear-all')?.addEventListener('click', async () => {
     }
 });
 
-// Update counts
-async function updateCounts() {
-    try {
-        const response = await fetch('/products/api/notifications/unread/count/');
-        const data = await response.json();
-        
-        if (data.success) {
-            document.getElementById('unread-count').textContent = data.unread_count;
-            
-            // Update bell icon in navbar if exists
-            const bellBadge = document.querySelector('.navbar .notification-bell .badge');
-            if (bellBadge) {
-                bellBadge.textContent = data.unread_count;
-                bellBadge.style.display = data.unread_count > 0 ? 'inline-block' : 'none';
-            }
-        }
-    } catch (error) {
-        console.error('Error updating counts:', error);
-    }
-}
-
-// Update total, order, promotion, system counts
 async function updateCounts() {
     try {
         const response = await fetch('/products/api/notifications/');
@@ -271,7 +234,6 @@ async function updateCounts() {
         if (data.success) {
             document.getElementById('total-count').textContent = data.total;
             
-            // Count by type
             const orderCount = data.notifications.filter(n => n.type === 'order').length;
             const promotionCount = data.notifications.filter(n => n.type === 'promotion').length;
             const systemCount = data.notifications.filter(n => n.type === 'system').length;
@@ -285,7 +247,6 @@ async function updateCounts() {
     }
 }
 
-// Update unread count only
 async function updateUnreadCount() {
     try {
         const response = await fetch('/products/api/notifications/unread/count/');
@@ -293,116 +254,82 @@ async function updateUnreadCount() {
         
         if (data.success) {
             document.getElementById('unread-count').textContent = data.unread_count;
-            
-            // Update bell icon in navbar
-            const bellBadge = document.querySelector('.navbar .notification-bell .badge');
-            if (bellBadge) {
-                bellBadge.textContent = data.unread_count;
-                bellBadge.style.display = data.unread_count > 0 ? 'inline-block' : 'none';
-            }
         }
     } catch (error) {
         console.error('Error updating unread count:', error);
     }
 }
 
-// Filter buttons
 document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         
-        currentType = btn.dataset.type;
+        currentType = btn.dataset.type === 'unread' ? 'all' : btn.dataset.type;
         currentPage = 1;
-        loadNotifications();
+        
+        if (btn.dataset.type === 'unread') {
+            loadUnreadOnly();
+        } else {
+            loadNotifications();
+        }
     });
 });
 
-// Play sound
-function playSound(type = 'default') {
-    const soundEnabled = document.getElementById('sound-toggle')?.checked;
-    if (!soundEnabled) return;
+async function loadUnreadOnly() {
+    if (isLoading) return;
+    isLoading = true;
     
-    const sounds = {
-        'success': '/static/sounds/success.mp3',
-        'error': '/static/sounds/error.mp3',
-        'warning': '/static/sounds/warning.mp3',
-        'order': '/static/sounds/order.mp3',
-        'default': '/static/sounds/notification.mp3'
-    };
-    
-    const audio = new Audio(sounds[type] || sounds.default);
-    audio.volume = 0.5;
-    audio.play().catch(e => console.log('Sound play failed:', e));
-}
-
-// Desktop notifications
-async function requestDesktopPermission() {
-    if (!('Notification' in window)) {
-        console.log('This browser does not support desktop notifications');
-        return;
-    }
-    
-    if (Notification.permission === 'granted') {
-        return true;
-    }
-    
-    const permission = await Notification.requestPermission();
-    return permission === 'granted';
-}
-
-// Load notification settings
-async function loadSettings() {
     try {
-        const response = await fetch('/products/api/notification-settings/');
+        const response = await fetch(`/products/api/notifications/?page=${currentPage}&is_read=false`);
         const data = await response.json();
         
         if (data.success) {
-            document.getElementById('sound-toggle').checked = data.settings.sound_enabled;
-            document.getElementById('desktop-toggle').checked = data.settings.desktop_notifications;
+            renderNotifications(data.notifications);
+            renderPagination(data);
         }
     } catch (error) {
-        console.error('Error loading settings:', error);
+        console.error('Error loading unread:', error);
+    } finally {
+        isLoading = false;
+        document.getElementById('loading').style.display = 'none';
     }
 }
 
-// Save settings
-document.getElementById('sound-toggle')?.addEventListener('change', async (e) => {
-    await saveSettings({ sound_enabled: e.target.checked });
-});
-
-document.getElementById('desktop-toggle')?.addEventListener('change', async (e) => {
-    if (e.target.checked) {
-        const granted = await requestDesktopPermission();
-        if (!granted) {
-            e.target.checked = false;
-            showToast('Desktop notifications permission denied', 'error');
-            return;
-        }
+function renderPagination(data) {
+    const container = document.getElementById('pagination');
+    if (data.total_pages <= 1) {
+        container.innerHTML = '';
+        return;
     }
-    await saveSettings({ desktop_notifications: e.target.checked });
-});
-
-async function saveSettings(settings) {
-    try {
-        const response = await fetch('/products/api/notification-settings/update/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken'),
-            },
-            body: JSON.stringify(settings)
+    
+    let html = '<nav><ul class="pagination justify-content-center mb-0">';
+    
+    if (data.current_page > 1) {
+        html += `<li class="page-item"><button class="page-link" data-page="${data.current_page - 1}">Previous</button></li>`;
+    }
+    
+    for (let i = 1; i <= Math.min(5, data.total_pages); i++) {
+        html += `<li class="page-item ${i === data.current_page ? 'active' : ''}">
+                    <button class="page-link" data-page="${i}">${i}</button>
+                </li>`;
+    }
+    
+    if (data.current_page < data.total_pages) {
+        html += `<li class="page-item"><button class="page-link" data-page="${data.current_page + 1}">Next</button></li>`;
+    }
+    
+    html += '</ul></nav>';
+    container.innerHTML = html;
+    
+    document.querySelectorAll('.page-link').forEach(btn => {
+        btn.addEventListener('click', () => {
+            currentPage = parseInt(btn.dataset.page);
+            loadNotifications();
         });
-        
-        if (!response.ok) {
-            showToast('Failed to save settings', 'error');
-        }
-    } catch (error) {
-        console.error('Error saving settings:', error);
-    }
+    });
 }
 
-// Helper functions
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
@@ -418,18 +345,10 @@ function formatDate(dateString) {
     const diffDays = Math.floor(diffMs / 86400000);
     
     if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins} minutes ago`;
-    if (diffHours < 24) return `${diffHours} hours ago`;
-    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffMins < 60) return `${diffMins} minute${diffMins === 1 ? '' : 's'} ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
     return date.toLocaleDateString();
-}
-
-function showToast(message, type) {
-    if (window.showToast) {
-        window.showToast(message, type);
-    } else {
-        alert(message);
-    }
 }
 
 function getCookie(name) {
@@ -447,14 +366,10 @@ function getCookie(name) {
     return cookieValue;
 }
 
-// Initial load
+// Initialize
 document.addEventListener('DOMContentLoaded', () => {
     loadNotifications();
-    loadSettings();
     updateUnreadCount();
-    
-    // Update unread count every 30 seconds
-    setInterval(updateUnreadCount, 30000);
 });
 </script>
 
@@ -473,9 +388,9 @@ document.addEventListener('DOMContentLoaded', () => {
 }
 
 .filter-btn.active {
-    background-color: var(--main-color);
+    background-color: #667eea;
     color: white;
-    border-color: var(--main-color);
+    border-color: #667eea;
 }
 </style>
 {% endblock %}
