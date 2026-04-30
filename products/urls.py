@@ -50,7 +50,7 @@ urlpatterns = [
     # 📱 Newsletter
     path('newsletter/signup/', views.newsletter_signup, name='newsletter-signup'),
     
-    # � Blog & Content Pages
+    # 📝 Blog & Content Pages
     path('blog/', views.blog_page, name='blog'),
     path('reviews/', views.reviews_page, name='reviews'),
     path('api/chat/', views.ai_chat, name='api-chat'),
@@ -59,7 +59,7 @@ urlpatterns = [
     path('wishlist/', views.wishlist_page, name='wishlist'),
     path('about/', views.about_page, name='about'),
     
-    # �📧 Email Templates Preview (Development/Testing) - Direct & Aliased URLs
+    # 📧 Email Templates Preview (Development/Testing) - Direct & Aliased URLs
     path('preview/email/welcome/', views.preview_email_welcome, name='preview-email-welcome'),
     path('preview/email/order_confirmation/', views.preview_email_order_confirmation, name='preview-email-order-confirmation'),
     path('preview/email/order_shipped/', views.preview_email_order_shipped, name='preview-email-order-shipped'),
@@ -74,5 +74,33 @@ urlpatterns = [
     path('order_delivered/', views.preview_email_order_delivered, name='email-order-delivered'),
     path('contact_reply/', views.preview_email_contact_reply, name='email-contact-reply'),
     path('password_reset/', views.preview_email_password_reset, name='email-password-reset'),
+    
+    # ============ NOTIFICATION SYSTEM URLS ============
+    
+    # 🔔 Notification Endpoints
+    path('api/notifications/', views.get_notifications, name='api-notifications'),
+    path('api/notifications/unread/count/', views.get_unread_count, name='api-notifications-count'),
+    path('api/notifications/mark-read/<int:notification_id>/', views.mark_notification_read, name='api-notifications-mark-read'),
+    path('api/notifications/mark-all-read/', views.mark_all_notifications_read, name='api-notifications-mark-all-read'),
+    path('api/notifications/delete/<int:notification_id>/', views.delete_notification, name='api-notifications-delete'),
+    path('api/notifications/clear-all/', views.clear_all_notifications, name='api-notifications-clear-all'),
+    
+    # ⚙️ Notification Settings
+    path('api/notification-settings/', views.get_notification_settings, name='api-notification-settings'),
+    path('api/notification-settings/update/', views.update_notification_settings, name='api-notification-settings-update'),
+    
+    # 📱 Push Notifications
+    path('api/push/subscribe/', views.subscribe_push_notifications, name='api-push-subscribe'),
+    path('api/push/unsubscribe/', views.unsubscribe_push_notifications, name='api-push-unsubscribe'),
+    path('api/push/vapid-public-key/', views.get_vapid_public_key, name='api-push-vapid-key'),
+    
+    # 🔔 Notification Center UI
+    path('notifications/', views.notification_center, name='notification-center'),
+    
+    # 🎵 Test Sound
+    path('api/test-notification/', views.test_notification, name='api-test-notification'),
+    
+    # 📊 Admin System Alerts
+    path('api/system-alerts/', views.get_system_alerts, name='api-system-alerts'),
+    path('api/system-alerts/dismiss/<int:alert_id>/', views.dismiss_system_alert, name='api-system-alerts-dismiss'),
 ]
-

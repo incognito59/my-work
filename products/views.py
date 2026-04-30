@@ -15,6 +15,17 @@ from .models import Product, Comment, Order, Offer, Wishlist, Coupon, AbandonedC
 from .utils import get_product_recommendations_ai, get_ai_chat_response
 from django.conf import settings
 
+# Add these to existing imports
+import json
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import csrf_exempt
+from django.core.paginator import Paginator
+from django.db.models import Count, Q
+from django.utils import timezone
+from django.contrib.auth.decorators import login_required
+from .models import Notification, UserNotificationSettings, PushNotificationSubscription, SystemAlert, NotificationLog
+from django.core.cache import cache
 
 def _get_coupon_context(request, subtotal):
     coupon_code = request.session.get('coupon_code', '')
@@ -122,6 +133,9 @@ def firebase_auth_callback(request):
 
         user.backend = 'django.contrib.auth.backends.ModelBackend'
         login(request, user)
+        
+        # NOTIFICATION: Firebase login success
+        messages.success(request, f"✅ Welcome back, {user.first_name or user.username}!")
 
         return JsonResponse({'success': True, 'created': created, 'email': email, 'redirect': '/products/'})
 
@@ -357,7 +371,7 @@ def register_page(request):
         user.first_name = first_name
         user.last_name = last_name
         user.save()
-        messages.success(request, "Account created! Please log in.")
+        messages.success(request, "✅ Account created! Please log in.")
         return redirect('products:login')
 
     return render(request, 'register.html')
@@ -406,7 +420,7 @@ def register_enhanced(request):
 
 def logout_page(request):
     logout(request)
-    messages.success(request, "You have been logged out.")
+    messages.success(request, "👋 You have been logged out successfully.")
     return redirect('products:product-list')
 
 
@@ -414,6 +428,7 @@ def logout_page(request):
 def user_profile(request):
     user = request.user
     orders = Order.objects.filter(user=user).order_by('-created_at')
+    messages.info(request, f"Welcome to your profile! You have {orders.count()} orders.")
     return render(request, 'profile.html', {
         'user': user,
         'orders': orders,
@@ -480,7 +495,7 @@ def delete_from_cart(request, product_id):
         _sync_abandoned_cart(request, cart)
         messages.info(request, "🗑️ Item removed from your cart successfully.")
     else:
-        messages.warning(request, "Item not found in your cart.")
+        messages.warning(request, "⚠️ Item not found in your cart.")
 
     return redirect('products:view-cart')
 
@@ -580,6 +595,7 @@ def buy_now(request, product_id):
     cart = {str(product.id): 1}
     request.session['cart'] = cart
     _sync_abandoned_cart(request, cart)
+    messages.success(request, f"🛍️ {product.name} added for checkout!")
     return redirect('products:checkout')
 
 
@@ -944,6 +960,328 @@ def wishlist_page(request):
         'total_wishlist': wishlist_items.count() if request.user.is_authenticated else 0,
         'message': message,
     })
+# ============ NOTIFICATION SYSTEM VIEWS ============
+
+@login_required
+def notification_center(request):
+    """Render notification center page"""
+    return render(request, 'notifications/notification_center.html')
+
+@login_required
+@require_http_methods(["GET"])
+def get_notifications(request):
+    """Get user notifications with pagination"""
+    page = request.GET.get('page', 1)
+    per_page = request.GET.get('per_page', 20)
+    notification_type = request.GET.get('type', 'all')
+    is_read = request.GET.get('is_read', None)
+    
+    notifications = Notification.objects.filter(user=request.user)
+    
+    if notification_type != 'all':
+        notifications = notifications.filter(notification_type=notification_type)
+    
+    if is_read is not None:
+        notifications = notifications.filter(is_read=is_read == 'true')
+    
+    paginator = Paginator(notifications, per_page)
+    notifications_page = paginator.get_page(page)
+    
+    data = {
+        'success': True,
+        'notifications': [
+            {
+                'id': n.id,
+                'title': n.title,
+                'message': n.message,
+                'type': n.notification_type,
+                'is_read': n.is_read,
+                'created_at': n.created_at.isoformat(),
+                'read_at': n.read_at.isoformat() if n.read_at else None,
+                'order_id': n.order.id if n.order else None,
+                'product_id': n.product.id if n.product else None,
+                'ticket_id': n.ticket.id if n.ticket else None,
+            }
+            for n in notifications_page
+        ],
+        'total': paginator.count,
+        'total_pages': paginator.num_pages,
+        'current_page': page,
+    }
+    return JsonResponse(data)
+
+@login_required
+@require_http_methods(["GET"])
+def get_unread_count(request):
+    """Get unread notification count"""
+    count = Notification.objects.filter(user=request.user, is_read=False).count()
+    return JsonResponse({'success': True, 'unread_count': count})
+
+@login_required
+@require_http_methods(["POST"])
+def mark_notification_read(request, notification_id):
+    """Mark a single notification as read"""
+    try:
+        notification = Notification.objects.get(id=notification_id, user=request.user)
+        notification.mark_as_read()
+        
+        # Log the read action
+        NotificationLog.objects.create(
+            user=request.user,
+            notification=notification,
+            channel='web',
+            status='read',
+            delivered_at=timezone.now()
+        )
+        
+        return JsonResponse({'success': True, 'message': 'Notification marked as read'})
+    except Notification.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Notification not found'}, status=404)
+
+@login_required
+@require_http_methods(["POST"])
+def mark_all_notifications_read(request):
+    """Mark all notifications as read"""
+    updated = Notification.objects.filter(user=request.user, is_read=False).update(
+        is_read=True, 
+        read_at=timezone.now()
+    )
+    return JsonResponse({'success': True, 'marked_count': updated})
+
+@login_required
+@require_http_methods(["POST"])
+def delete_notification(request, notification_id):
+    """Delete a single notification"""
+    try:
+        notification = Notification.objects.get(id=notification_id, user=request.user)
+        notification.delete()
+        return JsonResponse({'success': True, 'message': 'Notification deleted'})
+    except Notification.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Notification not found'}, status=404)
+
+@login_required
+@require_http_methods(["POST"])
+def clear_all_notifications(request):
+    """Clear all user notifications"""
+    deleted = Notification.objects.filter(user=request.user).delete()
+    return JsonResponse({'success': True, 'deleted_count': deleted[0] if deleted else 0})
+
+@login_required
+@require_http_methods(["GET"])
+def get_notification_settings(request):
+    """Get user notification settings"""
+    settings, created = UserNotificationSettings.objects.get_or_create(user=request.user)
+    data = {
+        'success': True,
+        'settings': {
+            'email_order_updates': settings.email_order_updates,
+            'email_promotions': settings.email_promotions,
+            'email_newsletter': settings.email_newsletter,
+            'email_support_replies': settings.email_support_replies,
+            'push_order_updates': settings.push_order_updates,
+            'push_promotions': settings.push_promotions,
+            'push_low_stock_alerts': settings.push_low_stock_alerts,
+            'sound_enabled': settings.sound_enabled,
+            'sound_volume': settings.sound_volume,
+            'desktop_notifications': settings.desktop_notifications,
+            'dnd_enabled': settings.dnd_enabled,
+            'dnd_start_time': settings.dnd_start_time.strftime('%H:%M') if settings.dnd_start_time else None,
+            'dnd_end_time': settings.dnd_end_time.strftime('%H:%M') if settings.dnd_end_time else None,
+        }
+    }
+    return JsonResponse(data)
+
+@login_required
+@require_http_methods(["POST"])
+def update_notification_settings(request):
+    """Update user notification settings"""
+    try:
+        data = json.loads(request.body)
+        settings, created = UserNotificationSettings.objects.get_or_create(user=request.user)
+        
+        # Update fields
+        if 'email_order_updates' in data:
+            settings.email_order_updates = data['email_order_updates']
+        if 'email_promotions' in data:
+            settings.email_promotions = data['email_promotions']
+        if 'email_newsletter' in data:
+            settings.email_newsletter = data['email_newsletter']
+        if 'email_support_replies' in data:
+            settings.email_support_replies = data['email_support_replies']
+        if 'push_order_updates' in data:
+            settings.push_order_updates = data['push_order_updates']
+        if 'push_promotions' in data:
+            settings.push_promotions = data['push_promotions']
+        if 'push_low_stock_alerts' in data:
+            settings.push_low_stock_alerts = data['push_low_stock_alerts']
+        if 'sound_enabled' in data:
+            settings.sound_enabled = data['sound_enabled']
+        if 'sound_volume' in data:
+            settings.sound_volume = max(0, min(100, data['sound_volume']))
+        if 'desktop_notifications' in data:
+            settings.desktop_notifications = data['desktop_notifications']
+        if 'dnd_enabled' in data:
+            settings.dnd_enabled = data['dnd_enabled']
+        if 'dnd_start_time' in data and data['dnd_start_time']:
+            from datetime import datetime
+            settings.dnd_start_time = datetime.strptime(data['dnd_start_time'], '%H:%M').time()
+        if 'dnd_end_time' in data and data['dnd_end_time']:
+            from datetime import datetime
+            settings.dnd_end_time = datetime.strptime(data['dnd_end_time'], '%H:%M').time()
+        
+        settings.save()
+        return JsonResponse({'success': True, 'message': 'Settings updated successfully'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+@login_required
+@csrf_exempt
+@require_http_methods(["POST"])
+def subscribe_push_notifications(request):
+    """Subscribe to push notifications"""
+    try:
+        data = json.loads(request.body)
+        endpoint = data.get('endpoint')
+        p256dh = data.get('keys', {}).get('p256dh')
+        auth = data.get('keys', {}).get('auth')
+        user_agent = request.META.get('HTTP_USER_AGENT', '')
+        
+        if not all([endpoint, p256dh, auth]):
+            return JsonResponse({'success': False, 'error': 'Missing subscription data'}, status=400)
+        
+        subscription, created = PushNotificationSubscription.objects.update_or_create(
+            endpoint=endpoint,
+            defaults={
+                'user': request.user,
+                'p256dh': p256dh,
+                'auth': auth,
+                'user_agent': user_agent,
+                'is_active': True,
+            }
+        )
+        
+        return JsonResponse({'success': True, 'created': created})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+@login_required
+@require_http_methods(["POST"])
+def unsubscribe_push_notifications(request):
+    """Unsubscribe from push notifications"""
+    try:
+        data = json.loads(request.body)
+        endpoint = data.get('endpoint')
+        
+        if endpoint:
+            PushNotificationSubscription.objects.filter(
+                endpoint=endpoint, 
+                user=request.user
+            ).update(is_active=False)
+        
+        return JsonResponse({'success': True, 'message': 'Unsubscribed successfully'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+def get_vapid_public_key(request):
+    """Get VAPID public key for push notifications"""
+    return JsonResponse({
+        'success': True,
+        'public_key': settings.VAPID_PUBLIC_KEY if hasattr(settings, 'VAPID_PUBLIC_KEY') else ''
+    })
+
+@login_required
+def test_notification(request):
+    """Test notification system"""
+    # Create a test notification
+    notification = Notification.objects.create(
+        user=request.user,
+        title="Test Notification",
+        message="This is a test notification! Your notification system is working perfectly. 🎉",
+        notification_type="success"
+    )
+    
+    return JsonResponse({
+        'success': True,
+        'message': 'Test notification sent! Check your notification center.',
+        'notification_id': notification.id
+    })
+
+@login_required
+def get_system_alerts(request):
+    """Get system alerts for admin users"""
+    if not request.user.is_staff:
+        return JsonResponse({'success': False, 'error': 'Unauthorized'}, status=403)
+    
+    alerts = SystemAlert.objects.filter(
+        is_active=True
+    ).filter(
+        Q(expires_at__isnull=True) | Q(expires_at__gt=timezone.now())
+    ).order_by('-created_at')
+    
+    data = {
+        'success': True,
+        'alerts': [
+            {
+                'id': alert.id,
+                'title': alert.title,
+                'message': alert.message,
+                'type': alert.alert_type,
+                'trigger_type': alert.trigger_type,
+                'trigger_data': alert.trigger_data,
+                'created_at': alert.created_at.isoformat(),
+            }
+            for alert in alerts
+        ]
+    }
+    return JsonResponse(data)
+
+@login_required
+def dismiss_system_alert(request, alert_id):
+    """Dismiss a system alert"""
+    if not request.user.is_staff:
+        return JsonResponse({'success': False, 'error': 'Unauthorized'}, status=403)
+    
+    try:
+        alert = SystemAlert.objects.get(id=alert_id)
+        alert.is_active = False
+        alert.save()
+        return JsonResponse({'success': True, 'message': 'Alert dismissed'})
+    except SystemAlert.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Alert not found'}, status=404)
+
+
+# Helper function to create notifications (use this in other views)
+def create_notification(user, title, message, notification_type='info', order=None, product=None, ticket=None):
+    """Helper function to create notifications"""
+    # Check Do Not Disturb settings
+    try:
+        settings_obj = UserNotificationSettings.objects.get(user=user)
+        if settings_obj.dnd_enabled and settings_obj.dnd_start_time and settings_obj.dnd_end_time:
+            now = timezone.now().time()
+            if settings_obj.dnd_start_time <= now <= settings_obj.dnd_end_time:
+                return None  # Don't send during DND
+    except UserNotificationSettings.DoesNotExist:
+        pass
+    
+    notification = Notification.objects.create(
+        user=user,
+        title=title,
+        message=message,
+        notification_type=notification_type,
+        order=order,
+        product=product,
+        ticket=ticket
+    )
+    
+    # Log creation
+    NotificationLog.objects.create(
+        user=user,
+        notification=notification,
+        channel='web',
+        status='sent'
+    )
+    
+    return notification
 
 
 def about_page(request):

@@ -132,6 +132,55 @@ STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY', '')
 PAYSTACK_PUBLIC_KEY = 'pk_test_4dc9ad4b7bac517bcfd33fb8398a1c3b865e6a2d'
 PAYSTACK_SECRET_KEY = 'sk_test_d34aee0fbe64455129b2062c4dcdbd4e87018b64'
 
+# ============ NOTIFICATION SYSTEM SETTINGS ============
+
+# WebSocket/Channels for real-time notifications
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    }
+}
+
+# Push Notification VAPID Keys (Generate these for production)
+# Run: python -c "from django.core.management import utils; print(utils.get_random_secret_key())"
+VAPID_PUBLIC_KEY = 'your-vapid-public-key-here'
+VAPID_PRIVATE_KEY = 'your-vapid-private-key-here'
+VAPID_EMAIL = 'afolabiprosper329@gmail.com'
+
+# Notification Settings
+NOTIFICATION_DEFAULT_DURATION = 5000  # milliseconds
+NOTIFICATION_MAX_PER_USER = 100  # Max notifications stored per user
+NOTIFICATION_CLEANUP_DAYS = 30  # Delete notifications older than 30 days
+
+# Sound notification files (add these to your static files)
+NOTIFICATION_SOUNDS = {
+    'default': '/static/sounds/notification.mp3',
+    'success': '/static/sounds/success.mp3',
+    'error': '/static/sounds/error.mp3',
+    'warning': '/static/sounds/warning.mp3',
+    'order': '/static/sounds/order.mp3',
+}
+
+# Email notification settings
+EMAIL_NOTIFICATION_ENABLED = True
+EMAIL_NOTIFICATION_BATCH_SIZE = 50
+
+# Real-time settings
+REAL_TIME_NOTIFICATIONS_ENABLED = True
+
+# System Alert Checks (in seconds)
+SYSTEM_ALERT_CHECK_INTERVAL = 300  # 5 minutes
+LOW_STOCK_THRESHOLD = 5
+ABANDONED_CART_HOURS = 24
+
+# Cache settings for notifications
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+    }
+}
+
 SITE_ID = 1
 ITEMS_PER_PAGE = 12
 CURRENCY = 'NGN'

@@ -1,0 +1,481 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Notifications</h5>
+                    <hr>
+                    <div class="list-group">
+                        <button class="list-group-item list-group-item-action filter-btn active" data-type="all">
+                            All <span class="badge bg-primary float-end" id="total-count">0</span>
+                        </button>
+                        <button class="list-group-item list-group-item-action filter-btn" data-type="unread">
+                            Unread <span class="badge bg-danger float-end" id="unread-count">0</span>
+                        </button>
+                        <button class="list-group-item list-group-item-action filter-btn" data-type="order">
+                            Orders <span class="badge bg-info float-end" id="order-count">0</span>
+                        </button>
+                        <button class="list-group-item list-group-item-action filter-btn" data-type="promotion">
+                            Promotions <span class="badge bg-success float-end" id="promotion-count">0</span>
+                        </button>
+                        <button class="list-group-item list-group-item-action filter-btn" data-type="system">
+                            System <span class="badge bg-warning float-end" id="system-count">0</span>
+                        </button>
+                    </div>
+                    <hr>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary btn-sm" id="mark-all-read">
+                            <i class="bi bi-check2-all"></i> Mark All as Read
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm" id="clear-all">
+                            <i class="bi bi-trash"></i> Clear All
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h6>Notification Settings</h6>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="sound-toggle">
+                        <label class="form-check-label" for="sound-toggle">Sound Notifications</label>
+                    </div>
+                    <div class="form-check form-switch mt-2">
+                        <input class="form-check-input" type="checkbox" id="desktop-toggle">
+                        <label class="form-check-label" for="desktop-toggle">Desktop Notifications</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0" id="notification-title">All Notifications</h5>
+                </div>
+                <div class="card-body" id="notifications-list" style="max-height: 600px; overflow-y: auto;">
+                    <div class="text-center text-muted py-5" id="loading">
+                        <div class="spinner-border text-primary"></div>
+                        <p class="mt-2">Loading notifications...</p>
+                    </div>
+                </div>
+                <div class="card-footer" id="pagination">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentPage = 1;
+let currentType = 'all';
+let isLoading = false;
+
+// Load notifications
+async function loadNotifications() {
+    if (isLoading) return;
+    isLoading = true;
+    
+    try {
+        const response = await fetch(`/products/api/notifications/?page=${currentPage}&type=${currentType}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            renderNotifications(data.notifications);
+            renderPagination(data);
+            updateCounts();
+        }
+    } catch (error) {
+        console.error('Error loading notifications:', error);
+    } finally {
+        isLoading = false;
+        document.getElementById('loading').style.display = 'none';
+    }
+}
+
+// Render notifications
+function renderNotifications(notifications) {
+    const container = document.getElementById('notifications-list');
+    
+    if (notifications.length === 0) {
+        container.innerHTML = `
+            <div class="text-center text-muted py-5">
+                <i class="bi bi-bell-slash" style="font-size: 48px;"></i>
+                <p class="mt-3">No notifications found</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = notifications.map(notif => `
+        <div class="notification-item border-bottom p-3 ${notif.is_read ? '' : 'bg-light'}" data-id="${notif.id}">
+            <div class="d-flex justify-content-between align-items-start">
+                <div class="flex-grow-1">
+                    <div class="d-flex align-items-center mb-2">
+                        ${getNotificationIcon(notif.type)}
+                        <strong class="me-2">${escapeHtml(notif.title)}</strong>
+                        ${!notif.is_read ? '<span class="badge bg-danger ms-2">New</span>' : ''}
+                        <small class="text-muted ms-auto">${formatDate(notif.created_at)}</small>
+                    </div>
+                    <p class="mb-1">${escapeHtml(notif.message)}</p>
+                </div>
+                <div class="btn-group-vertical">
+                    ${!notif.is_read ? `<button class="btn btn-sm btn-link mark-read-btn" data-id="${notif.id}"><i class="bi bi-envelope-open"></i></button>` : ''}
+                    <button class="btn btn-sm btn-link text-danger delete-btn" data-id="${notif.id}"><i class="bi bi-trash"></i></button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+    
+    // Add event listeners
+    document.querySelectorAll('.mark-read-btn').forEach(btn => {
+        btn.addEventListener('click', () => markAsRead(btn.dataset.id));
+    });
+    
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', () => deleteNotification(btn.dataset.id));
+    });
+}
+
+// Get notification icon
+function getNotificationIcon(type) {
+    const icons = {
+        'success': '<i class="bi bi-check-circle-fill text-success me-2"></i>',
+        'error': '<i class="bi bi-x-circle-fill text-danger me-2"></i>',
+        'warning': '<i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>',
+        'info': '<i class="bi bi-info-circle-fill text-info me-2"></i>',
+        'order': '<i class="bi bi-cart-check-fill text-primary me-2"></i>',
+        'promotion': '<i class="bi bi-gift-fill text-success me-2"></i>',
+        'system': '<i class="bi bi-gear-fill text-secondary me-2"></i>'
+    };
+    return icons[type] || icons['info'];
+}
+
+// Mark as read
+async function markAsRead(notificationId) {
+    try {
+        const response = await fetch(`/products/api/notifications/mark-read/${notificationId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+            }
+        });
+        
+        if (response.ok) {
+            loadNotifications();
+            updateUnreadCount();
+            playSound('success');
+        }
+    } catch (error) {
+        console.error('Error marking as read:', error);
+    }
+}
+
+// Delete notification
+async function deleteNotification(notificationId) {
+    if (!confirm('Delete this notification?')) return;
+    
+    try {
+        const response = await fetch(`/products/api/notifications/delete/${notificationId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+            }
+        });
+        
+        if (response.ok) {
+            loadNotifications();
+            updateUnreadCount();
+            showToast('Notification deleted', 'info');
+        }
+    } catch (error) {
+        console.error('Error deleting:', error);
+    }
+}
+
+// Mark all as read
+document.getElementById('mark-all-read')?.addEventListener('click', async () => {
+    try {
+        const response = await fetch('/products/api/notifications/mark-all-read/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+            }
+        });
+        
+        if (response.ok) {
+            loadNotifications();
+            updateUnreadCount();
+            showToast('All notifications marked as read', 'success');
+            playSound('success');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+});
+
+// Clear all
+document.getElementById('clear-all')?.addEventListener('click', async () => {
+    if (!confirm('Delete ALL notifications? This cannot be undone.')) return;
+    
+    try {
+        const response = await fetch('/products/api/notifications/clear-all/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+            }
+        });
+        
+        if (response.ok) {
+            loadNotifications();
+            updateUnreadCount();
+            showToast('All notifications cleared', 'success');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+});
+
+// Update counts
+async function updateCounts() {
+    try {
+        const response = await fetch('/products/api/notifications/unread/count/');
+        const data = await response.json();
+        
+        if (data.success) {
+            document.getElementById('unread-count').textContent = data.unread_count;
+            
+            // Update bell icon in navbar if exists
+            const bellBadge = document.querySelector('.navbar .notification-bell .badge');
+            if (bellBadge) {
+                bellBadge.textContent = data.unread_count;
+                bellBadge.style.display = data.unread_count > 0 ? 'inline-block' : 'none';
+            }
+        }
+    } catch (error) {
+        console.error('Error updating counts:', error);
+    }
+}
+
+// Update total, order, promotion, system counts
+async function updateCounts() {
+    try {
+        const response = await fetch('/products/api/notifications/');
+        const data = await response.json();
+        
+        if (data.success) {
+            document.getElementById('total-count').textContent = data.total;
+            
+            // Count by type
+            const orderCount = data.notifications.filter(n => n.type === 'order').length;
+            const promotionCount = data.notifications.filter(n => n.type === 'promotion').length;
+            const systemCount = data.notifications.filter(n => n.type === 'system').length;
+            
+            document.getElementById('order-count').textContent = orderCount;
+            document.getElementById('promotion-count').textContent = promotionCount;
+            document.getElementById('system-count').textContent = systemCount;
+        }
+    } catch (error) {
+        console.error('Error updating counts:', error);
+    }
+}
+
+// Update unread count only
+async function updateUnreadCount() {
+    try {
+        const response = await fetch('/products/api/notifications/unread/count/');
+        const data = await response.json();
+        
+        if (data.success) {
+            document.getElementById('unread-count').textContent = data.unread_count;
+            
+            // Update bell icon in navbar
+            const bellBadge = document.querySelector('.navbar .notification-bell .badge');
+            if (bellBadge) {
+                bellBadge.textContent = data.unread_count;
+                bellBadge.style.display = data.unread_count > 0 ? 'inline-block' : 'none';
+            }
+        }
+    } catch (error) {
+        console.error('Error updating unread count:', error);
+    }
+}
+
+// Filter buttons
+document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        currentType = btn.dataset.type;
+        currentPage = 1;
+        loadNotifications();
+    });
+});
+
+// Play sound
+function playSound(type = 'default') {
+    const soundEnabled = document.getElementById('sound-toggle')?.checked;
+    if (!soundEnabled) return;
+    
+    const sounds = {
+        'success': '/static/sounds/success.mp3',
+        'error': '/static/sounds/error.mp3',
+        'warning': '/static/sounds/warning.mp3',
+        'order': '/static/sounds/order.mp3',
+        'default': '/static/sounds/notification.mp3'
+    };
+    
+    const audio = new Audio(sounds[type] || sounds.default);
+    audio.volume = 0.5;
+    audio.play().catch(e => console.log('Sound play failed:', e));
+}
+
+// Desktop notifications
+async function requestDesktopPermission() {
+    if (!('Notification' in window)) {
+        console.log('This browser does not support desktop notifications');
+        return;
+    }
+    
+    if (Notification.permission === 'granted') {
+        return true;
+    }
+    
+    const permission = await Notification.requestPermission();
+    return permission === 'granted';
+}
+
+// Load notification settings
+async function loadSettings() {
+    try {
+        const response = await fetch('/products/api/notification-settings/');
+        const data = await response.json();
+        
+        if (data.success) {
+            document.getElementById('sound-toggle').checked = data.settings.sound_enabled;
+            document.getElementById('desktop-toggle').checked = data.settings.desktop_notifications;
+        }
+    } catch (error) {
+        console.error('Error loading settings:', error);
+    }
+}
+
+// Save settings
+document.getElementById('sound-toggle')?.addEventListener('change', async (e) => {
+    await saveSettings({ sound_enabled: e.target.checked });
+});
+
+document.getElementById('desktop-toggle')?.addEventListener('change', async (e) => {
+    if (e.target.checked) {
+        const granted = await requestDesktopPermission();
+        if (!granted) {
+            e.target.checked = false;
+            showToast('Desktop notifications permission denied', 'error');
+            return;
+        }
+    }
+    await saveSettings({ desktop_notifications: e.target.checked });
+});
+
+async function saveSettings(settings) {
+    try {
+        const response = await fetch('/products/api/notification-settings/update/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken'),
+            },
+            body: JSON.stringify(settings)
+        });
+        
+        if (!response.ok) {
+            showToast('Failed to save settings', 'error');
+        }
+    } catch (error) {
+        console.error('Error saving settings:', error);
+    }
+}
+
+// Helper functions
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} minutes ago`;
+    if (diffHours < 24) return `${diffHours} hours ago`;
+    if (diffDays < 7) return `${diffDays} days ago`;
+    return date.toLocaleDateString();
+}
+
+function showToast(message, type) {
+    if (window.showToast) {
+        window.showToast(message, type);
+    } else {
+        alert(message);
+    }
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Initial load
+document.addEventListener('DOMContentLoaded', () => {
+    loadNotifications();
+    loadSettings();
+    updateUnreadCount();
+    
+    // Update unread count every 30 seconds
+    setInterval(updateUnreadCount, 30000);
+});
+</script>
+
+<style>
+.notification-item {
+    transition: background-color 0.3s ease;
+    cursor: pointer;
+}
+
+.notification-item:hover {
+    background-color: #f8f9fa;
+}
+
+[data-theme="dark"] .notification-item:hover {
+    background-color: #2a2a2a;
+}
+
+.filter-btn.active {
+    background-color: var(--main-color);
+    color: white;
+    border-color: var(--main-color);
+}
+</style>
+{% endblock %}

@@ -490,3 +490,141 @@ class Newsletter(models.Model):
     
     def __str__(self):
         return self.email
+
+
+# ============ NOTIFICATION SYSTEM ============
+
+class Notification(models.Model):
+    """Store all user notifications"""
+    NOTIFICATION_TYPES = [
+        ('info', 'Information'),
+        ('success', 'Success'),
+        ('warning', 'Warning'),
+        ('error', 'Error'),
+        ('order', 'Order Update'),
+        ('promotion', 'Promotion'),
+        ('system', 'System Alert'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    title = models.CharField(max_length=255)
+    message = models.TextField()
+    notification_type = models.CharField(max_length=20, choices=NOTIFICATION_TYPES, default='info')
+    is_read = models.BooleanField(default=False)
+    is_archived = models.BooleanField(default=False)
+    
+    # Link to related objects
+    order = models.ForeignKey(Order, on_delete=models.SET_NULL, null=True, blank=True)
+    product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, blank=True)
+    ticket = models.ForeignKey(SupportTicket, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    # For real-time notifications
+    created_at = models.DateTimeField(auto_now_add=True)
+    read_at = models.DateTimeField(null=True, blank=True)
+    
+    # For push notifications
+    push_sent = models.BooleanField(default=False)
+    email_sent = models.BooleanField(default=False)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.get_notification_type_display()}: {self.title} for {self.user.username}"
+    
+    def mark_as_read(self):
+        if not self.is_read:
+            self.is_read = True
+            self.read_at = timezone.now()
+            self.save()
+
+
+class UserNotificationSettings(models.Model):
+    """User preferences for notifications"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='notification_settings')
+    
+    # Email notifications
+    email_order_updates = models.BooleanField(default=True)
+    email_promotions = models.BooleanField(default=True)
+    email_newsletter = models.BooleanField(default=True)
+    email_support_replies = models.BooleanField(default=True)
+    
+    # Push notifications
+    push_order_updates = models.BooleanField(default=True)
+    push_promotions = models.BooleanField(default=False)
+    push_low_stock_alerts = models.BooleanField(default=True)
+    
+    # Sound notifications
+    sound_enabled = models.BooleanField(default=True)
+    sound_volume = models.IntegerField(default=70)  # 0-100
+    
+    # Desktop notifications
+    desktop_notifications = models.BooleanField(default=True)
+    
+    # Do not disturb
+    dnd_enabled = models.BooleanField(default=False)
+    dnd_start_time = models.TimeField(null=True, blank=True)
+    dnd_end_time = models.TimeField(null=True, blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"Notification settings for {self.user.username}"
+
+
+class PushNotificationSubscription(models.Model):
+    """Store browser push notification subscriptions"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='push_subscriptions')
+    endpoint = models.TextField(unique=True)
+    p256dh = models.CharField(max_length=255)
+    auth = models.CharField(max_length=255)
+    user_agent = models.CharField(max_length=500, blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField(null=True, blank=True)
+    
+    def __str__(self):
+        return f"Push subscription for {self.user.username}"
+
+
+class NotificationLog(models.Model):
+    """Track all notifications sent"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notification_logs')
+    notification = models.ForeignKey(Notification, on_delete=models.CASCADE, null=True, blank=True)
+    
+    # Channel: web, email, push
+    channel = models.CharField(max_length=20)
+    
+    # Status: sent, delivered, failed, read
+    status = models.CharField(max_length=20, default='sent')
+    
+    error_message = models.TextField(blank=True)
+    sent_at = models.DateTimeField(auto_now_add=True)
+    delivered_at = models.DateTimeField(null=True, blank=True)
+    
+    def __str__(self):
+        return f"{self.channel} notification to {self.user.username} at {self.sent_at}"
+
+
+class SystemAlert(models.Model):
+    """System-wide alerts for admin"""
+    ALERT_TYPES = [
+        ('info', 'Information'),
+        ('warning', 'Warning'),
+        ('critical', 'Critical'),
+    ]
+    
+    title = models.CharField(max_length=255)
+    message = models.TextField()
+    alert_type = models.CharField(max_length=20, choices=ALERT_TYPES, default='info')
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField(null=True, blank=True)
+    
+    # For low stock, new orders, etc.
+    trigger_type = models.CharField(max_length=50, blank=True)  # 'low_stock', 'new_order', etc.
+    trigger_data = models.JSONField(default=dict, blank=True)
+    
+    def __str__(self):
+        return f"{self.get_alert_type_display()}: {self.title}"
