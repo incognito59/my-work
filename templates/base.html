@@ -55,6 +55,39 @@
       [data-theme="dark"] .navbar { background-color: #11121a; }
       [data-theme="dark"] .theme-toggle { color: #ffffff; }
 
+      /* ============ DARK THEME CARD FIXES ============ */
+      [data-theme="dark"] .card,
+      [data-theme="dark"] .theme-card,
+      [data-theme="dark"] [class*="card"] {
+        background-color: #1a1a24 !important;
+        color: #e8e8e8 !important;
+        border-color: #333 !important;
+      }
+
+      [data-theme="dark"] .card h1,
+      [data-theme="dark"] .card h2,
+      [data-theme="dark"] .card h3,
+      [data-theme="dark"] .card h4,
+      [data-theme="dark"] .card h5,
+      [data-theme="dark"] .card h6,
+      [data-theme="dark"] .card p,
+      [data-theme="dark"] .card span,
+      [data-theme="dark"] .card small,
+      [data-theme="dark"] .card li,
+      [data-theme="dark"] .card label {
+        color: #e8e8e8 !important;
+      }
+
+      [data-theme="dark"] .card .text-muted,
+      [data-theme="dark"] .card small {
+        color: #aaa !important;
+      }
+
+      /* Fix any inline background styles */
+      [data-theme="dark"] [style*="background"] {
+        background-color: #1a1a24 !important;
+      }
+
       body {
         font-family: "Poppins", sans-serif;
         background-color: var(--bg-color);
@@ -65,8 +98,18 @@
       .navbar { background-color: var(--main-color); transition: background-color 0.3s ease; }
       .navbar-brand { font-weight: 700; font-size: 1.5rem; color: #fff !important; }
       .navbar-brand span { color: #ffe5e5; }
-      .nav-link { color: #fff !important; font-weight: 500; transition: 0.3s; position: relative; }
-      .nav-link:hover { opacity: 0.85; }
+      .navbar-nav .nav-link {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: #fff !important;
+        font-weight: 500;
+        transition: 0.3s;
+        position: relative;
+      }
+      .navbar-nav .nav-link i { display: inline-block; font-size: 1rem; }
+      .navbar-nav .nav-link:hover { opacity: 0.85; }
+      .navbar-nav .dropdown-toggle { display: flex; align-items: center; gap: 6px; }
       .navbar .form-control { border-radius: 30px; padding: 8px 16px; width: 300px; border: none; }
       .navbar .btn { border-radius: 30px; }
       .theme-toggle { border: none; background: transparent; color: #fff; font-size: 1.3rem; margin-left: 10px; cursor: pointer; }
@@ -95,76 +138,94 @@
         100% { transform: scale(1); }
       }
 
-      .footer { background-color: #1e1e1e; color: #ddd; padding: 30px 0; text-align: center; margin-top: 80px; }
-
-      .animated-price, .animated-product { animation: colorShift 6s infinite alternate; }
-      @keyframes colorShift {
-        0% { color: #ff4747; } 25% { color: #f8b400; }
-        50% { color: #4cd137; } 75% { color: #0097e6; } 100% { color: #ff47a3; }
+      /* ============ RECENT SEARCHES ============ */
+      .search-wrapper { position: relative; flex: 1; max-width: 400px; }
+      .recent-searches-dropdown {
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 0;
+        right: 0;
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        z-index: 9999;
+        overflow: hidden;
+        display: none;
       }
+      .recent-searches-dropdown.show { display: block; }
+      .recent-searches-header {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 12px 16px 8px; border-bottom: 1px solid #f0f0f0;
+      }
+      .recent-searches-header span { font-weight: 700; font-size: 0.85rem; color: #333; }
+      .recent-searches-header button {
+        background: none; border: none; color: #ff4747;
+        font-size: 0.78rem; font-weight: 600; cursor: pointer; padding: 0;
+      }
+      .recent-search-item {
+        display: flex; align-items: center; gap: 10px;
+        padding: 10px 16px; cursor: pointer; transition: background 0.15s;
+        border-bottom: 1px solid #f8f8f8;
+      }
+      .recent-search-item:hover { background: #fafafa; }
+      .recent-search-item i { color: #aaa; font-size: 0.9rem; flex-shrink: 0; }
+      .recent-search-item span { flex: 1; font-size: 0.88rem; color: #333; }
+      .recent-search-item .remove-search {
+        background: none; border: none; color: #ccc;
+        font-size: 0.8rem; cursor: pointer; padding: 2px 4px;
+        border-radius: 4px; transition: color 0.15s;
+      }
+      .recent-search-item .remove-search:hover { color: #ff4747; }
+      .no-recent-searches {
+        padding: 16px; text-align: center;
+        font-size: 0.85rem; color: #aaa;
+      }
+      [data-theme="dark"] .recent-searches-dropdown { background: #1e1e28; }
+      [data-theme="dark"] .recent-searches-header span { color: #ddd; }
+      [data-theme="dark"] .recent-search-item { border-bottom-color: #2a2a35; }
+      [data-theme="dark"] .recent-search-item:hover { background: #252530; }
+      [data-theme="dark"] .recent-search-item span { color: #ddd; }
 
       /* ============ TOAST SYSTEM ============ */
       .toast-stack {
-        position: fixed;
-        top: 80px;
-        right: 20px;
-        z-index: 9999;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        max-width: 340px;
+        position: fixed; top: 80px; right: 20px;
+        z-index: 9999; display: flex; flex-direction: column;
+        gap: 10px; max-width: 340px;
       }
-
       .redcart-toast {
-        display: flex;
-        align-items: flex-start;
-        gap: 12px;
-        padding: 14px 16px;
-        border-radius: 14px;
+        display: flex; align-items: flex-start; gap: 12px;
+        padding: 14px 16px; border-radius: 14px;
         box-shadow: 0 8px 30px rgba(0,0,0,0.15);
-        font-size: 0.9rem;
-        font-weight: 500;
-        color: #fff;
+        font-size: 0.9rem; font-weight: 500; color: #fff;
         animation: toastSlideIn 0.35s ease forwards;
-        position: relative;
-        overflow: hidden;
+        position: relative; overflow: hidden;
       }
-
       .redcart-toast.success { background: linear-gradient(135deg, #28a745, #20c997); }
       .redcart-toast.error   { background: linear-gradient(135deg, #dc3545, #ff6b6b); }
       .redcart-toast.info    { background: linear-gradient(135deg, #0097e6, #00b4d8); }
       .redcart-toast.warning { background: linear-gradient(135deg, #f8b400, #ff9f43); }
-
       .redcart-toast .toast-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 1px; }
       .redcart-toast .toast-msg  { flex: 1; line-height: 1.4; }
       .redcart-toast .toast-close {
-        background: none; border: none; color: rgba(255,255,255,0.8);
-        font-size: 1.1rem; cursor: pointer; padding: 0; line-height: 1;
+        background: none; border: none; color: rgba(255,255,255,0.9);
+        font-size: 1rem; cursor: pointer; padding: 0; line-height: 1;
+        flex-shrink: 0; opacity: 1 !important; visibility: visible !important;
       }
       .redcart-toast .toast-close:hover { color: #fff; }
-
       .redcart-toast .toast-progress {
-        position: absolute;
-        bottom: 0; left: 0;
-        height: 3px;
+        position: absolute; bottom: 0; left: 0; height: 3px;
         background: rgba(255,255,255,0.5);
         animation: toastProgress 4s linear forwards;
       }
-
       @keyframes toastSlideIn {
         from { opacity: 0; transform: translateX(60px); }
         to   { opacity: 1; transform: translateX(0); }
       }
-
       @keyframes toastSlideOut {
         from { opacity: 1; transform: translateX(0); }
         to   { opacity: 0; transform: translateX(60px); }
       }
-
-      @keyframes toastProgress {
-        from { width: 100%; }
-        to   { width: 0%; }
-      }
+      @keyframes toastProgress { from { width: 100%; } to { width: 0%; } }
 
       /* Scroll to top */
       #scrollTopBtn {
@@ -193,21 +254,263 @@
       .btn-wishlist { border-radius: 999px; padding: 0.55rem 0.85rem; min-width: 50px; transition: background-color 0.25s ease, color 0.25s ease; }
       .btn-wishlist i { margin-right: 0.25rem; }
 
-      /* AI Chat */
-      .ai-chat-widget { position: fixed; right: 24px; bottom: 24px; z-index: 1100; max-width: 360px; font-family: inherit; }
-      .ai-chat-toggle { width: 60px; height: 60px; border-radius: 50%; border: none; background-color: var(--main-color); color: #fff; font-size: 1.4rem; box-shadow: 0 16px 40px rgba(0,0,0,0.2); cursor: pointer; }
-      .ai-chat-panel { display: none; width: 100%; background: var(--card-bg); border-radius: 24px; box-shadow: 0 18px 40px rgba(0,0,0,0.2); overflow: hidden; margin-bottom: 12px; }
-      .ai-chat-panel.active { display: block; }
-      .ai-chat-header { padding: 16px 18px; display: flex; justify-content: space-between; align-items: center; background: var(--main-color); color: #fff; }
-      .ai-chat-messages { max-height: 340px; overflow-y: auto; padding: 16px; }
-      .ai-chat-message { margin-bottom: 14px; line-height: 1.5; }
-      .ai-chat-message.user { text-align: right; }
-      .ai-chat-message.user .message-bubble { display: inline-block; background: #ffe8e8; color: #222; }
-      .ai-chat-message.assistant .message-bubble { display: inline-block; background: #f4f4f4; color: #222; }
-      .message-bubble { padding: 12px 14px; border-radius: 18px; max-width: 100%; display: inline-block; }
-      .ai-chat-footer { display: flex; gap: 10px; padding: 14px 16px; border-top: 1px solid #eaeaea; background: var(--card-bg); }
-      .ai-chat-footer input { flex: 1; border-radius: 999px; border: 1px solid #ddd; padding: 12px 16px; }
-      .ai-chat-footer button { min-width: 90px; border-radius: 999px; }
+      /* ============ AI CHAT - SMALLER, FIXED HEADER (CLOSE BUTTON ALWAYS VISIBLE) ============ */
+      .ai-chat-widget { 
+        position: fixed; 
+        right: 20px; 
+        bottom: 20px; 
+        z-index: 1100; 
+        max-width: 280px; 
+        font-family: inherit; 
+      }
+      .ai-chat-toggle { 
+        width: 50px; 
+        height: 50px; 
+        border-radius: 50%; 
+        border: none; 
+        background-color: var(--main-color); 
+        color: #fff; 
+        font-size: 1.3rem; 
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2); 
+        cursor: pointer; 
+      }
+      
+      .ai-chat-panel {
+        display: none;
+        width: 100%;
+        background: var(--card-bg);
+        border-radius: 16px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        margin-bottom: 12px;
+        flex-direction: column;
+        max-height: 400px;
+        overflow: hidden;
+      }
+      .ai-chat-panel.active { 
+        display: flex; 
+      }
+
+      /* LOCK header — never moves, always visible */
+      .ai-chat-header {
+        padding: 10px 14px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: var(--main-color);
+        color: #fff;
+        flex-shrink: 0;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        border-radius: 16px 16px 0 0;
+      }
+      .ai-chat-header span { 
+        font-weight: 600; 
+        font-size: 0.85rem; 
+      }
+
+      /* Close button - ALWAYS VISIBLE */
+      #ai-chat-close {
+        background: rgba(255,255,255,0.2) !important;
+        border: none !important;
+        color: #fff !important;
+        border-radius: 6px !important;
+        padding: 4px 8px !important;
+        font-size: 0.9rem !important;
+        cursor: pointer !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        flex-shrink: 0;
+        transition: background 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #ai-chat-close:hover { 
+        background: rgba(255,255,255,0.35) !important; 
+      }
+
+      /* Messages scroll independently */
+      .ai-chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 10px;
+        min-height: 0;
+        max-height: 280px;
+      }
+      
+      .ai-chat-message { 
+        margin-bottom: 10px; 
+        line-height: 1.4; 
+      }
+      .ai-chat-message.user { 
+        text-align: right; 
+      }
+      .ai-chat-message.user .message-bubble { 
+        display: inline-block; 
+        background: #e3f2fd; 
+        color: #1a1a2e; 
+        border-radius: 16px 16px 4px 16px;
+        font-size: 0.8rem;
+        padding: 8px 12px;
+        max-width: 90%;
+      }
+      .ai-chat-message.assistant .message-bubble { 
+        display: inline-block; 
+        background: #f0f0f0; 
+        color: #1a1a2e; 
+        border-radius: 16px 16px 16px 4px;
+        font-size: 0.8rem;
+        padding: 8px 12px;
+        max-width: 90%;
+      }
+      
+      /* Lock footer too */
+      .ai-chat-footer {
+        display: flex;
+        gap: 8px;
+        padding: 10px 12px;
+        border-top: 1px solid #eaeaea;
+        background: var(--card-bg);
+        flex-shrink: 0;
+        border-radius: 0 0 16px 16px;
+      }
+      .ai-chat-footer input { 
+        flex: 1; 
+        border-radius: 20px; 
+        border: 1px solid #ddd; 
+        padding: 8px 12px; 
+        font-size: 0.8rem;
+      }
+      .ai-chat-footer input:focus {
+        outline: none;
+        border-color: var(--main-color);
+      }
+      .ai-chat-footer button { 
+        min-width: 60px; 
+        border-radius: 20px; 
+        font-size: 0.8rem; 
+        padding: 8px 12px;
+        background-color: var(--main-color);
+        border: none;
+        color: #fff;
+        cursor: pointer;
+      }
+      .ai-chat-footer button:hover {
+        opacity: 0.9;
+      }
+
+      /* Dark theme fixes for AI chat */
+      [data-theme="dark"] .ai-chat-message.user .message-bubble {
+        background: #2a2a3a;
+        color: #e8e8e8;
+      }
+      [data-theme="dark"] .ai-chat-message.assistant .message-bubble {
+        background: #1a1a24;
+        color: #e8e8e8;
+      }
+      [data-theme="dark"] .ai-chat-footer input {
+        background: #2a2a2a;
+        color: #e8e8e8;
+        border-color: #444;
+      }
+
+      /* ============ PROFESSIONAL FOOTER ============ */
+      .footer {
+        background: #0a0a0a; color: #aaa;
+        padding: 60px 0 30px; margin-top: 80px;
+        border-top: 1px solid #222;
+      }
+      .footer h5 { color: #fff; font-weight: 700; margin-bottom: 20px; font-size: 1.1rem; }
+      .footer h5 i { margin-right: 8px; color: var(--main-color); }
+      .footer ul { list-style: none; padding: 0; margin: 0; }
+      .footer ul li { margin-bottom: 10px; }
+      .footer ul li a { color: #aaa; text-decoration: none; transition: all 0.3s ease; font-size: 0.9rem; }
+      .footer ul li a:hover { color: var(--main-color); padding-left: 5px; }
+      .footer .social-links a {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 36px; height: 36px; background: #1a1a1a;
+        border-radius: 50%; margin-right: 10px; transition: all 0.3s ease;
+      }
+      .footer .social-links a:hover { background: var(--main-color); transform: translateY(-3px); }
+      .footer .social-links a i { color: #fff; font-size: 1rem; }
+      .footer .newsletter-input { display: flex; gap: 10px; margin-top: 15px; }
+      .footer .newsletter-input input {
+        flex: 1; background: #1a1a1a; border: 1px solid #333;
+        color: #fff; padding: 10px 15px; border-radius: 30px;
+      }
+      .footer .newsletter-input button {
+        background: var(--main-color); border: none; color: #fff;
+        padding: 10px 20px; border-radius: 30px; cursor: pointer; transition: all 0.3s ease;
+      }
+      .footer .newsletter-input button:hover { opacity: 0.8; transform: scale(1.02); }
+      .footer .footer-bottom {
+        border-top: 1px solid #1a1a1a; padding-top: 30px;
+        margin-top: 40px; text-align: center; font-size: 0.85rem;
+      }
+      .footer .footer-bottom a { color: #aaa; text-decoration: none; }
+      .footer .footer-bottom a:hover { color: var(--main-color); }
+      [data-theme="dark"] .footer { background: #050505; border-top-color: #1a1a1a; }
+
+      .animated-price, .animated-product { animation: colorShift 6s infinite alternate; }
+      @keyframes colorShift {
+        0% { color: #ff4747; } 25% { color: #f8b400; }
+        50% { color: #4cd137; } 75% { color: #0097e6; } 100% { color: #ff47a3; }
+      }
+
+      @media (max-width: 768px) {
+        .footer { text-align: center; }
+        .footer .social-links { justify-content: center; }
+        .ai-chat-widget { max-width: 260px; right: 16px; bottom: 16px; }
+        .ai-chat-messages { max-height: 260px; }
+      }
+
+      /* ===== FORCE CART TEXT VISIBILITY (FINAL FIX) ===== */
+      .cart-product-description {
+        color: #111 !important;
+        opacity: 1 !important;
+        font-weight: 500 !important;
+      }
+
+      .sale-price-text,
+      .regular-price-text,
+      .cart-total-cell {
+        color: #000 !important;
+        opacity: 1 !important;
+        font-weight: 800 !important;
+      }
+
+      .original-price-text {
+        color: #444 !important;
+        opacity: 1 !important;
+      }
+
+      /* REMOVE ANY FADE EFFECT */
+      .cart-row {
+        opacity: 1 !important;
+      }
+
+      /* KILL BOOTSTRAP MUTED FADE */
+      .text-muted,
+      small,
+      .small {
+        opacity: 1 !important;
+      }
+
+      /* ===== DARK MODE FIX ===== */
+      [data-theme="dark"] .cart-product-description {
+        color: #e0e0e0 !important;
+      }
+
+      [data-theme="dark"] .sale-price-text,
+      [data-theme="dark"] .regular-price-text,
+      [data-theme="dark"] .cart-total-cell {
+        color: #ffffff !important;
+      }
+
+      [data-theme="dark"] .original-price-text {
+        color: #aaaaaa !important;
+      }
     </style>
   </head>
 
@@ -217,20 +520,13 @@
       <div class="spinner-border" role="status"></div>
     </div>
 
-    <!-- ============ GLOBAL TOAST STACK ============ -->
+    <!-- Global Toast Stack -->
     <div class="toast-stack" id="toast-stack"></div>
 
-    <!-- Django Messages passed to JavaScript -->
+    <!-- Django Messages passed to JS -->
     {% if messages %}
     <script id="django-messages-data" type="application/json">
-      [
-        {% for message in messages %}
-        {
-          "text": "{{ message|escapejs }}",
-          "tags": "{{ message.tags }}"
-        }{% if not forloop.last %},{% endif %}
-        {% endfor %}
-      ]
+      [{% for message in messages %}{"text":"{{ message|escapejs }}","tags":"{{ message.tags }}"}{% if not forloop.last %},{% endif %}{% endfor %}]
     </script>
     {% endif %}
 
@@ -244,10 +540,30 @@
         </button>
 
         <div class="collapse navbar-collapse" id="navbarNav">
-          <form class="d-flex mx-auto" method="get" action="{% url 'products:product-list' %}">
-            <input class="form-control me-2 shadow-sm" type="search" name="search" placeholder="Search for products..." value="{{ request.GET.search }}">
-            <button class="btn btn-light" type="submit">Search</button>
-          </form>
+
+          <!-- Search with Recent Searches -->
+          <div class="search-wrapper mx-auto">
+            <form class="d-flex" method="get" action="{% url 'products:product-list' %}" id="navbar-search-form">
+              <input
+                class="form-control me-2 shadow-sm"
+                type="search"
+                name="search"
+                id="navbar-search-input"
+                placeholder="Search for products..."
+                value="{{ request.GET.search }}"
+                autocomplete="off"
+              >
+              <button class="btn btn-light" type="submit">Search</button>
+            </form>
+            <!-- Recent Searches Dropdown -->
+            <div class="recent-searches-dropdown" id="recent-searches-dropdown">
+              <div class="recent-searches-header">
+                <span>Recent Searches</span>
+                <button onclick="clearAllSearches()">Clear All</button>
+              </div>
+              <div id="recent-searches-list"></div>
+            </div>
+          </div>
 
           <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
             <li class="nav-item"><a class="nav-link" href="{% url 'products:landing' %}">Home</a></li>
@@ -297,12 +613,14 @@
       </div>
     </nav>
 
-    <!-- AI Chat Widget -->
+    <!-- AI Chat Widget - SMALLER, FIXED HEADER (CLOSE BUTTON ALWAYS VISIBLE) -->
     <div class="ai-chat-widget">
       <div id="ai-chat-panel" class="ai-chat-panel">
         <div class="ai-chat-header">
-          <span>AI Shopping Assistant</span>
-          <button id="ai-chat-close" class="btn btn-sm btn-light">×</button>
+          <span>🤖 AI Assistant</span>
+          <button id="ai-chat-close">
+            <i class="bi bi-x-lg"></i>
+          </button>
         </div>
         <div id="ai-chat-messages" class="ai-chat-messages">
           <div class="ai-chat-message assistant">
@@ -310,7 +628,7 @@
           </div>
         </div>
         <div class="ai-chat-footer">
-          <input id="ai-chat-input" type="text" placeholder="Ask about red sneakers under ₦5000..." aria-label="Chat message">
+          <input id="ai-chat-input" type="text" placeholder="Ask about products..." aria-label="Chat message">
           <button id="ai-chat-send" class="btn btn-danger">Send</button>
         </div>
       </div>
@@ -325,51 +643,81 @@
     <!-- Scroll to top -->
     <button id="scrollTopBtn" title="Go to top"><i class="bi bi-arrow-up"></i></button>
 
-    <!-- Footer -->
+    <!-- Footer with UPDATED category links that go to proper category pages -->
     <footer class="footer">
       <div class="container">
-        <p>&copy; 2024 RedCart. All rights reserved.</p>
+        <div class="row">
+          <div class="col-lg-3 col-md-6 mb-4">
+            <h5><i class="bi bi-tags"></i> Top Categories</h5>
+            <ul>
+              <li><a href="{% url 'products:category-page' 'electronics' %}">📱 Electronics</a></li>
+              <li><a href="{% url 'products:category-page' 'clothing' %}">👕 Clothing & Fashion</a></li>
+              <li><a href="{% url 'products:category-page' 'home-kitchen' %}">🏠 Home & Kitchen</a></li>
+              <li><a href="{% url 'products:category-page' 'sports' %}">⚽ Sports & Outdoors</a></li>
+              <li><a href="{% url 'products:category-page' 'books' %}">📚 Books</a></li>
+              <li><a href="{% url 'products:category-page' 'toys' %}">🎮 Toys & Games</a></li>
+              <li><a href="{% url 'products:category-page' 'other' %}">🗂️ Other</a></li>
+              
+            </ul>
+          </div>
+          <div class="col-lg-3 col-md-6 mb-4">
+            <h5><i class="bi bi-grid-3x3-gap-fill"></i> Platform</h5>
+            <ul>
+              <li><a href="{% url 'products:about' %}">About Us</a></li>
+              <li><a href="{% url 'products:offers' %}">Explore Offers</a></li>
+              <li><a href="{% url 'products:blog' %}">Blog & News</a></li>
+              <li><a href="{% url 'products:faq' %}">FAQs</a></li>
+              <li><a href="{% url 'products:contact' %}">Contact Us</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-3 col-md-6 mb-4">
+            <h5><i class="bi bi-building"></i> Company</h5>
+            <ul>
+              <li><a href="{% url 'products:about' %}">About</a></li>
+              <li><a href="{% url 'products:contact' %}">Help Center</a></li>
+              <li><a href="{% url 'products:faq' %}">FAQs</a></li>
+              <li><a href="{% url 'products:privacy-policy' %}">Privacy Policy</a></li>
+              <li><a href="{% url 'products:terms-of-service' %}">Terms of Service</a></li>
+              <li><a href="{% url 'products:cookie-policy' %}">Cookie Policy</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-3 col-md-6 mb-4">
+            <h5><i class="bi bi-envelope-paper"></i> Stay Updated</h5>
+            <p class="small">Subscribe to get special offers, free giveaways, and exclusive deals.</p>
+            <form class="newsletter-input" method="post" action="{% url 'products:newsletter-signup' %}">
+              {% csrf_token %}
+              <input type="email" name="email" placeholder="Your email address" required>
+              <button type="submit"><i class="bi bi-send"></i></button>
+            </form>
+            <div class="social-links mt-4">
+              <a href="#"><i class="bi bi-facebook"></i></a>
+              <a href="#"><i class="bi bi-twitter-x"></i></a>
+              <a href="#"><i class="bi bi-instagram"></i></a>
+              <a href="#"><i class="bi bi-linkedin"></i></a>
+              <a href="#"><i class="bi bi-youtube"></i></a>
+            </div>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <div class="row">
+            <div class="col-md-6 text-md-start text-center">
+              <p>&copy; 2026 RedCart. All rights reserved.</p>
+            </div>
+            <div class="col-md-6 text-md-end text-center">
+              <a href="{% url 'products:terms-of-service' %}">Terms of Service</a> &nbsp;|&nbsp;
+              <a href="{% url 'products:privacy-policy' %}">Privacy Policy</a> &nbsp;|&nbsp;
+              <a href="{% url 'products:cookie-policy' %}">Cookie Policy</a>
+            </div>
+          </div>
+        </div>
       </div>
     </footer>
 
-    <!-- JS -->
+    <!-- Rest of your scripts stay the same -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
       // ============ TOAST SYSTEM ============
-      const TOAST_ICONS = {
-        success: '✅',
-        error:   '❌',
-        warning: '⚠️',
-        info:    'ℹ️',
-        danger:  '❌',
-      };
-
-      function showToast(message, type = 'success', duration = 4000) {
-        const stack = document.getElementById('toast-stack');
-        const toast = document.createElement('div');
-
-        const typeMap = { 
-          'success': 'success', 
-          'error': 'error', 
-          'danger': 'error', 
-          'warning': 'warning', 
-          'info': 'info', 
-          'debug': 'info' 
-        };
-        const resolvedType = typeMap[type] || 'info';
-        const icon = TOAST_ICONS[resolvedType] || 'ℹ️';
-
-        toast.className = `redcart-toast ${resolvedType}`;
-        toast.innerHTML = `
-          <span class="toast-icon">${icon}</span>
-          <span class="toast-msg">${escapeHtml(message)}</span>
-          <button class="toast-close" onclick="dismissToast(this.closest('.redcart-toast'))">×</button>
-          <div class="toast-progress"></div>
-        `;
-
-        stack.appendChild(toast);
-        setTimeout(() => dismissToast(toast), duration);
-      }
+      const TOAST_ICONS = { success:'✅', error:'❌', warning:'⚠️', info:'ℹ️', danger:'❌' };
 
       function escapeHtml(text) {
         const div = document.createElement('div');
@@ -377,20 +725,251 @@
         return div.innerHTML;
       }
 
+      function showToast(message, type = 'success', duration = 4000) {
+        const stack = document.getElementById('toast-stack');
+        const typeMap = { success:'success', error:'error', danger:'error', warning:'warning', info:'info', debug:'info' };
+        const resolvedType = typeMap[type] || 'info';
+        const icon = TOAST_ICONS[resolvedType] || 'ℹ️';
+        const toast = document.createElement('div');
+        toast.className = `redcart-toast ${resolvedType}`;
+        toast.innerHTML = `
+          <span class="toast-icon">${icon}</span>
+          <span class="toast-msg">${escapeHtml(message)}</span>
+          <button class="toast-close" onclick="dismissToast(this.closest('.redcart-toast'))">
+            <i class="bi bi-x-lg"></i>
+          </button>
+          <div class="toast-progress"></div>
+        `;
+        stack.appendChild(toast);
+        setTimeout(() => dismissToast(toast), duration);
+      }
+
       function dismissToast(toast) {
         if (!toast || !toast.parentNode) return;
         toast.style.animation = 'toastSlideOut 0.3s ease forwards';
         setTimeout(() => toast.remove(), 300);
       }
-
       window.showToast = showToast;
 
-      // ============ NOTIFICATION BELL (WORKS FOR GUESTS) ============
+      // ============ LOADER + DJANGO MESSAGES ============
+      window.addEventListener("load", () => {
+        document.getElementById("loader").style.display = "none";
+        const script = document.getElementById('django-messages-data');
+        if (script) {
+          try {
+            const msgs = JSON.parse(script.textContent);
+            msgs.forEach((msg, i) => {
+              const tags = msg.tags || '';
+              let type = 'info';
+              if (tags.includes('success')) type = 'success';
+              else if (tags.includes('error') || tags.includes('danger')) type = 'error';
+              else if (tags.includes('warning')) type = 'warning';
+              setTimeout(() => showToast(msg.text, type), i * 200);
+            });
+          } catch(e) { console.log('Message parse error:', e); }
+        }
+      });
+
+      // ============ THEME TOGGLE ============
+      const themeToggle = document.getElementById('theme-toggle');
+      const themeIcon   = document.getElementById('theme-icon');
+
+      function applyTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+        themeIcon.className = theme === 'dark' ? 'bi bi-moon-fill' : 'bi bi-brightness-high-fill';
+      }
+
+      applyTheme(localStorage.getItem('theme') || 'light');
+      themeToggle.addEventListener('click', () => {
+        applyTheme(document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
+      });
+
+      // ============ SCROLL TO TOP ============
+      const scrollTopBtn = document.getElementById("scrollTopBtn");
+      window.onscroll = () => {
+        scrollTopBtn.style.display = (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) ? "block" : "none";
+      };
+      scrollTopBtn.addEventListener("click", () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+      // ============ CSRF ============
+      function getCookie(name) {
+        for (let c of document.cookie.split(';')) {
+          c = c.trim();
+          if (c.startsWith(name + '=')) return decodeURIComponent(c.substring(name.length + 1));
+        }
+        return null;
+      }
+
+      // ============ RECENT SEARCHES ============
+      const SEARCH_KEY = 'redcart_recent_searches';
+      const MAX_SEARCHES = 8;
+
+      function getRecentSearches() {
+        try { return JSON.parse(localStorage.getItem(SEARCH_KEY)) || []; }
+        catch { return []; }
+      }
+
+      function saveRecentSearches(searches) {
+        localStorage.setItem(SEARCH_KEY, JSON.stringify(searches));
+      }
+
+      function addRecentSearch(term) {
+        if (!term || term.trim().length < 2) return;
+        let searches = getRecentSearches();
+        searches = searches.filter(s => s.toLowerCase() !== term.toLowerCase());
+        searches.unshift(term.trim());
+        searches = searches.slice(0, MAX_SEARCHES);
+        saveRecentSearches(searches);
+      }
+
+      function removeRecentSearch(term) {
+        let searches = getRecentSearches().filter(s => s !== term);
+        saveRecentSearches(searches);
+        renderRecentSearches();
+      }
+
+      function clearAllSearches() {
+        saveRecentSearches([]);
+        renderRecentSearches();
+        document.getElementById('recent-searches-dropdown').classList.remove('show');
+      }
+
+      function renderRecentSearches() {
+        const list = document.getElementById('recent-searches-list');
+        const searches = getRecentSearches();
+        if (!list) return;
+
+        if (searches.length === 0) {
+          list.innerHTML = '<div class="no-recent-searches">No recent searches</div>';
+          return;
+        }
+
+        list.innerHTML = searches.map(s => `
+          <div class="recent-search-item" onclick="applySearch('${escapeHtml(s)}')">
+            <i class="bi bi-clock-history"></i>
+            <span>${escapeHtml(s)}</span>
+            <button class="remove-search" onclick="event.stopPropagation(); removeRecentSearch('${escapeHtml(s)}')">
+              <i class="bi bi-x"></i>
+            </button>
+          </div>
+        `).join('');
+      }
+
+      function applySearch(term) {
+        const input = document.getElementById('navbar-search-input');
+        if (input) {
+          input.value = term;
+          document.getElementById('navbar-search-form').submit();
+        }
+      }
+
+      // Search input events
+      document.addEventListener('DOMContentLoaded', () => {
+        const searchInput = document.getElementById('navbar-search-input');
+        const dropdown    = document.getElementById('recent-searches-dropdown');
+        const searchForm  = document.getElementById('navbar-search-form');
+
+        if (searchInput) {
+          searchInput.addEventListener('focus', () => {
+            renderRecentSearches();
+            dropdown.classList.add('show');
+          });
+
+          searchInput.addEventListener('input', () => {
+            if (searchInput.value.trim().length === 0) {
+              renderRecentSearches();
+              dropdown.classList.add('show');
+            } else {
+              dropdown.classList.remove('show');
+            }
+          });
+
+          document.addEventListener('click', (e) => {
+            if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+              dropdown.classList.remove('show');
+            }
+          });
+        }
+
+        if (searchForm) {
+          searchForm.addEventListener('submit', () => {
+            const val = searchInput?.value.trim();
+            if (val) addRecentSearch(val);
+          });
+        }
+      });
+
+      // ============ AI CHAT ============
+      let chatHistory = [];
+
+      function addChatMessage(message, role = 'assistant') {
+        const msgs = document.getElementById('ai-chat-messages');
+        const wrapper = document.createElement('div');
+        wrapper.className = `ai-chat-message ${role}`;
+        const bubble = document.createElement('div');
+        bubble.className = 'message-bubble';
+        bubble.textContent = message;
+        wrapper.appendChild(bubble);
+        msgs.appendChild(wrapper);
+        msgs.scrollTop = msgs.scrollHeight;
+        chatHistory.push({ role: role, content: message });
+      }
+
+      function setChatOpen(open) {
+        const panel = document.getElementById('ai-chat-panel');
+        if (open) {
+          panel.classList.add('active');
+        } else {
+          panel.classList.remove('active');
+        }
+      }
+
+      async function sendAiChatMessage() {
+        const input = document.getElementById('ai-chat-input');
+        const text = input.value.trim();
+        if (!text) return;
+        addChatMessage(text, 'user');
+        input.value = '';
+        addChatMessage('Thinking... 🤖', 'assistant');
+
+        try {
+          const response = await fetch('/products/api/chat/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+            body: JSON.stringify({ message: text, history: chatHistory.slice(0, -1) }),
+          });
+          const data = await response.json();
+          const allMsgs = document.querySelectorAll('.ai-chat-message.assistant');
+          const bubble = allMsgs[allMsgs.length - 1]?.querySelector('.message-bubble');
+          if (bubble) {
+            if (data.success && data.reply) {
+              bubble.textContent = data.reply;
+              chatHistory[chatHistory.length - 1].content = data.reply;
+            } else {
+              bubble.textContent = 'Sorry, I could not process that. Please try again.';
+            }
+          }
+        } catch (error) {
+          console.error('Chat error:', error);
+          const allMsgs = document.querySelectorAll('.ai-chat-message.assistant');
+          const bubble = allMsgs[allMsgs.length - 1]?.querySelector('.message-bubble');
+          if (bubble) bubble.textContent = 'AI assistant temporarily unavailable. Please try again later.';
+        }
+      }
+
+      document.getElementById('ai-chat-toggle')?.addEventListener('click', () => setChatOpen(true));
+      document.getElementById('ai-chat-close')?.addEventListener('click', () => setChatOpen(false));
+      document.getElementById('ai-chat-send')?.addEventListener('click', sendAiChatMessage);
+      document.getElementById('ai-chat-input')?.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); sendAiChatMessage(); }
+      });
+
+      // ============ NOTIFICATION BELL UPDATE ============
       async function updateNotificationBell() {
         try {
           const response = await fetch('/products/api/notifications/unread/count/');
           
-          // If response is 401 (unauthorized), user is not logged in
           if (response.status === 401) {
             const badge = document.getElementById('notification-badge');
             const dropdownBadge = document.getElementById('dropdown-badge');
@@ -424,7 +1003,6 @@
           }
         } catch(e) {
           console.log('Error updating notification bell:', e);
-          // Hide badges on error (user likely not logged in)
           const badge = document.getElementById('notification-badge');
           const dropdownBadge = document.getElementById('dropdown-badge');
           if (badge) badge.style.display = 'none';
@@ -432,129 +1010,9 @@
         }
       }
 
-      // ============ LOADER ============
-      window.addEventListener("load", () => {
-        document.getElementById("loader").style.display = "none";
-        
-        // Get and display Django messages
-        const messagesScript = document.getElementById('django-messages-data');
-        if (messagesScript) {
-          try {
-            const messages = JSON.parse(messagesScript.textContent);
-            messages.forEach(msg => {
-              let toastType = 'info';
-              if (msg.tags.includes('success')) toastType = 'success';
-              else if (msg.tags.includes('error')) toastType = 'error';
-              else if (msg.tags.includes('warning')) toastType = 'warning';
-              else if (msg.tags.includes('info')) toastType = 'info';
-              
-              setTimeout(() => {
-                showToast(msg.text, toastType);
-              }, 100);
-            });
-          } catch(e) {
-            console.log('Error parsing messages:', e);
-          }
-        }
-        
-        // Update notification bell
+      document.addEventListener('DOMContentLoaded', () => {
         updateNotificationBell();
-        
-        // Update bell every 30 seconds
         setInterval(updateNotificationBell, 30000);
-      });
-
-      // ============ THEME TOGGLE ============
-      const themeToggle = document.getElementById('theme-toggle');
-      const themeIcon = document.getElementById('theme-icon');
-
-      function applyTheme(theme) {
-        document.documentElement.setAttribute('data-theme', theme);
-        localStorage.setItem('theme', theme);
-        if (theme === 'dark') {
-          themeIcon.classList.remove('bi-brightness-high-fill');
-          themeIcon.classList.add('bi-moon-fill');
-        } else {
-          themeIcon.classList.remove('bi-moon-fill');
-          themeIcon.classList.add('bi-brightness-high-fill');
-        }
-      }
-
-      applyTheme(localStorage.getItem('theme') || 'light');
-      themeToggle.addEventListener('click', () => {
-        applyTheme(document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
-      });
-
-      // ============ SCROLL TO TOP ============
-      const scrollTopBtn = document.getElementById("scrollTopBtn");
-      window.onscroll = () => {
-        scrollTopBtn.style.display = (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) ? "block" : "none";
-      };
-      scrollTopBtn.addEventListener("click", () => window.scrollTo({ top: 0, behavior: 'smooth' }));
-
-      // ============ CSRF COOKIE ============
-      function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-          for (let cookie of document.cookie.split(';')) {
-            cookie = cookie.trim();
-            if (cookie.startsWith(name + '=')) {
-              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-              break;
-            }
-          }
-        }
-        return cookieValue;
-      }
-
-      // ============ AI CHAT ============
-      function addChatMessage(message, role = 'assistant') {
-        const messages = document.getElementById('ai-chat-messages');
-        const wrapper = document.createElement('div');
-        wrapper.className = `ai-chat-message ${role}`;
-        const bubble = document.createElement('div');
-        bubble.className = 'message-bubble';
-        bubble.textContent = message;
-        wrapper.appendChild(bubble);
-        messages.appendChild(wrapper);
-        messages.scrollTop = messages.scrollHeight;
-      }
-
-      function setChatOpen(open) {
-        document.getElementById('ai-chat-panel').classList.toggle('active', open);
-      }
-
-      async function sendAiChatMessage() {
-        const input = document.getElementById('ai-chat-input');
-        const text = input.value.trim();
-        if (!text) return;
-        addChatMessage(text, 'user');
-        input.value = '';
-        addChatMessage('Thinking... 🤖', 'assistant');
-
-        try {
-          const response = await fetch('/api/chat/', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
-            body: JSON.stringify({ message: text }),
-          });
-          const data = await response.json();
-          const last = document.querySelectorAll('.ai-chat-message.assistant');
-          const bubble = last[last.length - 1]?.querySelector('.message-bubble');
-          if (bubble) bubble.textContent = data.reply || 'Sorry, I could not process that.';
-          if (!response.ok && data.login_url) window.location.href = data.login_url;
-        } catch {
-          const last = document.querySelectorAll('.ai-chat-message.assistant');
-          const bubble = last[last.length - 1]?.querySelector('.message-bubble');
-          if (bubble) bubble.textContent = 'Sorry, the AI assistant is unavailable right now.';
-        }
-      }
-
-      document.getElementById('ai-chat-toggle')?.addEventListener('click', () => setChatOpen(true));
-      document.getElementById('ai-chat-close')?.addEventListener('click', () => setChatOpen(false));
-      document.getElementById('ai-chat-send')?.addEventListener('click', sendAiChatMessage);
-      document.getElementById('ai-chat-input')?.addEventListener('keydown', e => {
-        if (e.key === 'Enter') { e.preventDefault(); sendAiChatMessage(); }
       });
 
       // ============ WISHLIST ============
@@ -590,7 +1048,6 @@
           button.textContent = liked ? 'Saved' : 'Save';
         }
         if (button.closest('.wishlist-item') && !liked) button.closest('.wishlist-item').remove();
-
         showToast(liked ? 'Added to wishlist ❤️' : 'Removed from wishlist', liked ? 'success' : 'info');
       }
 
@@ -607,7 +1064,7 @@
           });
         });
       }
-      window.addEventListener('load', applyImageFallbacks);
+      window.addEventListener('load', applyImageFallbacks());
     </script>
   </body>
 </html>

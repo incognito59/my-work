@@ -1,320 +1,1239 @@
 {% extends 'base.html' %}
+
 {% load static %}
 
-{% block title %}My Cart - MyStore{% endblock %}
+{% block title %}My Cart - RedCart{% endblock %}
 
 {% block content %}
-<div class="container my-5">
-
-<!-- Header: Search Bar -->
-  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-    <form class="d-flex flex-grow-1 me-3" method="get" action="{% url 'products:product-list' %}">
-      <input type="text" class="form-control me-2 rounded-pill shadow-sm" name="q" placeholder="Search for products..." value="{{ request.GET.q }}">
-      <button class="btn btn-warning fw-semibold rounded-pill px-4 shadow-sm">Search</button>
-    </form>
-  </div>
-
-  <div class="row g-4">
-
-    <!-- CART ITEMS SECTION -->
-    <div class="col-lg-8">
-      <div class="card border-0 shadow-lg rounded-4 p-4 theme-card">
-        <h4 class="fw-bold mb-4 text-gradient">🛒 Shopping Cart</h4>
-
-        {% if products %}
-          <div class="table-responsive">
-            <table class="table align-middle">
-              <thead class="table-light">
-                <tr>
-                  <th scope="col">Product</th>
-                  <th scope="col" class="text-center">Quantity</th>
-                  <th scope="col" class="text-end">Unit Price</th>
-                  <th scope="col" class="text-end">Total</th>
-                  <th scope="col"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for product in products %}
-                  <tr class="cart-row" data-product-id="{{ product.id }}" data-price="{{ product.price }}">
-                    <td>
-                      <div class="d-flex align-items-center gap-3">
-                        <img src="{{ product.image_src }}" alt="{{ product.name }}" class="rounded-3 shadow-sm" style="width: 70px; height: 70px; object-fit: cover;">
-                        <div>
-                          <h6 class="mb-1 fw-semibold color-changing">{{ product.name }}</h6>
-                          <small class="text-muted d-block">{{ product.description|truncatechars:50 }}</small>
-                        </div>
-                      </div>
-                    </td>
-
-                    <td class="text-center">
-                      <input type="number" min="1" value="{{ product.quantity }}" class="form-control form-control-sm text-center qty-input rounded-pill" style="width: 70px;">
-                    </td>
-
-                    <td class="text-end color-changing">₦{{ product.price|floatformat:2 }}</td>
-                    <td class="text-end fw-semibold color-changing row-total">₦{{ product.total_price|floatformat:2 }}</td>
-                    <td class="text-end">
-                      <a href="{% url 'products:delete-from-cart' product.id %}" class="btn btn-sm btn-outline-danger rounded-circle remove-btn" title="Remove Item">
-                        <i class="bi bi-trash"></i>
-                      </a>
-                    </td>
-                  </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        {% else %}
-          <div class="text-center py-5">
-            <div class="empty-cart-icon mb-3">
-              <i class="bi bi-cart3"></i>
-            </div>
-            <h5 class="mt-3 text-muted">Your cart is empty</h5>
-            <a href="{% url 'products:product-list' %}" class="btn btn-warning rounded-pill mt-3 px-5 fw-semibold shadow-sm">Continue Shopping</a>
-          </div>
-        {% endif %}
-      </div>
-    </div>
-
-    <!-- ORDER SUMMARY SECTION -->
-    <div class="col-lg-4">
-      <div class="card border-0 shadow-lg rounded-4 p-4 sticky-top theme-card" style="top: 90px;">
-        <h5 class="fw-bold mb-4 text-gradient">💳 Order Summary</h5>
-
-        <div class="d-flex justify-content-between mb-2">
-          <span>Subtotal</span>
-          <span class="fw-semibold" id="summary-subtotal">₦{{ total|floatformat:2 }}</span>
-        </div>
-
-        <div class="d-flex justify-content-between mb-2">
-          <span>Shipping Fee</span>
-          <span class="fw-semibold text-success">₦0.00</span>
-        </div>
-
-        <hr>
-
-        <div class="d-flex justify-content-between mb-3">
-          <span class="fw-bold fs-5">Total</span>
-          <span class="fw-bold fs-5 color-changing" id="summary-total">₦{{ total|floatformat:2 }}</span>
-        </div>
-
-        <a href="{% url 'products:checkout' %}" class="btn checkout-btn w-100 fw-semibold py-3 mb-3 rounded-pill shadow-sm">
-          Proceed to Checkout
-        </a>
-
-        <a href="{% url 'products:product-list' %}" class="btn btn-outline-dark w-100 fw-semibold py-2 rounded-pill">
-          Continue Shopping
-        </a>
-      </div>
-    </div>
-
-  </div>
-</div>
 
 <style>
-  /* Global Animation Effects */
-  body {
-    transition: background-color 0.5s ease, color 0.5s ease;
-  }
-
-  .theme-card {
-    transition: background-color 0.5s ease, color 0.5s ease;
-    border-radius: 20px;
-    background-color: var(--card-bg);
+  
+  /* ── Page heading ── */
+  
+  .cart-page-title {
+  
+    font-size: 1.5rem;
+  
+    font-weight: 800;
+  
     color: var(--text-color);
+  
+    letter-spacing: -0.02em;
+  
+    margin-bottom: 1.5rem;
+  
   }
+  
+  .cart-page-title span {
+  
+    color: var(--main-color);
+  
+  }
+  
 
-  .empty-cart-icon {
+  
+  /* ── Main card shell ── */
+  
+  .rc-panel {
+  
+    background: var(--card-bg);
+  
+    border: 1px solid rgba(128,128,128,0.12);
+  
+    border-radius: 16px;
+  
+    padding: 1.75rem;
+  
+  }
+  
+
+  
+  /* ── Section label ── */
+  
+  .rc-section-label {
+  
+    font-size: 0.7rem;
+  
+    font-weight: 700;
+  
+    letter-spacing: 0.1em;
+  
+    text-transform: uppercase;
+  
+    color: var(--text-color);
+  
+    opacity: 0.4;
+  
+    margin-bottom: 1rem;
+  
+  }
+  
+
+  
+  /* ── Table header ── */
+  
+  .rc-thead th {
+  
+    font-size: 0.7rem;
+  
+    font-weight: 700;
+  
+    letter-spacing: 0.08em;
+  
+    text-transform: uppercase;
+  
+    color: var(--text-color) !important;
+  
+    opacity: 0.4;
+  
+    border: none !important;
+  
+    padding: 0 0.75rem 0.85rem !important;
+  
+    background: transparent !important;
+  
+  }
+  
+
+  
+  /* ── Table rows ── */
+  
+  .rc-table {
+  
+    border-collapse: collapse;
+  
+    width: 100%;
+  
+  }
+  
+  .rc-table tbody tr {
+  
+    border-top: 1px solid rgba(128,128,128,0.1);
+  
+    transition: background 0.15s;
+  
+  }
+  
+  .rc-table tbody tr:hover {
+  
+    background: rgba(128,128,128,0.04);
+  
+  }
+  
+  .rc-table td {
+  
+    padding: 1rem 0.75rem;
+  
+    vertical-align: middle;
+  
+    color: var(--text-color) !important;
+  
+    border: none !important;
+  
+  }
+  
+
+  
+  /* ── Product name ── */
+  
+  .rc-name {
+  
+    font-weight: 700;
+  
+    font-size: 0.92rem;
+  
+    color: var(--text-color) !important;
+  
+    text-decoration: none;
+  
+    display: block;
+  
+    line-height: 1.3;
+  
+    transition: color 0.15s;
+  
+  }
+  
+  .rc-name:hover { color: var(--main-color) !important; }
+  
+
+  
+  /* ── Description ── */
+  
+  .rc-desc {
+  
+    font-size: 0.77rem;
+  
+    color: var(--text-color) !important;
+  
+    opacity: 0.45;
+  
+    margin-top: 3px;
+  
+    line-height: 1.4;
+  
+  }
+  
+
+  
+  /* ── Badges ── */
+  
+  .rc-badge-sale {
+  
+    display: inline-block;
+  
+    font-size: 0.66rem;
+  
+    font-weight: 700;
+  
+    padding: 2px 9px;
+  
+    border-radius: 999px;
+  
+    background: rgba(255, 71, 71, 0.12);
+  
+    color: var(--main-color);
+  
+    border: 1px solid rgba(255, 71, 71, 0.22);
+  
+    margin-top: 5px;
+  
+  }
+  
+  .rc-badge-off {
+  
+    display: inline-block;
+  
+    font-size: 0.66rem;
+  
+    font-weight: 700;
+  
+    padding: 2px 8px;
+  
+    border-radius: 999px;
+  
+    background: rgba(248, 180, 0, 0.12);
+  
+    color: #c98a00;
+  
+    border: 1px solid rgba(248, 180, 0, 0.22);
+  
+    margin-top: 3px;
+  
+  }
+  
+  [data-theme="dark"] .rc-badge-off { color: #f8b400; }
+  
+
+  
+  /* ── Price ── */
+  
+  .rc-price-sale {
+  
+    font-weight: 800;
+  
+    font-size: 0.92rem;
+  
+    color: var(--main-color) !important;
+  
+  }
+  
+  .rc-price-original {
+  
+    font-size: 0.75rem;
+  
+    text-decoration: line-through;
+  
+    color: var(--text-color) !important;
+  
+    opacity: 0.35;
+  
+    display: block;
+  
+    margin-top: 1px;
+  
+  }
+  
+  .rc-price-regular {
+  
+    font-weight: 700;
+  
+    font-size: 0.9rem;
+  
+    color: var(--text-color) !important;
+  
+  }
+  
+  .rc-row-total {
+  
+    font-weight: 800;
+  
+    font-size: 0.95rem;
+  
+    color: var(--text-color) !important;
+  
+  }
+  
+
+  
+  /* ── Qty input ── */
+  
+  .rc-qty {
+  
+    width: 68px;
+  
+    text-align: center;
+  
+    background: rgba(128,128,128,0.08) !important;
+  
+    border: 1px solid rgba(128,128,128,0.18) !important;
+  
+    color: var(--text-color) !important;
+  
+    border-radius: 8px;
+  
+    padding: 6px 8px;
+  
+    font-size: 0.9rem;
+  
+    font-weight: 700;
+  
+    outline: none;
+  
+  }
+  
+  .rc-qty:focus {
+  
+    border-color: var(--main-color) !important;
+  
+    box-shadow: 0 0 0 3px rgba(255,71,71,0.12) !important;
+  
+  }
+  
+
+  
+  /* ── Remove btn ── */
+  
+  .rc-remove {
+  
     display: inline-flex;
+  
     align-items: center;
+  
     justify-content: center;
-    width: 160px;
-    height: 160px;
+  
+    width: 34px; height: 34px;
+  
     border-radius: 50%;
-    background: rgba(255, 193, 7, 0.14);
-    border: 2px dashed rgba(255, 193, 7, 0.35);
-    color: #ffc107;
-    font-size: 4rem;
-    margin: 0 auto;
-  }
-
-  .empty-cart-icon i {
-    line-height: 1;
-  }
-
-  /* Color Animation for Premium Feel */
-  .color-changing {
-    animation: colorChange 5s infinite alternate;
-  }
-  @keyframes colorChange {
-    0% { color: #ff4d4d; }
-    25% { color: #ff9900; }
-    50% { color: #0099ff; }
-    75% { color: #00cc66; }
-    100% { color: #cc00ff; }
-  }
-
-  .text-gradient {
-    background: linear-gradient(45deg, #ff6b6b, #f8c471, #6ab04c, #2980b9, #8e44ad);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    animation: textShift 8s infinite alternate;
-  }
-  @keyframes textShift {
-    0% { filter: hue-rotate(0deg); }
-    100% { filter: hue-rotate(360deg); }
-  }
-
-  /* Buttons */
-  .checkout-btn {
-    background: linear-gradient(135deg, #f68b1e, #ff6f00);
-    color: #fff;
-    border: none;
-    transition: all 0.3s ease;
-  }
-  .checkout-btn:hover {
-    transform: scale(1.03);
-    box-shadow: 0 6px 20px rgba(246,139,30,0.4);
-  }
-
-  .remove-btn {
-    border: 1px solid #ff4d4d;
-    color: #ff4d4d;
-    transition: all 0.3s ease;
-  }
-  .remove-btn:hover {
-    background-color: #ff4d4d;
-    color: white;
-  }
-
-  .cart-row {
-    background-color: var(--card-bg);
+  
+    border: 1px solid rgba(128,128,128,0.15);
+  
+    background: transparent;
+  
     color: var(--text-color);
-    transition: background-color 0.3s ease;
+  
+    opacity: 0.4;
+  
+    font-size: 0.8rem;
+  
+    text-decoration: none;
+  
+    transition: all 0.2s;
+  
   }
-
-  .cart-row:hover {
-    background-color: var(--card-bg);
-    opacity: 0.9;
-    transition: 0.3s ease;
+  
+  .rc-remove:hover {
+  
+    background: rgba(255,71,71,0.1);
+  
+    border-color: rgba(255,71,71,0.3);
+  
+    color: var(--main-color);
+  
+    opacity: 1;
+  
   }
+  
 
-  /* Dark theme text visibility for cart */
-  [data-theme="dark"] .theme-card {
-    background-color: #1e1e1e;
-    color: #e0e0e0;
+  
+  /* ── Product image ── */
+  
+  .rc-img {
+  
+    width: 66px;
+  
+    height: 66px;
+  
+    object-fit: cover;
+  
+    border-radius: 10px;
+  
+    border: 1px solid rgba(128,128,128,0.12);
+  
+    flex-shrink: 0;
+  
   }
+  
 
-  [data-theme="dark"] .color-changing {
-    color: #66b3ff;
+  
+  /* ── Coupon section ── */
+  
+  .rc-coupon-wrap {
+  
+    background: rgba(128,128,128,0.05);
+  
+    border: 1px dashed rgba(128,128,128,0.18);
+  
+    border-radius: 12px;
+  
+    padding: 1rem 1.25rem;
+  
+    margin-top: 1.5rem;
+  
   }
-
-  [data-theme="dark"] .text-gradient {
-    background: linear-gradient(45deg, #ff9999, #ffcc99, #99ff99, #99ccff, #ff99ff);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+  
+  .rc-coupon-input {
+  
+    background: var(--card-bg) !important;
+  
+    border: 1px solid rgba(128,128,128,0.18) !important;
+  
+    color: var(--text-color) !important;
+  
+    border-radius: 8px;
+  
+    font-size: 0.88rem;
+  
   }
-
-  [data-theme="dark"] .table {
-    color: #ddd;
+  
+  .rc-coupon-input::placeholder { opacity: 0.35; }
+  
+  .rc-coupon-input:focus {
+  
+    border-color: var(--main-color) !important;
+  
+    box-shadow: 0 0 0 3px rgba(255,71,71,0.1) !important;
+  
   }
-
-  [data-theme="dark"] .table thead {
-    background-color: #2a2a2a;
+  
+  .rc-coupon-btn {
+  
+    background: var(--main-color);
+  
     color: #fff;
+  
+    border: none;
+  
+    border-radius: 8px;
+  
+    font-weight: 700;
+  
+    font-size: 0.85rem;
+  
+    padding: 0.5rem 1.25rem;
+  
+    transition: opacity 0.2s;
+  
+    white-space: nowrap;
+  
+  }
+  
+  .rc-coupon-btn:hover { opacity: 0.85; color: #fff; }
+  
+  .rc-coupon-applied {
+  
+    background: rgba(40,167,69,0.08);
+  
+    border: 1px solid rgba(40,167,69,0.22);
+  
+    border-radius: 8px;
+  
+    padding: 8px 14px;
+  
+    font-size: 0.82rem;
+  
+    color: #1a8a3c;
+  
+    margin-top: 0.6rem;
+  
+  }
+  
+  [data-theme="dark"] .rc-coupon-applied { color: #4cd97a; }
+  
+
+  
+  /* ── Summary panel ── */
+  
+  .rc-summary {
+  
+    background: var(--card-bg);
+  
+    border: 1px solid rgba(128,128,128,0.12);
+  
+    border-radius: 16px;
+  
+    padding: 1.5rem;
+  
+    position: sticky;
+  
+    top: 90px;
+  
+  }
+  
+  .rc-summary-title {
+  
+    font-size: 1rem;
+  
+    font-weight: 800;
+  
+    color: var(--text-color);
+  
+    margin-bottom: 1.1rem;
+  
+  }
+  
+  .rc-sum-row {
+  
+    display: flex;
+  
+    justify-content: space-between;
+  
+    align-items: center;
+  
+    padding: 0.45rem 0;
+  
+    font-size: 0.88rem;
+  
+  }
+  
+  .rc-sum-label { color: var(--text-color); opacity: 0.55; }
+  
+  .rc-sum-value { color: var(--text-color); font-weight: 600; }
+  
+  .rc-sum-divider {
+  
+    border: none;
+  
+    border-top: 1px solid rgba(128,128,128,0.13);
+  
+    margin: 0.7rem 0;
+  
+  }
+  
+  .rc-sum-total-label { color: var(--text-color); font-weight: 800; font-size: 1.05rem; }
+  
+  .rc-sum-total-value { color: var(--text-color); font-weight: 800; font-size: 1.05rem; }
+  
+
+  
+  /* ── Checkout button ── */
+  
+  .rc-btn-checkout {
+  
+    display: block;
+  
+    width: 100%;
+  
+    text-align: center;
+  
+    background: var(--main-color);
+  
+    color: #fff !important;
+  
+    font-weight: 700;
+  
+    font-size: 0.95rem;
+  
+    padding: 14px;
+  
+    border-radius: 10px;
+  
+    text-decoration: none;
+  
+    border: none;
+  
+    transition: opacity 0.2s, transform 0.15s;
+  
+    margin-bottom: 0.65rem;
+  
+  }
+  
+  .rc-btn-checkout:hover { opacity: 0.88; transform: translateY(-1px); color: #fff !important; }
+  
+
+  
+  .rc-btn-continue {
+  
+    display: block;
+  
+    width: 100%;
+  
+    text-align: center;
+  
+    background: transparent;
+  
+    color: var(--text-color) !important;
+  
+    font-weight: 600;
+  
+    font-size: 0.88rem;
+  
+    padding: 11px;
+  
+    border-radius: 10px;
+  
+    text-decoration: none;
+  
+    border: 1px solid rgba(128,128,128,0.2);
+  
+    transition: border-color 0.2s, background 0.2s;
+  
+  }
+  
+  .rc-btn-continue:hover {
+  
+    border-color: rgba(128,128,128,0.4);
+  
+    background: rgba(128,128,128,0.06);
+  
+    color: var(--text-color) !important;
+  
+  }
+  
+
+  
+  /* ── Flash warning ── */
+  
+  .rc-flash-warn {
+  
+    background: rgba(248,180,0,0.08);
+  
+    border: 1px solid rgba(248,180,0,0.25);
+  
+    border-radius: 8px;
+  
+    padding: 9px 14px;
+  
+    font-size: 0.8rem;
+  
+    color: #a06b00;
+  
+    margin-bottom: 0.85rem;
+  
+  }
+  
+  [data-theme="dark"] .rc-flash-warn { color: #f8b400; }
+  
+
+  
+  /* ── Discount row ── */
+  
+  .rc-sum-discount { color: #1a8a3c !important; }
+  
+  [data-theme="dark"] .rc-sum-discount { color: #4cd97a !important; }
+  
+
+  
+  /* ── Empty cart ── */
+  
+  .rc-empty-icon {
+  
+    width: 110px; height: 110px;
+  
+    border-radius: 50%;
+  
+    background: rgba(255,193,7,0.1);
+  
+    border: 2px dashed rgba(255,193,7,0.28);
+  
+    display: inline-flex;
+  
+    align-items: center;
+  
+    justify-content: center;
+  
+    font-size: 3rem;
+  
+    color: #ffc107;
+  
+  }
+  
+  .rc-empty-title {
+  
+    font-size: 1.05rem;
+  
+    font-weight: 700;
+  
+    color: var(--text-color);
+  
+    margin: 1rem 0 0.35rem;
+  
+  }
+  
+  .rc-empty-sub {
+  
+    font-size: 0.88rem;
+  
+    color: var(--text-color);
+  
+    opacity: 0.45;
+  
+    margin-bottom: 1.5rem;
+  
+  }
+  
+
+  
+  /* ── Secure badges ── */
+  
+  .rc-secure-row {
+  
+    display: flex;
+  
+    align-items: center;
+  
+    justify-content: center;
+  
+    gap: 1rem;
+  
+    margin-top: 1rem;
+  
+    padding-top: 1rem;
+  
+    border-top: 1px solid rgba(128,128,128,0.1);
+  
+  }
+  
+  .rc-secure-badge {
+  
+    display: flex;
+  
+    align-items: center;
+  
+    gap: 5px;
+  
+    font-size: 0.72rem;
+  
+    color: var(--text-color);
+  
+    opacity: 0.4;
+  
   }
 
-  [data-theme="dark"] .table td,
-  [data-theme="dark"] .table th {
-    color: #e0e0e0;
-    border-color: #333;
+  /* ── Fix column alignment ── */
+  .rc-table th:nth-child(1) { width: 50%; }
+  .rc-table th:nth-child(2) { width: 80px; }
+  .rc-table th:nth-child(3) { width: 130px; }
+  .rc-table th:nth-child(4) { width: 120px; }
+  .rc-table th:nth-child(5) { width: 44px; }
+  
+</style><p class="cart-page-title"><span>🛒</span> Shopping Cart</p><div class="row g-4">  <!-- ── LEFT: CART ITEMS ──────────────────────────────── -->  <div class="col-lg-8"><div class="rc-panel">
+
+
+
+  {% if products %}
+
+
+
+    <p class="rc-section-label">{{ products|length }} item{{ products|length|pluralize }} in your cart</p>
+
+
+
+    <div class="table-responsive">
+
+      <table class="rc-table">
+
+        <thead>
+
+          <tr class="rc-thead">
+
+            <th style="padding-left:0 !important">Product</th>
+
+            <th class="text-center">Qty</th>
+
+            <th class="text-end">Unit Price</th>
+
+            <th class="text-end">Total</th>
+
+            <th></th>
+
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          {% for product in products %}
+
+          <tr class="cart-row"
+
+              data-product-id="{{ product.id }}"
+
+              data-price="{% if product.has_active_sale %}{{ product.sale_price }}{% else %}{{ product.price }}{% endif %}">
+
+
+
+            <!-- Product info -->
+
+            <td style="padding-left:0">
+
+              <div class="d-flex align-items-center gap-3">
+
+                <a href="{% url 'products:product-detail' product.id %}">
+
+                  <img src="{{ product.image_src }}" alt="{{ product.name }}" class="rc-img">
+
+                </a>
+
+                <div>
+
+                  <a href="{% url 'products:product-detail' product.id %}" class="rc-name">{{ product.name }}</a>
+
+                  {% if product.has_active_sale %}
+
+                    <span class="rc-badge-sale">⚡ Flash Sale</span>
+
+                  {% endif %}
+
+                  <p class="rc-desc mb-0">{{ product.description|truncatechars:52 }}</p>
+
+                </div>
+
+              </div>
+
+            </td>
+
+
+
+            <!-- Qty -->
+
+            <td class="text-center">
+
+              <input type="number" min="1" value="{{ product.quantity }}"
+
+                     class="rc-qty qty-input form-control">
+
+            </td>
+
+
+
+            <!-- Unit price -->
+
+            <td class="text-end cart-price-cell">
+
+              {% if product.has_active_sale %}
+
+                <span class="rc-price-sale sale-price-text">₦{{ product.sale_price|floatformat:2 }}</span>
+
+                <span class="rc-price-original original-price-text">₦{{ product.price|floatformat:2 }}</span>
+
+                <span class="rc-badge-off d-block" style="width:fit-content;margin-left:auto">-{{ product.discount_percentage|floatformat:0 }}%</span>
+
+              {% else %}
+
+                <span class="rc-price-regular regular-price-text">₦{{ product.price|floatformat:2 }}</span>
+
+              {% endif %}
+
+            </td>
+
+
+
+            <!-- Row total -->
+
+            <td class="text-end" style="padding-right:0">
+
+              <span class="rc-row-total cart-total-cell">
+
+                {% if product.has_active_sale %}
+
+                  ₦{% widthratio product.sale_price 1 product.quantity %}
+
+                {% else %}
+
+                  ₦{{ product.total_price|floatformat:2 }}
+
+                {% endif %}
+
+              </span>
+
+            </td>
+
+
+
+            <!-- Remove -->
+
+            <td style="width:44px;padding-right:0">
+
+              <a href="{% url 'products:delete-from-cart' product.id %}" class="rc-remove" title="Remove">
+
+                <i class="bi bi-trash"></i>
+
+              </a>
+
+            </td>
+
+
+
+          </tr>
+
+          {% endfor %}
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+
+
+    <!-- Coupon -->
+
+    <div class="rc-coupon-wrap">
+
+      <p class="rc-section-label mb-2">Have a coupon?</p>
+
+      <div class="d-flex gap-2">
+
+        <input type="text" id="coupon-code" class="rc-coupon-input form-control"
+
+               placeholder="e.g. SAVE10, FLASH20">
+
+        <button onclick="applyCoupon()" class="rc-coupon-btn">
+
+          <i class="bi bi-ticket-perforated me-1"></i> Apply
+
+        </button>
+
+      </div>
+
+      <div id="coupon-message" class="mt-2" style="font-size:0.82rem"></div>
+
+      {% if coupon_code %}
+
+        <div class="rc-coupon-applied d-flex justify-content-between align-items-center">
+
+          <span>
+
+            <i class="bi bi-check-circle me-1"></i>
+
+            "{{ coupon_code }}" applied{% if coupon_discount > 0 %} — saved ₦{{ coupon_discount|floatformat:2 }}{% endif %}
+
+          </span>
+
+          <a href="#" onclick="removeCoupon(); return false;"
+
+             style="color:var(--main-color);font-size:0.78rem;font-weight:700;text-decoration:none">
+
+            Remove
+
+          </a>
+
+        </div>
+
+      {% endif %}
+
+    </div>
+
+
+
+  {% else %}
+
+
+
+    <!-- Empty state -->
+
+    <div class="text-center py-5">
+
+      <div class="rc-empty-icon"><i class="bi bi-cart3"></i></div>
+
+      <p class="rc-empty-title">Your cart is empty</p>
+
+      <p class="rc-empty-sub">Add something you love 🛍️</p>
+
+      <a href="{% url 'products:product-list' %}" class="rc-btn-checkout"
+
+         style="display:inline-block;width:auto;padding:12px 36px">
+
+        Browse Products
+
+      </a>
+
+    </div>
+
+
+
+  {% endif %}
+
+</div>
+
+  </div>  <!-- ── RIGHT: ORDER SUMMARY ─────────────────────────── -->  <div class="col-lg-4"><div class="rc-summary">
+
+
+
+  <p class="rc-summary-title">💳 Order Summary</p>
+
+
+
+  <div class="rc-sum-row">
+
+    <span class="rc-sum-label">Subtotal</span>
+
+    <span class="rc-sum-value" id="summary-subtotal">₦{{ total|floatformat:2 }}</span>
+
+  </div>
+
+
+
+  {% if coupon_discount > 0 %}
+
+  <div class="rc-sum-row">
+
+    <span class="rc-sum-label">Discount <small style="opacity:.7">({{ coupon_code }})</small></span>
+
+    <span class="rc-sum-discount fw-bold">-₦{{ coupon_discount|floatformat:2 }}</span>
+
+  </div>
+
+  {% endif %}
+
+
+
+  <div class="rc-sum-row">
+
+    <span class="rc-sum-label">Shipping</span>
+
+    <span class="rc-sum-discount fw-bold" style="font-size:0.85rem">FREE</span>
+
+  </div>
+
+
+
+  <hr class="rc-sum-divider">
+
+
+
+  <div class="rc-sum-row mb-1">
+
+    <span class="rc-sum-total-label">Total</span>
+
+    <span class="rc-sum-total-value" id="summary-total">₦{{ total_after_coupon|floatformat:2 }}</span>
+
+  </div>
+
+
+
+  {% for product in products %}
+
+    {% if product.has_active_sale and forloop.first %}
+
+      <div class="rc-flash-warn mt-3">
+
+        ⚡ Flash sale prices applied valid until timer ends!
+
+      </div>
+
+    {% endif %}
+
+  {% endfor %}
+
+
+
+  <div class="mt-3">
+
+    <a href="{% url 'products:checkout' %}" class="rc-btn-checkout">
+
+      Proceed to Checkout →
+
+    </a>
+
+    <a href="{% url 'products:product-list' %}" class="rc-btn-continue">
+
+      ← Continue Shopping
+
+    </a>
+
+  </div>
+
+
+
+  <!-- Secure badges -->
+
+  <div class="rc-secure-row">
+
+    <span class="rc-secure-badge"><i class="bi bi-shield-check"></i> Secure</span>
+
+    <span class="rc-secure-badge"><i class="bi bi-lock"></i> Encrypted</span>
+
+    <span class="rc-secure-badge"><i class="bi bi-arrow-counterclockwise"></i> Easy Returns</span>
+
+  </div>
+
+
+
+</div>
+
+  </div></div><script>
+  
+  function getCookie(name) {
+  
+    for (let c of document.cookie.split(';')) {
+  
+      c = c.trim();
+  
+      if (c.startsWith(name + '=')) return decodeURIComponent(c.substring(name.length + 1));
+  
+    }
+  
+    return null;
+  
   }
+  
 
-  [data-theme="dark"] .text-muted {
-    color: #999 !important;
-  }
-
-  [data-theme="dark"] .fw-semibold,
-  [data-theme="dark"] h4,
-  [data-theme="dark"] h5,
-  [data-theme="dark"] h6 {
-    color: #e0e0e0;
-  }
-
-  [data-theme="dark"] .form-control {
-    background-color: #2a2a2a;
-    color: #e0e0e0;
-    border-color: #444;
-  }
-
-  [data-theme="dark"] .form-control::placeholder {
-    color: #777;
-  }
-
-  [data-theme="dark"] .btn-outline-danger {
-    color: #ff6b6b;
-    border-color: #ff6b6b;
-  }
-
-  [data-theme="dark"] .btn-outline-danger:hover {
-    background-color: #ff6b6b;
-    color: #fff;
-  }
-
-</style>
-
-<script>
-  // Cart quantity update with live total calculation
+  
   document.querySelectorAll('.qty-input').forEach(input => {
-    input.addEventListener('change', function() {
+  
+    input.addEventListener('change', function () {
+  
       const row = this.closest('.cart-row');
+  
       const qty = Math.max(1, parseInt(this.value) || 1);
-      this.value = qty; // Enforce minimum
+  
+      this.value = qty;
+  
       const unitPrice = parseFloat(row.dataset.price);
-      const newRowTotal = qty * unitPrice;
-      
-      // Update the total cell for this row
-      const totalCell = row.querySelector('.row-total');
-      totalCell.textContent = '₦' + newRowTotal.toFixed(2);
-      
-      // Recalculate overall cart total
+  
+      const totalCell = row.querySelector('.cart-total-cell');
+  
+      if (totalCell) totalCell.textContent = '₦' + (qty * unitPrice).toFixed(2);
+  
       updateOrderSummary();
+  
     });
+  
   });
+  
 
+  
   function updateOrderSummary() {
+  
     let cartTotal = 0;
-    
-    // Sum all row totals from the cart table
-    document.querySelectorAll('.cart-row .row-total').forEach(cell => {
-      const textContent = cell.textContent.replace('₦', '').trim();
-      const value = parseFloat(textContent);
-      
-      if (!isNaN(value)) {
-        cartTotal += value;
-      }
+  
+    document.querySelectorAll('.cart-row').forEach(row => {
+  
+      const qty = parseInt(row.querySelector('.qty-input')?.value || 1);
+  
+      const price = parseFloat(row.dataset.price || 0);
+  
+      cartTotal += qty * price;
+  
     });
-    
-    // Update summary using IDs (much more reliable)
-    const subtotalSpan = document.getElementById('summary-subtotal');
-    const totalSpan = document.getElementById('summary-total');
-    
-    const formattedTotal = cartTotal.toFixed(2);
-    
-    if (subtotalSpan) {
-      subtotalSpan.textContent = '₦' + formattedTotal;
-    }
-    
-    if (totalSpan) {
-      totalSpan.textContent = '₦' + formattedTotal;
-    }
-    
-    // Debug log (remove in production)
-    console.log('Cart Total Updated:', cartTotal, 'Rows:', document.querySelectorAll('.cart-row').length);
+  
+    const subtotalEl = document.getElementById('summary-subtotal');
+  
+    const totalEl = document.getElementById('summary-total');
+  
+    if (subtotalEl) subtotalEl.textContent = '₦' + cartTotal.toFixed(2);
+  
+    if (totalEl) totalEl.textContent = '₦' + cartTotal.toFixed(2);
+  
   }
+  
 
-  // Initialize on page load
-  document.addEventListener('DOMContentLoaded', function() {
-    updateOrderSummary();
-  });
+  
+  async function applyCoupon() {
+  
+    const code = document.getElementById('coupon-code').value.trim();
+  
+    if (!code) { showCouponMsg('Please enter a coupon code', 'error'); return; }
+  
+    
+  
+    try {
+  
+      const response = await fetch('/products/api/apply-coupon/', {
+  
+        method: 'POST',
+  
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+  
+        body: JSON.stringify({ code: code })
+  
+      });
+  
+      const data = await response.json();
+      
+  
+      if (data.success) {
+  
+        showCouponMsg(data.message || 'Coupon applied successfully!', 'success');
+  
+        // Reload the page to show the discount
+  
+        setTimeout(() => window.location.reload(), 1000);
+  
+      } else {
+  
+        showCouponMsg(data.error || 'Invalid coupon code', 'error');
+  
+      }
+  
+    } catch (error) {
+  
+      console.error('Error applying coupon:', error);
+  
+      showCouponMsg('Network error. Please try again.', 'error');
+  
+    }
+  
+  }
+  
+
+  
+  async function removeCoupon() {
+  
+    try {
+  
+      const response = await fetch('/products/api/remove-coupon/', {
+  
+        method: 'POST',
+  
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') }
+  
+      });
+  
+      if (response.ok) {
+  
+        window.location.reload();
+  
+      }
+  
+    } catch (error) {
+  
+      console.error('Error removing coupon:', error);
+  
+    }
+  
+    return false;
+  
+  }
+  
+
+  
+  function showCouponMsg(msg, type) {
+  
+    const div = document.getElementById('coupon-message');
+  
+    if (!div) return;
+  
+    div.innerHTML = `<span style="color:${type === 'success' ? '#1a8a3c' : 'var(--main-color)'}">
+  
+      <i class="bi bi-${type === 'success' ? 'check' : 'x'}-circle me-1"></i>${msg}
+  
+    </span>`;
+  
+  }
+  
 </script>
 
 {% endblock %}

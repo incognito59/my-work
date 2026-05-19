@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Cookie Policy - RedCart{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+      <div class="card border-0 shadow-sm rounded-4 p-5 theme-card">
+        <h1 class="fw-bold mb-4">Cookie Policy</h1>
+        <p class="text-muted mb-4">Last updated: May 11, 2026</p>
+
+        <div class="mb-4">
+          <h4 class="fw-semibold mb-3">What Are Cookies?</h4>
+          <p>Cookies are small text files placed on your device when you visit our website. They help us provide you with a better shopping experience by remembering your preferences and actions.</p>
+        </div>
+
+        <div class="mb-4">
+          <h4 class="fw-semibold mb-3">How We Use Cookies</h4>
+          <p>We use cookies for the following purposes:</p>
+          <ul>
+            <li><strong>Essential Cookies:</strong> Required for cart and checkout functionality</li>
+            <li><strong>Preference Cookies:</strong> Remember your theme preference (light/dark mode)</li>
+            <li><strong>Analytics Cookies:</strong> Help us understand how visitors use our site</li>
+            <li><strong>Session Cookies:</strong> Keep you logged in during your visit</li>
+            <li><strong>Security Cookies:</strong> Protect against cross-site request forgery (CSRF)</li>
+          </ul>
+        </div>
+
+        <div class="mb-4">
+          <h4 class="fw-semibold mb-3">Types of Cookies We Use</h4>
+          <div class="table-responsive">
+            <table class="table table-bordered">
+              <thead class="table-light">
+                <tr>
+                  <th>Cookie Name</th>
+                  <th>Purpose</th>
+                  <th>Duration</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>sessionid</code></td>
+                  <td>Maintains your login session</td>
+                  <td>Session (2 weeks if "Remember Me")</td>
+                </tr>
+                <tr>
+                  <td><code>csrftoken</code></td>
+                  <td>Protects against cross-site request forgery</td>
+                  <td>1 year</td>
+                </tr>
+                <tr>
+                  <td><code>theme</code></td>
+                  <td>Remembers your light/dark theme preference</td>
+                  <td>1 year</td>
+                </tr>
+                <tr>
+                  <td><code>cart</code></td>
+                  <td>Stores your cart items</td>
+                  <td>Session</td>
+                </tr>
+                <tr>
+                  <td><code>recentlyViewed</code></td>
+                  <td>Saves products you've viewed</td>
+                  <td>30 days</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <h4 class="fw-semibold mb-3">Third-Party Cookies</h4>
+          <p>We use third-party services that may set cookies:</p>
+          <ul>
+            <li><strong>Paystack:</strong> For secure payment processing</li>
+            <li><strong>Google Analytics:</strong> For website analytics (if enabled)</li>
+            <li><strong>Bootstrap CDN:</strong> For website styling</li>
+          </ul>
+          <p>We do not control third-party cookies. Please check their respective privacy policies.</p>
+        </div>
+
+        <div class="mb-4">
+          <h4 class="fw-semibold mb-3">Managing Cookies</h4>
+          <p>You can control cookies through your browser settings. Most browsers allow you to:</p>
+          <ul>
+            <li>View cookies stored on your device</li>
+            <li>Delete individual or all cookies</li>
+            <li>Block cookies from specific websites</li>
+            <li>Set browser to block all cookies</li>
+          </ul>
+          <p class="mt-2"><strong>⚠️ Important:</strong> Disabling cookies may affect:</p>
+          <ul>
+            <li>Cart functionality (items may not be saved)</li>
+            <li>Login persistence (you'll need to log in each time)</li>
+            <li>Theme preferences (dark/light mode won't be remembered)</li>
+            <li>Recently viewed products (history won't be saved)</li>
+          </ul>
+        </div>
+
+        <div class="mb-4">
+          <h4 class="fw-semibold mb-3">How to Manage Cookies in Different Browsers</h4>
+          <ul>
+            <li><strong>Chrome:</strong> Settings → Privacy and Security → Cookies and other site data</li>
+            <li><strong>Firefox:</strong> Options → Privacy & Security → Cookies and Site Data</li>
+            <li><strong>Safari:</strong> Preferences → Privacy → Cookies and website data</li>
+            <li><strong>Edge:</strong> Settings → Site permissions → Cookies and site data</li>
+          </ul>
+        </div>
+
+        <div class="mb-4">
+          <h4 class="fw-semibold mb-3">Cookie Duration</h4>
+          <ul>
+            <li><strong>Session Cookies:</strong> Deleted when you close your browser</li>
+            <li><strong>Persistent Cookies:</strong> Remain for up to 30 days or until manually deleted</li>
+            <li><strong>Long-term Cookies:</strong> Some preferences (theme) stored for 1 year</li>
+          </ul>
+        </div>
+
+        <div class="mb-4">
+          <h4 class="fw-semibold mb-3">Updates to This Policy</h4>
+          <p>We may update this Cookie Policy periodically. Changes will be posted on this page with an updated effective date. We encourage you to review this policy regularly.</p>
+        </div>
+
+        <div class="mb-4">
+          <h4 class="fw-semibold mb-3">Contact Us</h4>
+          <p>If you have questions about our Cookie Policy:</p>
+          <p><strong>Email:</strong> afolabiprosper329@gmail.com</p>
+          <p><strong>Phone:</strong> +234 (0) 801 234 5678</p>
+        </div>
+
+        <hr class="my-4">
+        <p class="text-muted small">By continuing to use RedCart, you consent to our use of cookies as described in this policy.</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -75,6 +75,17 @@ urlpatterns = [
     path('contact_reply/', views.preview_email_contact_reply, name='email-contact-reply'),
     path('password_reset/', views.preview_email_password_reset, name='email-password-reset'),
     
+    # 💰 Coupon Routes
+    path('api/apply-coupon/', views.apply_coupon, name='api-apply-coupon'),
+    path('api/remove-coupon/', views.remove_coupon, name='api-remove-coupon'),
+    
+    # 🎁 Offer Routes (NEW)
+    path('api/apply-offer/', views.apply_offer, name='api-apply-offer'),
+    path('api/remove-offer/', views.remove_offer, name='api-remove-offer'),
+    
+    # 🔄 Recently Viewed
+    path('api/recently-viewed/', views.recently_viewed, name='api-recently-viewed'),
+    
     # ============ NOTIFICATION SYSTEM URLS ============
     
     # 🔔 Notification Endpoints
@@ -103,4 +114,14 @@ urlpatterns = [
     # 📊 Admin System Alerts
     path('api/system-alerts/', views.get_system_alerts, name='api-system-alerts'),
     path('api/system-alerts/dismiss/<int:alert_id>/', views.dismiss_system_alert, name='api-system-alerts-dismiss'),
+    
+    # ============ LEGAL PAGES & CATEGORY PAGES ============
+    
+    # 📜 Legal Pages
+    path('privacy-policy/', views.privacy_policy, name='privacy-policy'),
+    path('terms-of-service/', views.terms_of_service, name='terms-of-service'),
+    path('cookie-policy/', views.cookie_policy, name='cookie-policy'),
+    
+    # 🏷️ Category Pages
+    path('category/<slug:category_slug>/', views.category_page, name='category-page'),
 ]

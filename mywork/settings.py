@@ -1,11 +1,11 @@
 import os
 from pathlib import Path
+from decouple import config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-i@yrga*53o@x%tdm8ps)=_zt@obzs4^bx^y)em+r%5)-velltj'
-
-DEBUG = True
+SECRET_KEY = config('SECRET_KEY')
+DEBUG = config('DEBUG', cast=bool, default=True)
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
@@ -22,7 +22,6 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
-    'allauth.socialaccount.providers.facebook',
     'allauth.socialaccount.providers.github',
 ]
 
@@ -94,8 +93,8 @@ SOCIALACCOUNT_ADAPTER = 'products.adapters.NoSignupFormAdapter'
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
         'APP': {
-            'client_id': '774139839237-3e62lmii9cvo2ju690b5hsb79cksol4e.apps.googleusercontent.com',
-            'secret': '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',
+            'client_id': config('GOOGLE_CLIENT_ID'),
+            'secret': config('GOOGLE_CLIENT_SECRET'),
         },
         'SCOPE': ['profile', 'email'],
         'AUTH_PARAMS': {
@@ -103,56 +102,48 @@ SOCIALACCOUNT_PROVIDERS = {
             'prompt': 'consent select_account',
         },
     },
-    'facebook': {
-        'METHOD': 'oauth2',
-        'SCOPE': ['email', 'public_profile'],
-        'VERSION': 'v17.0',
-    },
     'github': {
         'APP': {
-            'client_id': 'Ov23liSP3Xh0LGviobxc',
-            'secret': 'f7751b467a3db033c2e40db25d947d48fc35737d',
+            'client_id': config('GITHUB_CLIENT_ID'),
+            'secret': config('GITHUB_CLIENT_SECRET'),
         },
         'SCOPE': ['user', 'user:email'],
     },
 }
 
-# Firebase project ID for token verification
+# Firebase
 FIREBASE_PROJECT_ID = 'redcart-d792b'
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-DEFAULT_FROM_EMAIL = 'afolabiprosper329@gmail.com'
-SERVER_EMAIL = 'afolabiprosper329@gmail.com'
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
+SERVER_EMAIL = config('DEFAULT_FROM_EMAIL')
 
 # Stripe (keep for later)
 STRIPE_PUBLISHABLE_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY', '')
 STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY', '')
 
 # Paystack
-PAYSTACK_PUBLIC_KEY = 'pk_test_4dc9ad4b7bac517bcfd33fb8398a1c3b865e6a2d'
-PAYSTACK_SECRET_KEY = 'sk_test_d34aee0fbe64455129b2062c4dcdbd4e87018b64'
+PAYSTACK_PUBLIC_KEY = config('PAYSTACK_PUBLIC_KEY')
+PAYSTACK_SECRET_KEY = config('PAYSTACK_SECRET_KEY')
+
+# Groq
+GROQ_API_KEY = config('GROQ_API_KEY')
 
 # ============ NOTIFICATION SYSTEM SETTINGS ============
-
-# WebSocket/Channels for real-time notifications
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels.layers.InMemoryChannelLayer',
     }
 }
 
-# Push Notification VAPID Keys (Generate these for production)
-# Run: python -c "from django.core.management import utils; print(utils.get_random_secret_key())"
 VAPID_PUBLIC_KEY = 'your-vapid-public-key-here'
 VAPID_PRIVATE_KEY = 'your-vapid-private-key-here'
-VAPID_EMAIL = 'afolabiprosper329@gmail.com'
+VAPID_EMAIL = config('DEFAULT_FROM_EMAIL')
 
-# Notification Settings
-NOTIFICATION_DEFAULT_DURATION = 5000  # milliseconds
-NOTIFICATION_MAX_PER_USER = 100  # Max notifications stored per user
-NOTIFICATION_CLEANUP_DAYS = 30  # Delete notifications older than 30 days
+NOTIFICATION_DEFAULT_DURATION = 5000
+NOTIFICATION_MAX_PER_USER = 100
+NOTIFICATION_CLEANUP_DAYS = 30
 
-# Sound notification files (add these to your static files)
 NOTIFICATION_SOUNDS = {
     'default': '/static/sounds/notification.mp3',
     'success': '/static/sounds/success.mp3',
@@ -161,19 +152,14 @@ NOTIFICATION_SOUNDS = {
     'order': '/static/sounds/order.mp3',
 }
 
-# Email notification settings
 EMAIL_NOTIFICATION_ENABLED = True
 EMAIL_NOTIFICATION_BATCH_SIZE = 50
-
-# Real-time settings
 REAL_TIME_NOTIFICATIONS_ENABLED = True
 
-# System Alert Checks (in seconds)
-SYSTEM_ALERT_CHECK_INTERVAL = 300  # 5 minutes
+SYSTEM_ALERT_CHECK_INTERVAL = 300
 LOW_STOCK_THRESHOLD = 5
 ABANDONED_CART_HOURS = 24
 
-# Cache settings for notifications
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
@@ -196,7 +182,5 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'frontend']
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
-
-GROQ_API_KEY = os.environ.get('GROQ_API_KEY', '')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

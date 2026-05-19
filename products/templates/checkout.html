@@ -9,8 +9,8 @@
     <!-- LEFT: Checkout -->
     <div class="col-lg-8">
       <div class="card border-0 shadow-sm p-4 rounded-4 theme-card">
-        <h3 class="fw-bold mb-3 text-gradient">🛍 Checkout</h3>
-        <p class="fs-5 mb-4">Review your order and complete payment securely.</p>
+        <h3 class="fw-bold mb-3">🛍️ Checkout</h3>
+        <p class="mb-4">Review your order and complete payment securely.</p>
 
         <!-- Customer Email (for Paystack) -->
         <div class="mb-3">
@@ -28,28 +28,56 @@
             placeholder="Your full name" required>
         </div>
 
+        <!-- Accepted Payment Methods - WORKING SVG ICONS -->
+        <div class="mb-4">
+          <p class="fw-semibold mb-3">We Accept:</p>
+          <div class="d-flex align-items-center gap-3 flex-wrap">
+            <!-- Visa -->
+            <div class="payment-badge">
+              <svg width="45" height="30" viewBox="0 0 72 45" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="72" height="45" rx="6" fill="#1434CB"/>
+                <text x="36" y="28" text-anchor="middle" fill="white" font-size="18" font-weight="bold" font-family="Arial">VISA</text>
+              </svg>
+            </div>
+            <!-- Mastercard -->
+            <div class="payment-badge">
+              <svg width="45" height="30" viewBox="0 0 72 45" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="72" height="45" rx="6" fill="#EB001B"/>
+                <circle cx="30" cy="22.5" r="14" fill="#F79E1B"/>
+                <circle cx="42" cy="22.5" r="14" fill="#EB001B"/>
+                <text x="36" y="30" text-anchor="middle" fill="white" font-size="9" font-weight="bold">mastercard</text>
+              </svg>
+            </div>
+            <!-- American Express -->
+            <div class="payment-badge">
+              <svg width="45" height="30" viewBox="0 0 72 45" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="72" height="45" rx="6" fill="#006FCF"/>
+                <text x="36" y="28" text-anchor="middle" fill="white" font-size="12" font-weight="bold" font-family="Arial">AMEX</text>
+              </svg>
+            </div>
+            <!-- Verve -->
+            <div class="payment-badge">
+              <svg width="45" height="30" viewBox="0 0 72 45" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="72" height="45" rx="6" fill="#2C5F2D"/>
+                <text x="36" y="28" text-anchor="middle" fill="white" font-size="14" font-weight="bold" font-family="Arial">VERVE</text>
+              </svg>
+            </div>
+            <!-- Paystack -->
+            <div class="payment-badge">
+              <svg width="45" height="30" viewBox="0 0 72 45" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="72" height="45" rx="6" fill="#000000"/>
+                <text x="36" y="28" text-anchor="middle" fill="#00B3FF" font-size="10" font-weight="bold" font-family="Arial">PAYSTACK</text>
+              </svg>
+            </div>
+          </div>
+        </div>
+
         <!-- Paystack Pay Button -->
         {% if products %}
         <button id="paystack-btn" class="btn btn-success w-100 py-3 fw-semibold rounded-pill shadow-sm btn-glow">
           💳 Pay ₦{{ total_after_coupon|default:total|floatformat:2 }} with Paystack
         </button>
         {% endif %}
-
-        <!-- Manual Payment Fallback -->
-        <div class="alert alert-warning border-0 rounded-4 shadow-sm mt-4">
-          <h5 class="fw-bold mb-2"><i class="bi bi-phone"></i> Pay via Transfer / OPay</h5>
-          <ul class="list-unstyled mb-2">
-            <li><strong>Account Name:</strong> Peter Afolabi</li>
-            <li><strong>OPay Number:</strong> 08137649314</li>
-          </ul>
-          <p class="mb-2 text-muted">After transferring, click below to confirm your order.</p>
-          <form method="post" action="{% url 'products:confirm-payment' %}">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-outline-success rounded-pill fw-semibold w-100">
-              ✅ I Have Paid via Transfer
-            </button>
-          </form>
-        </div>
 
       </div>
     </div>
@@ -64,26 +92,38 @@
           {% for product in products %}
           <li class="list-group-item border-0 px-0 d-flex justify-content-between align-items-center">
             <div>
-              <p class="mb-1 fw-semibold">{{ product.name }}</p>
+              <p class="mb-1 fw-semibold">{{ product.name|truncatechars:30 }}</p>
               <small class="text-muted">Qty: {{ product.quantity }}</small>
             </div>
-            <span class="fw-semibold color-changing">₦{{ product.total_price|floatformat:2 }}</span>
+            <span class="fw-semibold">₦{{ product.total_price|floatformat:2 }}</span>
           </li>
           {% endfor %}
         </ul>
 
         <hr>
 
+        <div class="d-flex justify-content-between mb-2">
+          <span>Subtotal:</span>
+          <span>₦{{ total|floatformat:2 }}</span>
+        </div>
+
         {% if coupon_discount %}
-        <div class="d-flex justify-content-between text-success mb-1">
-          <span>Coupon Discount:</span>
+        <div class="d-flex justify-content-between text-success mb-2">
+          <span>Discount:</span>
           <span>-₦{{ coupon_discount|floatformat:2 }}</span>
         </div>
         {% endif %}
 
+        <div class="d-flex justify-content-between mb-2">
+          <span>Shipping:</span>
+          <span class="text-success">Free</span>
+        </div>
+
+        <hr>
+
         <div class="d-flex justify-content-between fw-bold fs-5">
           <span>Total:</span>
-          <span class="text-danger color-changing">₦{{ total_after_coupon|default:total|floatformat:2 }}</span>
+          <span class="text-danger fw-bold">₦{{ total_after_coupon|default:total|floatformat:2 }}</span>
         </div>
         {% else %}
         <p class="text-muted text-center mt-3">No items in your order.</p>
@@ -99,67 +139,107 @@
     border-radius: 20px;
     transition: all 0.4s ease;
   }
-  .text-gradient {
-    background: linear-gradient(90deg, #ff7b00, #ff0066);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+
+  .payment-badge {
+    background: #f8f9fa;
+    padding: 8px 12px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
   }
+  .payment-badge:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+  .payment-badge svg {
+    display: block;
+  }
+
   .btn-success {
-    background: linear-gradient(90deg, #28a745, #20c997);
+    background: linear-gradient(135deg, #28a745, #20c997);
     border: none;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
   }
   .btn-success:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 15px rgba(32, 201, 151, 0.4);
+    box-shadow: 0 8px 20px rgba(32, 201, 151, 0.4);
   }
+
   .btn-glow {
     animation: glowPulse 2s infinite alternate;
   }
+
   @keyframes glowPulse {
-    0% { box-shadow: 0 0 10px rgba(40, 167, 69, 0.5); }
-    100% { box-shadow: 0 0 25px rgba(32, 201, 151, 0.8); }
+    0% { box-shadow: 0 0 10px rgba(40, 167, 69, 0.3); }
+    100% { box-shadow: 0 0 25px rgba(32, 201, 151, 0.6); }
   }
-  .color-changing {
-    animation: colorShift 6s infinite alternate;
+
+  .list-group-item {
+    background-color: transparent;
   }
-  @keyframes colorShift {
-    0% { color: #ff4747; }
-    25% { color: #ffb400; }
-    50% { color: #4cd137; }
-    75% { color: #0097e6; }
-    100% { color: #e84118; }
-  }
-  .alert-warning {
-    background-color: #fff6e6;
-    border-left: 4px solid #ffb400;
-  }
+
+  /* Dark Theme */
   [data-theme="dark"] .theme-card {
-    background-color: #1f1f1f !important;
-    color: #e0e0e0 !important;
+    background-color: #1a1a24 !important;
+    color: #e8e8e8 !important;
   }
-  [data-theme="dark"] .alert-warning {
-    background-color: #332200;
-    border-left-color: #ffb400;
-    color: #ddd;
+
+  [data-theme="dark"] .payment-badge {
+    background-color: #252530;
   }
+
   [data-theme="dark"] .form-control {
     background-color: #2a2a2a;
-    color: #e0e0e0;
+    color: #e8e8e8;
     border-color: #444;
   }
-  [data-theme="dark"] .color-changing { color: #66b3ff; }
-  [data-theme="dark"] h2,[data-theme="dark"] h3,
-  [data-theme="dark"] h4,[data-theme="dark"] h5,
-  [data-theme="dark"] label,[data-theme="dark"] p { color: #e0e0e0; }
-  [data-theme="dark"] .text-muted, [data-theme="dark"] small { color: #aaa; }
+
+  [data-theme="dark"] .form-control:focus {
+    border-color: #ff4747;
+    box-shadow: 0 0 0 0.2rem rgba(255, 71, 71, 0.25);
+  }
+
+  [data-theme="dark"] .form-label {
+    color: #ddd;
+  }
+
+  [data-theme="dark"] .list-group-item {
+    background-color: transparent;
+    color: #e8e8e8;
+  }
+
+  [data-theme="dark"] .text-muted {
+    color: #aaa !important;
+  }
+
+  [data-theme="dark"] h3,
+  [data-theme="dark"] h5,
+  [data-theme="dark"] p,
+  [data-theme="dark"] label,
+  [data-theme="dark"] span {
+    color: #e8e8e8;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .payment-badge {
+      padding: 5px 8px;
+    }
+    .payment-badge svg {
+      width: 38px;
+      height: 25px;
+    }
+  }
 </style>
 
 <!-- Paystack Script -->
 <script src="https://js.paystack.co/v1/inline.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
-    // Card fade in
+    // Card fade in animation
     document.querySelectorAll('.theme-card').forEach((card, i) => {
       card.style.opacity = '0';
       setTimeout(() => {
@@ -176,37 +256,58 @@
       const name  = document.getElementById('customer-name').value.trim();
 
       if (!email) {
-        alert('Please enter your email address.');
+        if (window.showToast) {
+          window.showToast('Please enter your email address.', 'error');
+        } else {
+          alert('Please enter your email address.');
+        }
         return;
       }
 
-      // Amount in kobo (Paystack requires kobo)
-      const totalText = paystackBtn.textContent.replace(/[^0-9.]/g, '');
-      const amountNaira = parseFloat(totalText) || 0;
-      const amountKobo  = Math.round(amountNaira * 100);
+      if (!name) {
+        if (window.showToast) {
+          window.showToast('Please enter your full name.', 'error');
+        } else {
+          alert('Please enter your full name.');
+        }
+        return;
+      }
+
+      // Get the total amount from the context
+      const totalAmount = parseFloat('{{ total_after_coupon|default:total|floatformat:2 }}');
+      const amountKobo = Math.round(totalAmount * 100);
 
       if (amountKobo <= 0) {
-        alert('Invalid order amount.');
+        if (window.showToast) {
+          window.showToast('Invalid order amount.', 'error');
+        } else {
+          alert('Invalid order amount.');
+        }
         return;
       }
 
+      // Generate unique reference
+      const reference = 'REDCART-' + Date.now() + '-' + Math.floor(Math.random() * 1000000);
+
       const handler = PaystackPop.setup({
-        key: '{{ paystack_public_key }}',
+        key: '{{ paystack_public_key|default:"pk_test_4dc9ad4b7bac517bcfd33fb8398a1c3b865e6a2d" }}',
         email: email,
         amount: amountKobo,
         currency: 'NGN',
-        ref: 'REDCART-' + Math.floor(Math.random() * 1000000000),
+        ref: reference,
         metadata: {
           custom_fields: [
             { display_name: 'Customer Name', variable_name: 'customer_name', value: name }
           ]
         },
         callback: function(response) {
-          // Payment successful — verify and confirm order
           window.location.href = '/products/payment/verify/?reference=' + response.reference;
         },
         onClose: function() {
           console.log('Payment window closed.');
+          if (window.showToast) {
+            window.showToast('Payment was cancelled. You can try again.', 'info');
+          }
         }
       });
 

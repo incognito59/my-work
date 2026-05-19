@@ -5,11 +5,6 @@
 
 {% block content %}
 <style>
-  body {
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  }
-
   .offers-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -19,8 +14,6 @@
   .page-header {
     text-align: center;
     margin-bottom: 60px;
-    color: white;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
   }
 
   .page-header h1 {
@@ -37,7 +30,6 @@
     color: #555;
   }
 
-  /* Offers Section */
   .offers-section {
     margin-bottom: 60px;
   }
@@ -66,7 +58,6 @@
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease;
     border: 2px solid #667eea;
-    position: relative;
   }
 
   .offer-card:hover {
@@ -132,10 +123,26 @@
     box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
   }
 
-  /* Products by Category */
-  .category-section {
-    margin-bottom: 60px;
+  .coupon-toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+    padding: 12px 20px;
+    border-radius: 10px;
+    color: white;
+    font-weight: 500;
+    animation: slideIn 0.3s ease;
   }
+
+  @keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  .coupon-success { background: #28a745; }
+  .coupon-error { background: #dc3545; }
+  .coupon-info { background: #17a2b8; }
 
   .products-grid {
     display: grid;
@@ -149,7 +156,7 @@
     overflow: hidden;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
     transition: all 0.3s ease;
-    cursor: pointer;
+    position: relative;
   }
 
   .product-card:hover {
@@ -185,15 +192,6 @@
     margin-bottom: 10px;
   }
 
-  .product-discount-badge {
-    background: #ff6b6b;
-    color: white;
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 600;
-  }
-
   .add-to-cart-btn {
     width: 100%;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -205,11 +203,41 @@
     font-weight: 600;
     transition: all 0.3s ease;
     font-size: 0.9rem;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
   }
 
   .add-to-cart-btn:hover {
     transform: scale(1.02);
     box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    color: white;
+  }
+
+  .discount-label {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: linear-gradient(135deg, #ff6b6b 0%, #ff8e72 100%);
+    color: white;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    z-index: 10;
+  }
+
+  .flash-sale-badge {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    background: #ff6b6b;
+    color: white;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.75rem;
+    z-index: 10;
   }
 
   .no-products {
@@ -218,21 +246,6 @@
     border-radius: 10px;
     text-align: center;
     color: #999;
-  }
-
-  .empty-state {
-    text-align: center;
-    padding: 60px 20px;
-  }
-
-  .empty-state h2 {
-    color: #666;
-    margin-bottom: 15px;
-  }
-
-  .empty-state p {
-    color: #999;
-    margin-bottom: 30px;
   }
 
   .back-btn {
@@ -249,47 +262,46 @@
   .back-btn:hover {
     transform: translateY(-3px);
     box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+    color: white;
   }
 
-  .discount-label {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    background: linear-gradient(135deg, #ff6b6b 0%, #ff8e72 100%);
-    color: white;
-    padding: 8px 15px;
-    border-radius: 20px;
-    font-weight: 700;
-    font-size: 0.9rem;
+  [data-theme="dark"] .offer-card,
+  [data-theme="dark"] .product-card {
+    background: #1c1c24;
+  }
+
+  [data-theme="dark"] .offer-description,
+  [data-theme="dark"] .product-name {
+    color: #e0e0e0;
+  }
+
+  [data-theme="dark"] .no-products {
+    background: #1c1c24;
+    color: #aaa;
+  }
+
+  [data-theme="dark"] .section-title {
+    color: #e0e0e0;
+  }
+
+  [data-theme="dark"] .page-header p {
+    color: #aaa;
   }
 
   @media (max-width: 768px) {
-    .page-header h1 {
-      font-size: 2rem;
-    }
-
-    .section-title {
-      font-size: 1.5rem;
-    }
-
-    .offers-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .products-grid {
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    }
+    .page-header h1 { font-size: 2rem; }
+    .section-title { font-size: 1.5rem; }
+    .offers-grid { grid-template-columns: 1fr; }
+    .products-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
   }
 </style>
 
 <div class="offers-container">
-  <!-- Page Header -->
   <div class="page-header">
     <h1>🎉 Special Offers & Deals</h1>
     <p>Save big on your favorite products</p>
   </div>
 
-  <!-- Offers Section -->
   {% if offers %}
   <div class="offers-section">
     <h2 class="section-title">💝 Active Offers</h2>
@@ -306,73 +318,134 @@
             <span style="font-size: 2.5rem;">{{ offer.discount|floatformat:0 }}%</span>
             <span style="font-size: 1rem; color: #999;">OFF</span>
           </div>
-          <a href="{% url 'products:product-list' %}?promo={{ offer.code }}" class="offer-cta">
-            Shop Now
-          </a>
+          <button onclick="applyOffer('{{ offer.code }}', {{ offer.discount|floatformat:0 }})" class="offer-cta">
+            🎁 Apply Offer to Cart
+          </button>
         </div>
       </div>
       {% endfor %}
     </div>
   </div>
   {% else %}
-  <div class="empty-state">
+  <div style="text-align: center; padding: 60px 20px;">
     <h2>No active offers at the moment</h2>
     <p>Check back soon for amazing deals!</p>
   </div>
   {% endif %}
 
-  <!-- Products by Category -->
-  {% if products_by_category %}
+  {% if products %}
   <div class="offers-section">
-    <h2 class="section-title">🛍️ Featured Products</h2>
-    
-    {% for category_name, products in products_by_category.items %}
-      {% if products %}
-      <div class="category-section">
-        <h3 style="color: #666; margin-bottom: 20px; font-size: 1.3rem;">
-          {% if category_name == 'Electronics' %}📱{% elif category_name == 'Clothing' %}👕{% elif category_name == 'Home & Kitchen' %}🏠{% elif category_name == 'Sports & Outdoors' %}⚽{% elif category_name == 'Books' %}📚{% elif category_name == 'Toys & Games' %}🎮{% else %}📦{% endif %}
-          {{ category_name }}
-        </h3>
-        <div class="products-grid">
-          {% for product in products %}
-          <div class="product-card" style="position: relative;">
-            {% if offers %}
-            <div class="discount-label">-{{ offers.first.discount|floatformat:0 }}%</div>
-            {% endif %}
-            
-            <img src="{{ product.image_src }}" alt="{{ product.name }}" class="product-image">
-            
-            <div class="product-info">
-              <div class="product-name">{{ product.name }}</div>
-              
-              <div style="margin-bottom: 10px;">
-                <div class="product-price">₦{{ product.price|floatformat:2 }}</div>
-              </div>
-              
-              <a href="{% url 'products:product-detail' product.id %}" class="add-to-cart-btn">
-                View Product
-              </a>
-            </div>
-          </div>
-          {% endfor %}
+    <h2 class="section-title">🛍️ Products on Sale</h2>
+    <div class="products-grid">
+      {% for product in products %}
+      <div class="product-card">
+        <div class="flash-sale-badge">⚡ FLASH SALE</div>
+        <div class="discount-label">-{{ product.discount_percentage|floatformat:0 }}%</div>
+        
+        <img src="{{ product.image_src }}" alt="{{ product.name }}" class="product-image"
+             onerror="this.src='https://via.placeholder.com/200x200?text=No+Image'">
+        
+        <div class="product-info">
+          <div class="product-name">{{ product.name|truncatechars:40 }}</div>
+          
+          <div class="product-price" style="color: #ff6b6b;">₦{{ product.sale_price|floatformat:2 }}</div>
+          <small class="text-muted text-decoration-line-through">₦{{ product.price|floatformat:2 }}</small>
+          
+          {% if product.is_out_of_stock %}
+            <button class="add-to-cart-btn" disabled style="opacity:0.5; cursor:not-allowed;">Out of Stock</button>
+          {% else %}
+            <a href="{% url 'products:add-to-cart' product.id %}" class="add-to-cart-btn">
+              🛒 Add to Cart
+            </a>
+          {% endif %}
         </div>
       </div>
-      {% endif %}
-    {% endfor %}
+      {% endfor %}
+    </div>
   </div>
   {% else %}
   <div class="no-products">
-    <h3>No products available</h3>
-    <p>Please add products to the store.</p>
+    <h3>No products on sale</h3>
+    <p>Check back soon for amazing deals!</p>
   </div>
   {% endif %}
 
-  <!-- Footer CTA -->
   <div style="text-align: center; margin-top: 60px; padding: 40px;">
     <a href="{% url 'products:product-list' %}" class="back-btn">
       View All Products
     </a>
   </div>
 </div>
+
+<script>
+// Apply offer function
+async function applyOffer(offerCode, discountPercent) {
+  try {
+    const cartResponse = await fetch('/products/cart/', { method: 'GET' });
+    const cartText = await cartResponse.text();
+    
+    if (cartText.includes('Your cart is empty')) {
+      showCouponMessage('Your cart is empty. Add items first!', 'error');
+      return;
+    }
+  } catch(e) {
+    console.log('Error checking cart:', e);
+  }
+  
+  try {
+    const response = await fetch('/products/api/apply-offer/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: JSON.stringify({ code: offerCode })
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      showCouponMessage(`✅ ${data.message || `Offer applied! ${discountPercent}% discount added.`}`, 'success');
+      setTimeout(() => {
+        window.location.href = '/products/cart/';
+      }, 1500);
+    } else {
+      showCouponMessage(`❌ ${data.error || 'Could not apply offer'}`, 'error');
+    }
+  } catch (error) {
+    console.error('Error applying offer:', error);
+    showCouponMessage('❌ Network error. Please try again.', 'error');
+  }
+}
+
+function showCouponMessage(message, type) {
+  const existingToast = document.querySelector('.coupon-toast');
+  if (existingToast) existingToast.remove();
+  
+  const toast = document.createElement('div');
+  toast.className = `coupon-toast coupon-${type}`;
+  toast.innerHTML = message;
+  document.body.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.remove();
+  }, 3000);
+}
+
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+</script>
 
 {% endblock %}

@@ -112,10 +112,7 @@
   </div>
   {% endif %}
 
-  <div id="recently-viewed-wrapper" class="mt-5 pt-4">
-    <h4 class="fw-bold mb-4">Recently Viewed</h4>
-    <div id="recently-viewed-products" class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-3"></div>
-  </div>
+  <!-- REMOVED: Recently Viewed Section - Moved to Cart and Shop pages -->
 
   <!-- Reviews Section -->
   <div class="mt-5 pt-4 border-top">
@@ -174,7 +171,29 @@
   </div>
 </div>
 
-<!-- JS -->
+<!-- Recently Viewed Script - Add to localStorage when viewing product -->
+<script>
+  // Add current product to recently viewed
+  function addToRecentlyViewed(productId) {
+    let recentlyViewed = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
+    
+    // Remove if already exists
+    recentlyViewed = recentlyViewed.filter(id => id != productId);
+    
+    // Add to beginning
+    recentlyViewed.unshift(parseInt(productId));
+    
+    // Keep only last 10 items
+    recentlyViewed = recentlyViewed.slice(0, 10);
+    
+    localStorage.setItem('recentlyViewed', JSON.stringify(recentlyViewed));
+  }
+  
+  // Add current product to recently viewed
+  const productId = {{ product.id }};
+  addToRecentlyViewed(productId);
+</script>
+
 <script>
   function changeImage(thumb) {
     const main = document.getElementById('main-image');
@@ -254,6 +273,51 @@
     box-shadow: 0 6px 20px rgba(0,0,0,0.2);
   }
 
+  /* Flash Sale Styles */
+  .product-detail-sale {
+    background: linear-gradient(135deg, #ff6b6b, #ff8e72);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 20px;
+    color: white;
+  }
+  .sale-status-icon {
+    font-size: 24px;
+    margin-bottom: 8px;
+  }
+  .sale-ends-label {
+    font-size: 12px;
+    opacity: 0.9;
+    margin-bottom: 5px;
+  }
+  .sale-timer-display {
+    font-size: 20px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+  }
+  .sale-discount-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid rgba(255,255,255,0.3);
+    padding-top: 12px;
+    margin-top: 8px;
+  }
+  .sale-discount-percentage {
+    font-size: 28px;
+    font-weight: bold;
+  }
+  .sale-original-price {
+    font-size: 14px;
+    text-decoration: line-through;
+    opacity: 0.8;
+  }
+  .sale-current-price {
+    font-size: 22px;
+    font-weight: bold;
+  }
+
   /* Theme support */
   .theme-card {
     transition: background-color 0.5s ease, color 0.5s ease;
@@ -308,6 +372,21 @@
 
   [data-theme="dark"] strong {
     color: #e0e0e0;
+  }
+  
+  .stock-badge {
+    position: absolute;
+    bottom: 15px;
+    left: 15px;
+    background: #ff6b6b;
+    color: white;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+  }
+  .stock-out {
+    background: #999;
   }
 </style>
 

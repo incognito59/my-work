@@ -1,0 +1,133 @@
+<!-- Recently Viewed Section - Dynamic and Responsive -->
+<div id="recently-viewed-section" class="mb-4" style="display: none;">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="fw-bold mb-0">
+      <i class="bi bi-clock-history text-primary"></i> Recently Viewed
+    </h5>
+    <button class="btn btn-sm btn-link text-muted" onclick="clearRecentlyViewed()">
+      <i class="bi bi-trash"></i> Clear
+    </button>
+  </div>
+  <div id="recently-viewed-products" class="d-flex gap-3 overflow-auto pb-2" style="max-height: 180px;">
+    <!-- Products will be loaded here dynamically -->
+  </div>
+</div>
+
+<script>
+// Recently Viewed Products Handler
+function addToRecentlyViewed(productId) {
+  let recentlyViewed = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
+  
+  // Remove if already exists
+  recentlyViewed = recentlyViewed.filter(id => id != productId);
+  
+  // Add to beginning
+  recentlyViewed.unshift(parseInt(productId));
+  
+  // Keep only last 10 items
+  recentlyViewed = recentlyViewed.slice(0, 10);
+  
+  localStorage.setItem('recentlyViewed', JSON.stringify(recentlyViewed));
+  
+  // Update display
+  displayRecentlyViewed();
+}
+
+async function displayRecentlyViewed() {
+  const recentlyViewed = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
+  const container = document.getElementById('recently-viewed-products');
+  const section = document.getElementById('recently-viewed-section');
+  
+  if (!container || recentlyViewed.length === 0) {
+    if (section) section.style.display = 'none';
+    return;
+  }
+  
+  try {
+    const response = await fetch('/products/api/recently-viewed/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: JSON.stringify({ ids: recentlyViewed })
+    });
+    
+    const data = await response.json();
+    
+    if (data.success && data.recently_viewed && data.recently_viewed.length > 0) {
+      container.innerHTML = data.recently_viewed.map(product => `
+        <a href="/products/product/${product.id}/" class="text-decoration-none" onclick="addToRecentlyViewed(${product.id})">
+          <div class="card border-0 shadow-sm h-100" style="width: 130px;">
+            <img src="${product.image_src}" class="card-img-top" alt="${product.name}" style="height: 100px; object-fit: cover; background: #f5f5f5;">
+            <div class="card-body p-2 text-center">
+              <small class="text-dark d-block" style="font-size: 0.75rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                ${product.name.length > 25 ? product.name.substring(0, 22) + '...' : product.name}
+              </small>
+              <small class="text-danger fw-bold d-block mt-1">₦${parseFloat(product.price).toFixed(2)}</small>
+            </div>
+          </div>
+        </a>
+      `).join('');
+      section.style.display = 'block';
+    } else {
+      section.style.display = 'none';
+    }
+  } catch(e) {
+    console.log('Error loading recently viewed:', e);
+    section.style.display = 'none';
+  }
+}
+
+function clearRecentlyViewed() {
+  localStorage.removeItem('recentlyViewed');
+  displayRecentlyViewed();
+  if (window.showToast) {
+    window.showToast('Recently viewed cleared', 'info');
+  }
+}
+
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
+// Auto display on page load
+document.addEventListener('DOMContentLoaded', displayRecentlyViewed);
+</script>
+
+<style>
+#recently-viewed-products {
+  scrollbar-width: thin;
+}
+#recently-viewed-products::-webkit-scrollbar {
+  height: 6px;
+}
+#recently-viewed-products::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+#recently-viewed-products::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+#recently-viewed-products::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+[data-theme="dark"] #recently-viewed-products::-webkit-scrollbar-track {
+  background: #333;
+}
+[data-theme="dark"] #recently-viewed-products::-webkit-scrollbar-thumb {
+  background: #666;
+}
+</style>

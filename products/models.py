@@ -32,12 +32,11 @@ class Product(models.Model):
 
     @property
     def image_src(self):
-        if self.image_url:
-            if self.image_url.startswith(('http://', 'https://', '//')):
-                return self.image_url
-            return static(self.image_url)
+      if self.image_url:
+        if self.image_url.startswith(('http://', 'https://', '//', 'data:image')):
+            return self.image_url
+        return static(self.image_url)
         return 'https://via.placeholder.com/500x350?text=No+Image'
-
     @property
     def additional_images(self):
         images = []

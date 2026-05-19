@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.db.models import Q, F
 from django.contrib import messages, auth
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
@@ -18,7 +19,7 @@ from django.conf import settings
 # Add these to existing imports
 from django.views.decorators.http import require_http_methods
 from django.core.paginator import Paginator
-from django.db.models import Count, Q
+from django.db.models import Count
 from .models import Notification, UserNotificationSettings, PushNotificationSubscription, SystemAlert, NotificationLog
 from django.core.cache import cache
 
@@ -139,74 +140,126 @@ def firebase_auth_callback(request):
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
-# ============ PAYSTACK PAYMENT VERIFY ============
+# ============ PAYSTACK PAYMENT VERIFY (FIXED) ============
 
 def paystack_verify(request):
+    """Verify Paystack payment and complete order"""
     reference = request.GET.get('reference')
     if not reference:
         messages.error(request, '❌ No payment reference found.')
         return redirect('products:checkout')
 
     try:
-        verify_url = f'https://api.paystack.co/transaction/verify/{reference}'
-        req = urllib.request.Request(verify_url)
-        req.add_header('Authorization', f'Bearer {settings.PAYSTACK_SECRET_KEY}')
-        with urllib.request.urlopen(req) as response:
-            data = json.loads(response.read().decode())
+        import requests
+        headers = {
+            'Authorization': f'Bearer {settings.PAYSTACK_SECRET_KEY}',
+            'Content-Type': 'application/json',
+        }
+        
+        response = requests.get(f'https://api.paystack.co/transaction/verify/{reference}', headers=headers)
+        result = response.json()
+        
+        print(f"Paystack verification response: {result}")  # Debug log
 
-        if data.get('data', {}).get('status') == 'success':
+        if result.get('status') and result.get('data', {}).get('status') == 'success':
+            # Payment successful
+            amount = result['data']['amount'] / 100
+            
+            # Create order record if needed
+            if request.user.is_authenticated:
+                # Get cart items from session
+                cart = request.session.get('cart', {})
+                
+                # Create an order record
+                order = Order.objects.create(
+                    user=request.user,
+                    subtotal=amount,
+                    discount=0,
+                    is_paid=True,
+                    payment_status='paid',
+                    status='confirmed'
+                )
+                
+                # Create order items
+                for product_id, item_data in cart.items():
+                    try:
+                        product = Product.objects.get(id=int(product_id))
+                        OrderItem.objects.create(
+                            order=order,
+                            product=product,
+                            quantity=item_data.get('quantity', 1),
+                            price=item_data.get('price', product.price)
+                        )
+                    except Product.DoesNotExist:
+                        pass
+            
+            # Clear cart and coupons
             request.session['cart'] = {}
             request.session.pop('coupon_code', None)
+            request.session.pop('offer_discount', None)
             _sync_abandoned_cart(request, {})
-            messages.success(request, '✅ Payment successful! Thank you for shopping with RedCart.')
+            
+            messages.success(request, f'✅ Payment successful! Amount: ₦{amount:,.2f}')
             return redirect('products:product-list')
         else:
-            messages.error(request, '❌ Payment verification failed. Please contact support.')
+            error_msg = result.get('data', {}).get('gateway_response', 'Payment verification failed')
+            messages.error(request, f'❌ Payment verification failed: {error_msg}')
             return redirect('products:checkout')
 
     except Exception as e:
+        print(f"Paystack verification error: {str(e)}")
         messages.error(request, f'❌ Payment error: {str(e)}')
         return redirect('products:checkout')
 
 
 # ============ PAGES ============
-
 def index(request):
     query = request.GET.get('q') or request.GET.get('search')
-    category_values = Product.objects.order_by('category').values_list('category', flat=True).distinct()
+
+    if not query:
+        cached = cache.get('shop_page_data')
+        if cached:
+            return render(request, 'index.html', cached)
+
+    all_products = Product.objects.all().order_by('category', '-id')
 
     products_by_category = {}
     available_categories = []
-    for category_code in category_values:
-        category_label = category_code or 'Uncategorized'
-        if query:
-            products = Product.objects.filter(category=category_code, name__icontains=query)
-        else:
-            products = Product.objects.filter(category=category_code)
 
-        if products.exists():
-            products_by_category[category_code or 'Uncategorized'] = {
-                'label': category_label,
-                'products': products
-            }
-            available_categories.append((category_code or 'Uncategorized', category_label))
+    for product in all_products:
+        code = product.category or 'Uncategorized'
 
-    available_categories.sort(key=lambda item: item[1])
-    latest_products = Product.objects.order_by('-id')[:8]
-    best_deals = Offer.objects.all()[:4]
+        if query and query.lower() not in product.name.lower():
+            continue
+
+        if code not in products_by_category:
+            products_by_category[code] = {'label': code, 'products': []}
+            available_categories.append((code, code))
+
+        products_by_category[code]['products'].append(product)
+
+    available_categories.sort(key=lambda x: x[1])
+    latest_products = list(Product.objects.order_by('-id')[:8])
 
     wishlisted_ids = []
     if request.user.is_authenticated:
-        wishlisted_ids = list(Wishlist.objects.filter(user=request.user).values_list('product_id', flat=True))
+        wishlisted_ids = list(
+            Wishlist.objects.filter(user=request.user).values_list('product_id', flat=True)
+        )
 
-    return render(request, 'index.html', {
+    context = {
         'products_by_category': products_by_category,
         'query': query,
         'available_categories': available_categories,
         'latest_products': latest_products,
-        'best_deals': best_deals,
+        'best_deals': Offer.objects.all()[:4],
         'wishlisted_ids': wishlisted_ids,
-    })
+    }
+
+    if not query:
+        cache.set('shop_page_data', context, 300)
+
+    return render(request, 'index.html', context)
 
 
 def landing_page(request):
@@ -262,7 +315,11 @@ def landing_page(request):
 
 def offers_page(request):
     offers = Offer.objects.all()
-    products = Product.objects.all().order_by('-id')
+    products = Product.objects.filter(
+        sale_price__isnull=False,
+        sale_ends_at__gt=timezone.now(),
+        sale_price__lt=F('price')
+    ).order_by('-id')[:12]
     return render(request, 'offers.html', {'offers': offers, 'products': products})
 
 
@@ -433,22 +490,31 @@ def user_profile(request):
 def add_to_cart(request, item_id):
     product = get_object_or_404(Product, id=item_id)
     if product.is_out_of_stock:
-        messages.error(request, f"⚠️ {product.name} is out of stock and cannot be added to the cart.")
+        messages.error(request, f"⚠️ {product.name} is out of stock.")
         return redirect('products:product-detail', product_id=product.id)
 
     cart = request.session.get('cart', {})
     product_id = str(product.id)
-    cart[product_id] = cart.get(product_id, 0) + 1
+    
+    if product.has_active_sale:
+        price = float(product.sale_price)
+    else:
+        price = float(product.price)
+    
+    if product_id in cart:
+        cart[product_id]['quantity'] = cart[product_id]['quantity'] + 1
+    else:
+        cart[product_id] = {
+            'quantity': 1,
+            'price': price,
+            'name': product.name,
+            'image': product.image_src
+        }
+    
     request.session['cart'] = cart
     _sync_abandoned_cart(request, cart)
 
-    cart_url = reverse('products:view-cart')
-    messages.success(
-        request,
-        f"🛒 {product.name} added to your cart! "
-        f"<a href='{cart_url}' class='btn btn-sm btn-outline-light ms-2'>Check Cart Now</a>",
-        extra_tags='safe'
-    )
+    messages.success(request, f"🛒 {product.name} added to your cart! (₦{price:.2f})")
     return redirect('products:product-list')
 
 
@@ -457,15 +523,31 @@ def view_cart(request):
     products = []
     total = 0
 
-    for product_id, quantity in cart.items():
+    for product_id, item_data in cart.items():
         product = get_object_or_404(Product, id=product_id)
+        quantity = item_data.get('quantity', 1)
+        price = item_data.get('price', product.sale_price if product.has_active_sale else product.price)
+        
         product.quantity = quantity
-        product.total_price = product.price * quantity
+        product.cart_price = price
+        product.total_price = price * quantity
         products.append(product)
         total += product.total_price
 
-    coupon_context = _get_coupon_context(request, total)
-    coupon_discount = coupon_context['coupon_discount']
+    offer_discount = request.session.get('offer_discount', {})
+    
+    if offer_discount and offer_discount.get('amount', 0) > 0:
+        discount_amount = offer_discount['amount']
+        discount_code = offer_discount['code']
+        coupon_discount = discount_amount
+        coupon_code = discount_code
+        coupon_message = f"Offer '{discount_code}' applied ({offer_discount.get('percent', 0)}% off)"
+    else:
+        coupon_context = _get_coupon_context(request, total)
+        coupon_discount = coupon_context['coupon_discount']
+        coupon_code = coupon_context['coupon_code']
+        coupon_message = coupon_context['coupon_message']
+    
     total_after_coupon = max(0, total - coupon_discount)
 
     return render(request, 'cart.html', {
@@ -473,8 +555,8 @@ def view_cart(request):
         'total': total,
         'total_after_coupon': total_after_coupon,
         'coupon_discount': coupon_discount,
-        'coupon_code': coupon_context['coupon_code'],
-        'coupon_message': coupon_context['coupon_message'],
+        'coupon_code': coupon_code,
+        'coupon_message': coupon_message,
         'query': request.GET.get('q', ''),
     })
 
@@ -494,22 +576,34 @@ def delete_from_cart(request, product_id):
     return redirect('products:view-cart')
 
 
-# 💳 Checkout
 def checkout(request):
     cart = request.session.get('cart', {})
     products = []
     total = 0
 
-    for product_id, quantity in cart.items():
+    for product_id, item_data in cart.items():
         product = get_object_or_404(Product, id=product_id)
+        quantity = item_data.get('quantity', 1)
+        price = item_data.get('price', product.sale_price if product.has_active_sale else product.price)
+        
         product.quantity = quantity
-        product.total_price = product.price * quantity
+        product.cart_price = price
+        product.total_price = price * quantity
         products.append(product)
         total += product.total_price
 
-    total_kobo = int(total * 100)
-    coupon_context = _get_coupon_context(request, total)
-    coupon_discount = coupon_context['coupon_discount']
+    offer_discount = request.session.get('offer_discount', {})
+    
+    if offer_discount and offer_discount.get('amount', 0) > 0:
+        discount_amount = offer_discount['amount']
+        discount_code = offer_discount['code']
+        coupon_discount = discount_amount
+        coupon_code = discount_code
+    else:
+        coupon_context = _get_coupon_context(request, total)
+        coupon_discount = coupon_context['coupon_discount']
+        coupon_code = coupon_context['coupon_code']
+    
     total_after_coupon = max(0, total - coupon_discount)
 
     context = {
@@ -517,18 +611,16 @@ def checkout(request):
         'total': total,
         'total_after_coupon': total_after_coupon,
         'coupon_discount': coupon_discount,
-        'coupon_code': coupon_context['coupon_code'],
-        'coupon_message': coupon_context['coupon_message'],
-        'total_kobo': total_kobo,
+        'coupon_code': coupon_code,
         'query': request.GET.get('q', ''),
-        'paystack_public_key': getattr(settings, 'PAYSTACK_PUBLIC_KEY', ''),
+        'paystack_public_key': getattr(settings, 'PAYSTACK_PUBLIC_KEY', 'pk_test_4dc9ad4b7bac517bcfd33fb8398a1c3b865e6a2d'),
     }
 
     if stripe_api_available and settings.STRIPE_SECRET_KEY:
         stripe.api_key = settings.STRIPE_SECRET_KEY
         try:
             intent = stripe.PaymentIntent.create(
-                amount=total_kobo or 0,
+                amount=int(total_after_coupon * 100) or 0,
                 currency='usd',
                 automatic_payment_methods={'enabled': True},
             )
@@ -545,6 +637,7 @@ def confirm_payment(request):
         messages.success(request, "✅ Payment confirmed! Thank you for shopping with RedCart.")
         request.session['cart'] = {}
         request.session.pop('coupon_code', None)
+        request.session.pop('offer_discount', None)
         _sync_abandoned_cart(request, {})
         return redirect('products:product-list')
     return redirect('products:checkout')
@@ -586,7 +679,19 @@ def buy_now(request, product_id):
         messages.error(request, f"⚠️ {product.name} is out of stock.")
         return redirect('products:product-detail', product_id=product.id)
 
-    cart = {str(product.id): 1}
+    if product.has_active_sale:
+        price = float(product.sale_price)
+    else:
+        price = float(product.price)
+    
+    cart = {
+        str(product.id): {
+            'quantity': 1,
+            'price': price,
+            'name': product.name,
+            'image': product.image_src
+        }
+    }
     request.session['cart'] = cart
     _sync_abandoned_cart(request, cart)
     messages.success(request, f"🛍️ {product.name} added for checkout!")
@@ -887,10 +992,12 @@ def apply_coupon(request):
         return JsonResponse({'success': False, 'error': 'Your cart is empty.'}, status=400)
 
     subtotal = 0
-    for product_id, quantity in cart.items():
+    for product_id, item_data in cart.items():
         product = Product.objects.filter(id=product_id).first()
         if product:
-            subtotal += product.price * quantity
+            price = item_data.get('price', product.price)
+            quantity = item_data.get('quantity', 1)
+            subtotal += price * quantity
 
     coupon = Coupon.objects.filter(code__iexact=code).first()
     if not coupon:
@@ -901,8 +1008,73 @@ def apply_coupon(request):
         return JsonResponse({'success': False, 'error': f'Minimum order amount is ₦{coupon.min_order_amount:,.2f}.'}, status=400)
 
     discount = coupon.calculate_discount(subtotal)
+    if 'offer_discount' in request.session:
+        del request.session['offer_discount']
     request.session['coupon_code'] = coupon.code
     return JsonResponse({'success': True, 'discount': discount, 'coupon_code': coupon.code, 'message': f"Coupon '{coupon.code}' applied successfully."})
+
+
+@require_http_methods(["POST"])
+def remove_coupon(request):
+    if 'coupon_code' in request.session:
+        del request.session['coupon_code']
+    return JsonResponse({'success': True, 'message': 'Coupon removed'})
+
+
+# ============ OFFER FUNCTIONS ============
+
+@require_http_methods(["POST"])
+def apply_offer(request):
+    try:
+        data = json.loads(request.body)
+        offer_code = data.get('code', '').strip()
+    except:
+        offer_code = request.POST.get('code', '').strip()
+    
+    if not offer_code:
+        return JsonResponse({'success': False, 'error': 'Offer code required.'}, status=400)
+    
+    offer = Offer.objects.filter(code__iexact=offer_code).first()
+    if not offer:
+        return JsonResponse({'success': False, 'error': 'Offer not found.'}, status=404)
+    
+    cart = request.session.get('cart', {})
+    if not cart:
+        return JsonResponse({'success': False, 'error': 'Your cart is empty. Add items first.'}, status=400)
+    
+    subtotal = 0
+    for product_id, item_data in cart.items():
+        product = Product.objects.filter(id=product_id).first()
+        if product:
+            price = item_data.get('price', product.price)
+            quantity = item_data.get('quantity', 1)
+            subtotal += price * quantity
+    
+    discount_percent = offer.discount
+    discount_amount = (subtotal * discount_percent) / 100
+    
+    if 'coupon_code' in request.session:
+        del request.session['coupon_code']
+    
+    request.session['offer_discount'] = {
+        'code': offer.code,
+        'amount': discount_amount,
+        'percent': discount_percent
+    }
+    
+    return JsonResponse({
+        'success': True, 
+        'discount': discount_amount,
+        'code': offer.code,
+        'message': f"Offer '{offer.code}' applied! {discount_percent}% discount (₦{discount_amount:.2f})"
+    })
+
+
+@require_http_methods(["POST"])
+def remove_offer(request):
+    if 'offer_discount' in request.session:
+        del request.session['offer_discount']
+    return JsonResponse({'success': True, 'message': 'Offer removed'})
 
 
 def recently_viewed(request):
@@ -929,10 +1101,11 @@ def recently_viewed(request):
         seen.add(product_id)
         product = Product.objects.filter(id=product_id).first()
         if product:
+            display_price = product.sale_price if product.has_active_sale else product.price
             products.append({
                 'id': product.id, 'name': product.name,
                 'image_src': product.image_src,
-                'price': f"{product.price:.2f}",
+                'price': f"{display_price:.2f}",
                 'is_out_of_stock': product.is_out_of_stock,
             })
         if len(products) >= 6:
@@ -982,10 +1155,68 @@ def about_page(request):
     return render(request, 'about.html', {'company': company_info, 'stats': stats, 'team': team_members})
 
 
-# ============ NOTIFICATION SYSTEM VIEWS (FIXED FOR UNAUTHENTICATED USERS) ============
+# ============ LEGAL PAGES & CATEGORY PAGES ============
+
+def privacy_policy(request):
+    """Privacy Policy Page"""
+    return render(request, 'legal/privacy_policy.html')
+
+
+def terms_of_service(request):
+    """Terms of Service Page"""
+    return render(request, 'legal/terms_of_service.html')
+
+
+def cookie_policy(request):
+    """Cookie Policy Page"""
+    return render(request, 'legal/cookie_policy.html')
+
+
+def category_page(request, category_slug):
+    """Display products by category"""
+    # Map URL-friendly slugs to actual category names
+    category_mapping = {
+        'electronics': 'Electronics',
+        'clothing': 'Clothing',
+        'home-kitchen': 'Home',
+        'sports': 'Sports',
+        'books': 'Books',
+        'toys': 'Toys',
+        'artificial-intelligence': 'Artificial Intelligence',
+        'business-management': 'Business Management',
+        'finance-accounting': 'Finance & Accounting',
+        'marketing-sales-growth': 'Marketing, Sales & Growth',
+        'it-cybersecurity': 'IT & Cybersecurity',
+        'personal-development': 'Personal Development & Communication',
+    }
+    
+    # Get the actual category name from slug, or use slug as is
+    category_name = category_mapping.get(category_slug.lower(), category_slug.title())
+    
+    # Also try to find by exact match in database
+    products = Product.objects.filter(category__iexact=category_name)
+    
+    # If no products found, try to search by category containing the term
+    if not products.exists():
+        products = Product.objects.filter(category__icontains=category_name)
+    
+    # Get all available categories for the sidebar
+    all_categories = Product.objects.values_list('category', flat=True).distinct()
+    available_categories = sorted(set([c for c in all_categories if c]))
+    
+    context = {
+        'category_name': category_name,
+        'category_slug': category_slug,
+        'products': products,
+        'product_count': products.count(),
+        'available_categories': available_categories,
+    }
+    return render(request, 'products/category_page.html', context)
+
+
+# ============ NOTIFICATION SYSTEM VIEWS ============
 
 def notification_center(request):
-    """Render notification center page - shows login prompt if not authenticated"""
     if not request.user.is_authenticated:
         return render(request, 'notifications/notification_center_guest.html')
     return render(request, 'notifications/notification_center.html')
@@ -993,13 +1224,8 @@ def notification_center(request):
 
 @require_http_methods(["GET"])
 def get_notifications(request):
-    """Get user notifications with pagination"""
     if not request.user.is_authenticated:
-        return JsonResponse({
-            'success': False, 
-            'error': 'Please log in to view notifications',
-            'login_required': True
-        }, status=401)
+        return JsonResponse({'success': False, 'error': 'Please log in'}, status=401)
     
     page = request.GET.get('page', 1)
     per_page = request.GET.get('per_page', 20)
@@ -1043,7 +1269,6 @@ def get_notifications(request):
 
 @require_http_methods(["GET"])
 def get_unread_count(request):
-    """Get unread notification count"""
     if not request.user.is_authenticated:
         return JsonResponse({'success': True, 'unread_count': 0})
     
@@ -1053,22 +1278,12 @@ def get_unread_count(request):
 
 @require_http_methods(["POST"])
 def mark_notification_read(request, notification_id):
-    """Mark a single notification as read"""
     if not request.user.is_authenticated:
         return JsonResponse({'success': False, 'error': 'Please log in'}, status=401)
     
     try:
         notification = Notification.objects.get(id=notification_id, user=request.user)
         notification.mark_as_read()
-        
-        NotificationLog.objects.create(
-            user=request.user,
-            notification=notification,
-            channel='web',
-            status='read',
-            delivered_at=timezone.now()
-        )
-        
         return JsonResponse({'success': True, 'message': 'Notification marked as read'})
     except Notification.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Notification not found'}, status=404)
@@ -1076,20 +1291,17 @@ def mark_notification_read(request, notification_id):
 
 @require_http_methods(["POST"])
 def mark_all_notifications_read(request):
-    """Mark all notifications as read"""
     if not request.user.is_authenticated:
         return JsonResponse({'success': False, 'error': 'Please log in'}, status=401)
     
     updated = Notification.objects.filter(user=request.user, is_read=False).update(
-        is_read=True, 
-        read_at=timezone.now()
+        is_read=True, read_at=timezone.now()
     )
     return JsonResponse({'success': True, 'marked_count': updated})
 
 
 @require_http_methods(["POST"])
 def delete_notification(request, notification_id):
-    """Delete a single notification"""
     if not request.user.is_authenticated:
         return JsonResponse({'success': False, 'error': 'Please log in'}, status=401)
     
@@ -1103,7 +1315,6 @@ def delete_notification(request, notification_id):
 
 @require_http_methods(["POST"])
 def clear_all_notifications(request):
-    """Clear all user notifications"""
     if not request.user.is_authenticated:
         return JsonResponse({'success': False, 'error': 'Please log in'}, status=401)
     
@@ -1113,7 +1324,6 @@ def clear_all_notifications(request):
 
 @require_http_methods(["GET"])
 def get_notification_settings(request):
-    """Get user notification settings"""
     if not request.user.is_authenticated:
         return JsonResponse({'success': False, 'error': 'Please log in'}, status=401)
     
@@ -1141,7 +1351,6 @@ def get_notification_settings(request):
 
 @require_http_methods(["POST"])
 def update_notification_settings(request):
-    """Update user notification settings"""
     if not request.user.is_authenticated:
         return JsonResponse({'success': False, 'error': 'Please log in'}, status=401)
     
@@ -1149,45 +1358,44 @@ def update_notification_settings(request):
         data = json.loads(request.body)
         settings_obj, created = UserNotificationSettings.objects.get_or_create(user=request.user)
         
-        if 'email_order_updates' in data:
-            settings_obj.email_order_updates = data['email_order_updates']
-        if 'email_promotions' in data:
-            settings_obj.email_promotions = data['email_promotions']
-        if 'email_newsletter' in data:
-            settings_obj.email_newsletter = data['email_newsletter']
-        if 'email_support_replies' in data:
-            settings_obj.email_support_replies = data['email_support_replies']
-        if 'push_order_updates' in data:
-            settings_obj.push_order_updates = data['push_order_updates']
-        if 'push_promotions' in data:
-            settings_obj.push_promotions = data['push_promotions']
-        if 'push_low_stock_alerts' in data:
-            settings_obj.push_low_stock_alerts = data['push_low_stock_alerts']
-        if 'sound_enabled' in data:
-            settings_obj.sound_enabled = data['sound_enabled']
-        if 'sound_volume' in data:
-            settings_obj.sound_volume = max(0, min(100, data['sound_volume']))
-        if 'desktop_notifications' in data:
-            settings_obj.desktop_notifications = data['desktop_notifications']
-        if 'dnd_enabled' in data:
-            settings_obj.dnd_enabled = data['dnd_enabled']
-        if 'dnd_start_time' in data and data['dnd_start_time']:
-            from datetime import datetime
-            settings_obj.dnd_start_time = datetime.strptime(data['dnd_start_time'], '%H:%M').time()
-        if 'dnd_end_time' in data and data['dnd_end_time']:
-            from datetime import datetime
-            settings_obj.dnd_end_time = datetime.strptime(data['dnd_end_time'], '%H:%M').time()
+        for key, value in data.items():
+            if hasattr(settings_obj, key):
+                setattr(settings_obj, key, value)
         
         settings_obj.save()
-        return JsonResponse({'success': True, 'message': 'Settings updated successfully'})
+        return JsonResponse({'success': True, 'message': 'Settings updated'})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+def test_notification(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'success': False, 'error': 'Please log in'}, status=401)
+    
+    notification = Notification.objects.create(
+        user=request.user,
+        title="Test Notification",
+        message="Your notification system is working perfectly! 🎉",
+        notification_type="success"
+    )
+    
+    return JsonResponse({
+        'success': True,
+        'message': 'Test notification sent!',
+        'notification_id': notification.id
+    })
+
+
+def get_vapid_public_key(request):
+    return JsonResponse({
+        'success': True,
+        'public_key': settings.VAPID_PUBLIC_KEY if hasattr(settings, 'VAPID_PUBLIC_KEY') else ''
+    })
 
 
 @csrf_exempt
 @require_http_methods(["POST"])
 def subscribe_push_notifications(request):
-    """Subscribe to push notifications"""
     if not request.user.is_authenticated:
         return JsonResponse({'success': False, 'error': 'Please log in'}, status=401)
     
@@ -1196,30 +1404,23 @@ def subscribe_push_notifications(request):
         endpoint = data.get('endpoint')
         p256dh = data.get('keys', {}).get('p256dh')
         auth = data.get('keys', {}).get('auth')
-        user_agent = request.META.get('HTTP_USER_AGENT', '')
         
-        if not all([endpoint, p256dh, auth]):
-            return JsonResponse({'success': False, 'error': 'Missing subscription data'}, status=400)
-        
-        subscription, created = PushNotificationSubscription.objects.update_or_create(
+        PushNotificationSubscription.objects.update_or_create(
             endpoint=endpoint,
             defaults={
                 'user': request.user,
                 'p256dh': p256dh,
                 'auth': auth,
-                'user_agent': user_agent,
                 'is_active': True,
             }
         )
-        
-        return JsonResponse({'success': True, 'created': created})
+        return JsonResponse({'success': True})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
 
 @require_http_methods(["POST"])
 def unsubscribe_push_notifications(request):
-    """Unsubscribe from push notifications"""
     if not request.user.is_authenticated:
         return JsonResponse({'success': False, 'error': 'Please log in'}, status=401)
     
@@ -1238,39 +1439,7 @@ def unsubscribe_push_notifications(request):
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
 
-def get_vapid_public_key(request):
-    """Get VAPID public key for push notifications"""
-    return JsonResponse({
-        'success': True,
-        'public_key': settings.VAPID_PUBLIC_KEY if hasattr(settings, 'VAPID_PUBLIC_KEY') else ''
-    })
-
-
-def test_notification(request):
-    """Test notification system - creates a test notification for logged in users"""
-    if not request.user.is_authenticated:
-        return JsonResponse({
-            'success': False, 
-            'error': 'Please log in to test notifications',
-            'message': 'Login first to create a test notification'
-        }, status=401)
-    
-    notification = Notification.objects.create(
-        user=request.user,
-        title="Test Notification",
-        message="This is a test notification! Your notification system is working perfectly. 🎉",
-        notification_type="success"
-    )
-    
-    return JsonResponse({
-        'success': True,
-        'message': 'Test notification sent! Check your notification center.',
-        'notification_id': notification.id
-    })
-
-
 def get_system_alerts(request):
-    """Get system alerts for admin users"""
     if not request.user.is_staff:
         return JsonResponse({'success': False, 'error': 'Unauthorized'}, status=403)
     
@@ -1300,7 +1469,6 @@ def get_system_alerts(request):
 
 @require_http_methods(["POST"])
 def dismiss_system_alert(request, alert_id):
-    """Dismiss a system alert"""
     if not request.user.is_staff:
         return JsonResponse({'success': False, 'error': 'Unauthorized'}, status=403)
     
@@ -1313,22 +1481,11 @@ def dismiss_system_alert(request, alert_id):
         return JsonResponse({'success': False, 'error': 'Alert not found'}, status=404)
 
 
-# Helper function to create notifications (use this in other views)
 def create_notification(user, title, message, notification_type='info', order=None, product=None, ticket=None):
-    """Helper function to create notifications"""
     if not user or not user.is_authenticated:
         return None
     
-    try:
-        settings_obj = UserNotificationSettings.objects.get(user=user)
-        if settings_obj.dnd_enabled and settings_obj.dnd_start_time and settings_obj.dnd_end_time:
-            now = timezone.now().time()
-            if settings_obj.dnd_start_time <= now <= settings_obj.dnd_end_time:
-                return None
-    except UserNotificationSettings.DoesNotExist:
-        pass
-    
-    notification = Notification.objects.create(
+    return Notification.objects.create(
         user=user,
         title=title,
         message=message,
@@ -1336,13 +1493,4 @@ def create_notification(user, title, message, notification_type='info', order=No
         order=order,
         product=product,
         ticket=ticket
-    )
-    
-    NotificationLog.objects.create(
-        user=user,
-        notification=notification,
-        channel='web',
-        status='sent'
-    )
-    
-    return notification
+    ) 

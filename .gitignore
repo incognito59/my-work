@@ -10,3 +10,17 @@ media/
 # PyCharm / IDE
 .idea/
 .vscode/
+
+# Environment variables
+.env
+
+# Virtual environment
+.venv/
+
+# Static files
+staticfiles/
+
+# Python egg
+*.egg-info/
+dist/
+build/
