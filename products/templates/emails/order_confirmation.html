@@ -1,3 +1,4 @@
+{% load humanize %}
 <!DOCTYPE html>
 <html>
 <head>
@@ -203,8 +204,8 @@
                         <tr>
                             <td>{{ item.product.name }}</td>
                             <td style="text-align: center;">{{ item.quantity }}</td>
-                            <td>₦{{ item.price|floatformat:2 }}</td>
-                            <td style="font-weight: 600;">₦{{ item.total_price|floatformat:2 }}</td>
+                            <td>₦{{ item.price|floatformat:2|intcomma }}</td>
+                            <td style="font-weight: 600;">₦{{ item.total_price|floatformat:2|intcomma }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -213,7 +214,7 @@
 
             <div class="total-section">
                 <h3>Order Total</h3>
-                <div class="total-amount">₦{{ total|floatformat:2 }}</div>
+                <div class="total-amount">₦{{ total|floatformat:2|intcomma }}</div>
             </div>
 
             <div class="next-steps">

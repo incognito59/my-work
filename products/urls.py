@@ -10,7 +10,6 @@ urlpatterns = [
     
     # 🔍 Product pages
     path('shop/', views.index, name='product-list'),
-    path('offers/', views.offers_page, name='offers'),
     path('product/<int:product_id>/', views.product_detail, name='product-detail'),
 
     # 🛒 Cart actions
@@ -21,6 +20,11 @@ urlpatterns = [
     # 💳 Checkout & payments
     path('checkout/', views.checkout, name='checkout'),
     path('confirm-payment/', views.confirm_payment, name='confirm-payment'),
+    path('api/apply-coupon/', views.apply_coupon, name='api-apply-coupon'),
+    path('api/remove-coupon/', views.remove_coupon, name='api-remove-coupon'),
+    path('api/autocomplete/', views.product_autocomplete, name='api-autocomplete'),
+    path('order/<int:order_id>/reorder/', views.reorder_order, name='reorder-order'),
+    path('order/<int:order_id>/invoice/', views.order_invoice, name='order-invoice'),
     path('buy-now/<int:product_id>/', views.buy_now, name='buy-now'),
 
     # 👤 Auth pages
@@ -49,6 +53,7 @@ urlpatterns = [
     
     # 📱 Newsletter
     path('newsletter/signup/', views.newsletter_signup, name='newsletter-signup'),
+    path('newsletter/unsubscribe/', views.newsletter_unsubscribe, name='newsletter-unsubscribe'),
     
     # 📝 Blog & Content Pages
     path('blog/', views.blog_page, name='blog'),
@@ -74,14 +79,6 @@ urlpatterns = [
     path('order_delivered/', views.preview_email_order_delivered, name='email-order-delivered'),
     path('contact_reply/', views.preview_email_contact_reply, name='email-contact-reply'),
     path('password_reset/', views.preview_email_password_reset, name='email-password-reset'),
-    
-    # 💰 Coupon Routes
-    path('api/apply-coupon/', views.apply_coupon, name='api-apply-coupon'),
-    path('api/remove-coupon/', views.remove_coupon, name='api-remove-coupon'),
-    
-    # 🎁 Offer Routes (NEW)
-    path('api/apply-offer/', views.apply_offer, name='api-apply-offer'),
-    path('api/remove-offer/', views.remove_offer, name='api-remove-offer'),
     
     # 🔄 Recently Viewed
     path('api/recently-viewed/', views.recently_viewed, name='api-recently-viewed'),

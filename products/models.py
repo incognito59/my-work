@@ -1,3 +1,4 @@
+from datetime import timedelta
 from django.db import models
 from django.contrib.auth.models import User
 from django.templatetags.static import static
@@ -5,13 +6,22 @@ from django.utils import timezone
 
 class Product(models.Model):
     CATEGORY_CHOICES = [
-        ('Electronics', 'Electronics'),
-        ('Clothing', 'Clothing'),
-        ('Home', 'Home & Kitchen'),
-        ('Sports', 'Sports & Outdoors'),
-        ('Books', 'Books'),
-        ('Toys', 'Toys & Games'),
-        ('Other', 'Other'),
+    ('Electronics', 'Electronics'),
+    ('Clothing', 'Clothing'),
+    ('Home', 'Home & Kitchen'),
+    ('Sports', 'Sports & Outdoors'),
+    ('Books', 'Books'),
+    ('Toys', 'Toys & Games'),
+    ('Accessories', 'Accessories'),
+    ('Fashion', 'Fashion'),
+    ('Fitness', 'Fitness'),
+    ('Gaming', 'Gaming'),
+    ('Home Appliances', 'Home Appliances'),
+    ('Laptops', 'Laptops'),
+    ('Phones', 'Phones'),
+    ('Sneakers', 'Sneakers'),
+    ('Watches', 'Watches'),
+    ('Other', 'Other'),
     ]
     
     name = models.CharField(max_length=255)
@@ -288,6 +298,14 @@ class Order(models.Model):
     @property
     def total(self):
         return self.subtotal + self.shipping_cost + self.tax - self.discount
+
+    @property
+    def estimated_delivery_date(self):
+        if self.delivered_date:
+            return self.delivered_date
+        if self.shipped_date:
+            return self.shipped_date + timedelta(days=3)
+        return self.created_at + timedelta(days=5)
 
 
 class AbandonedCart(models.Model):

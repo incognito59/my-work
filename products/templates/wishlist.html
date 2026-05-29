@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load humanize %}
 
 {% block title %}Wishlist - Your Favorites | RedCart{% endblock %}
 
@@ -153,7 +154,7 @@
         <div class="wishlist-item">
           <img src="{{ item.product.image_src }}" alt="{{ item.product.name }}">
           <h3>{{ item.product.name }}</h3>
-          <p>{{ item.product.get_category_display }} • ₦{{ item.product.price|floatformat:2 }}</p>
+          <p>{{ item.product.get_category_display }} • ₦{{ item.product.price|floatformat:2|intcomma }}</p>
           <div class="wishlist-actions">
             <a href="{% url 'products:product-detail' item.product.id %}" class="btn btn-outline-danger btn-sm">View</a>
             <a href="{% url 'products:add-to-cart' item.product.id %}" class="btn btn-danger btn-sm">Add to Cart</a>

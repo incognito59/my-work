@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load humanize %}
 {% block content %}
 
 <div class="container my-5">
@@ -18,6 +19,10 @@
           <p><strong>Email:</strong> {{ user.email }}</p>
           <p><strong>Member Since:</strong> {{ user.date_joined|date:"M d, Y" }}</p>
           <p><strong>Total Orders:</strong> <span class="badge bg-danger">{{ order_count }}</span></p>
+          <p><strong>Loyalty Points:</strong> <span class="badge bg-success">{{ loyalty_points|default:0 }}</span></p>
+          <p><strong>Referral Link:</strong><br>
+            <a href="{{ referral_link }}" class="text-decoration-none">{{ referral_link }}</a>
+          </p>
         </div>
 
         <div class="d-flex gap-2">
@@ -46,6 +51,8 @@
                   <th>Items</th>
                   <th>Total</th>
                   <th>Status</th>
+                  <th>Est. Delivery</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -56,13 +63,18 @@
                     <td>
                       <span class="badge bg-info">{{ order.items.count }} item{{ order.items.count|pluralize }}</span>
                     </td>
-                    <td class="fw-semibold">₦{{ order.total|floatformat:2 }}</td>
+                    <td class="fw-semibold">₦{{ order.total|floatformat:2|intcomma }}</td>
                     <td>
                       {% if order.is_paid %}
                         <span class="badge bg-success">Paid</span>
                       {% else %}
                         <span class="badge bg-warning">Pending</span>
                       {% endif %}
+                    </td>
+                    <td>{{ order.estimated_delivery_date|date:"M d, Y" }}</td>
+                    <td>
+                      <a href="{% url 'products:reorder-order' order.id %}" class="btn btn-sm btn-outline-primary">Reorder</a>
+                      <a href="{% url 'products:order-invoice' order.id %}" class="btn btn-sm btn-outline-secondary ms-2">Invoice</a>
                     </td>
                   </tr>
                 {% endfor %}

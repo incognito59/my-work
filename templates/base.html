@@ -133,19 +133,11 @@
         background: rgba(255,255,255,0.3);
         transform: rotate(20deg);
       }
-      /* Sun icon in light mode */
-      [data-theme="light"] .theme-toggle #theme-icon {
-        color: #fff;
-      }
-      /* Moon icon in dark mode */
-      [data-theme="dark"] .theme-toggle #theme-icon {
-        color: #ffd700;
-      }
+      [data-theme="light"] .theme-toggle #theme-icon { color: #fff; }
+      [data-theme="dark"] .theme-toggle #theme-icon { color: #ffd700; }
 
       /* Notification Bell Badge */
-      .notification-bell {
-        position: relative;
-      }
+      .notification-bell { position: relative; }
       .notification-badge {
         position: absolute;
         top: -8px;
@@ -303,7 +295,6 @@
         box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         cursor: pointer;
       }
-
       .ai-chat-panel {
         display: none;
         width: 100%;
@@ -315,10 +306,7 @@
         max-height: 400px;
         overflow: hidden;
       }
-      .ai-chat-panel.active {
-        display: flex;
-      }
-
+      .ai-chat-panel.active { display: flex; }
       .ai-chat-header {
         padding: 10px 14px;
         display: flex;
@@ -332,11 +320,7 @@
         z-index: 10;
         border-radius: 16px 16px 0 0;
       }
-      .ai-chat-header span {
-        font-weight: 600;
-        font-size: 0.85rem;
-      }
-
+      .ai-chat-header span { font-weight: 600; font-size: 0.85rem; }
       #ai-chat-close {
         background: rgba(255,255,255,0.2) !important;
         border: none !important;
@@ -353,10 +337,7 @@
         align-items: center;
         justify-content: center;
       }
-      #ai-chat-close:hover {
-        background: rgba(255,255,255,0.35) !important;
-      }
-
+      #ai-chat-close:hover { background: rgba(255,255,255,0.35) !important; }
       .ai-chat-messages {
         flex: 1;
         overflow-y: auto;
@@ -364,14 +345,8 @@
         min-height: 0;
         max-height: 280px;
       }
-
-      .ai-chat-message {
-        margin-bottom: 10px;
-        line-height: 1.4;
-      }
-      .ai-chat-message.user {
-        text-align: right;
-      }
+      .ai-chat-message { margin-bottom: 10px; line-height: 1.4; }
+      .ai-chat-message.user { text-align: right; }
       .ai-chat-message.user .message-bubble {
         display: inline-block;
         background: #e3f2fd;
@@ -390,7 +365,6 @@
         padding: 8px 12px;
         max-width: 90%;
       }
-
       .ai-chat-footer {
         display: flex;
         gap: 8px;
@@ -407,10 +381,7 @@
         padding: 8px 12px;
         font-size: 0.8rem;
       }
-      .ai-chat-footer input:focus {
-        outline: none;
-        border-color: var(--main-color);
-      }
+      .ai-chat-footer input:focus { outline: none; border-color: var(--main-color); }
       .ai-chat-footer button {
         min-width: 60px;
         border-radius: 20px;
@@ -422,21 +393,9 @@
         cursor: pointer;
       }
       .ai-chat-footer button:hover { opacity: 0.9; }
-
-      /* Dark theme fixes for AI chat */
-      [data-theme="dark"] .ai-chat-message.user .message-bubble {
-        background: #2a2a3a;
-        color: #e8e8e8;
-      }
-      [data-theme="dark"] .ai-chat-message.assistant .message-bubble {
-        background: #1a1a24;
-        color: #e8e8e8;
-      }
-      [data-theme="dark"] .ai-chat-footer input {
-        background: #2a2a2a;
-        color: #e8e8e8;
-        border-color: #444;
-      }
+      [data-theme="dark"] .ai-chat-message.user .message-bubble { background: #2a2a3a; color: #e8e8e8; }
+      [data-theme="dark"] .ai-chat-message.assistant .message-bubble { background: #1a1a24; color: #e8e8e8; }
+      [data-theme="dark"] .ai-chat-footer input { background: #2a2a2a; color: #e8e8e8; border-color: #444; }
 
       /* ============ PROFESSIONAL FOOTER ============ */
       .footer {
@@ -489,37 +448,15 @@
       }
 
       /* ===== FORCE CART TEXT VISIBILITY ===== */
-      .cart-product-description {
-        color: #111 !important;
-        opacity: 1 !important;
-        font-weight: 500 !important;
-      }
-
-      .sale-price-text,
-      .regular-price-text,
-      .cart-total-cell {
-        color: #000 !important;
-        opacity: 1 !important;
-        font-weight: 800 !important;
-      }
-
-      .original-price-text {
-        color: #444 !important;
-        opacity: 1 !important;
-      }
-
+      .cart-product-description { color: #111 !important; opacity: 1 !important; font-weight: 500 !important; }
+      .sale-price-text, .regular-price-text, .cart-total-cell { color: #000 !important; opacity: 1 !important; font-weight: 800 !important; }
+      .original-price-text { color: #444 !important; opacity: 1 !important; }
       .cart-row { opacity: 1 !important; }
-
-      .text-muted,
-      small,
-      .small { opacity: 1 !important; }
-
+      .text-muted, small, .small { opacity: 1 !important; }
       [data-theme="dark"] .cart-product-description { color: #e0e0e0 !important; }
-
       [data-theme="dark"] .sale-price-text,
       [data-theme="dark"] .regular-price-text,
       [data-theme="dark"] .cart-total-cell { color: #ffffff !important; }
-
       [data-theme="dark"] .original-price-text { color: #aaaaaa !important; }
     </style>
   </head>
@@ -578,7 +515,6 @@
           <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
             <li class="nav-item"><a class="nav-link" href="{% url 'products:landing' %}">Home</a></li>
             <li class="nav-item"><a class="nav-link" href="{% url 'products:product-list' %}">Shop</a></li>
-            <li class="nav-item"><a class="nav-link" href="{% url 'products:offers' %}">Offers</a></li>
             <li class="nav-item"><a class="nav-link" href="{% url 'products:blog' %}">Blog</a></li>
             <li class="nav-item"><a class="nav-link" href="{% url 'products:about' %}">About</a></li>
             <li class="nav-item"><a class="nav-link" href="{% url 'products:wishlist' %}"><i class="bi bi-heart"></i> Wishlist</a></li>
@@ -657,28 +593,37 @@
     <footer class="footer">
       <div class="container">
         <div class="row">
+
+          <!-- ===== TOP CATEGORIES — now matches all 13 script categories ===== -->
           <div class="col-lg-3 col-md-6 mb-4">
             <h5><i class="bi bi-tags"></i> Top Categories</h5>
             <ul>
-              <li><a href="{% url 'products:category-page' 'electronics' %}">📱 Electronics</a></li>
-              <li><a href="{% url 'products:category-page' 'clothing' %}">👕 Clothing & Fashion</a></li>
-              <li><a href="{% url 'products:category-page' 'home-kitchen' %}">🏠 Home & Kitchen</a></li>
-              <li><a href="{% url 'products:category-page' 'sports' %}">⚽ Sports & Outdoors</a></li>
-              <li><a href="{% url 'products:category-page' 'books' %}">📚 Books</a></li>
-              <li><a href="{% url 'products:category-page' 'toys' %}">🎮 Toys & Games</a></li>
+              <li><a href="{% url 'products:category-page' 'phones' %}">📱 Phones</a></li>
+              <li><a href="{% url 'products:category-page' 'laptops' %}">💻 Laptops</a></li>
+              <li><a href="{% url 'products:category-page' 'gaming' %}">🎮 Gaming</a></li>
+              <li><a href="{% url 'products:category-page' 'watches' %}">⌚ Watches</a></li>
+              <li><a href="{% url 'products:category-page' 'sneakers' %}">👟 Sneakers</a></li>
+              <li><a href="{% url 'products:category-page' 'electronics' %}">🔌 Electronics</a></li>
+              <li><a href="{% url 'products:category-page' 'home-appliances' %}">🏠 Home Appliances</a></li>
+              <li><a href="{% url 'products:category-page' 'fitness' %}">🏋️ Fitness</a></li>
+              <li><a href="{% url 'products:category-page' 'accessories' %}">🎒 Accessories</a></li>
+              <li><a href="{% url 'products:category-page' 'fashion' %}">👕 Fashion</a></li>
+              <li><a href="{% url 'products:category-page' 'home' %}">🛋️ Home</a></li>
+              <li><a href="{% url 'products:category-page' 'beauty' %}">💄 Beauty</a></li>
               <li><a href="{% url 'products:category-page' 'other' %}">🗂️ Other</a></li>
             </ul>
           </div>
+
           <div class="col-lg-3 col-md-6 mb-4">
             <h5><i class="bi bi-grid-3x3-gap-fill"></i> Platform</h5>
             <ul>
               <li><a href="{% url 'products:about' %}">About Us</a></li>
-              <li><a href="{% url 'products:offers' %}">Explore Offers</a></li>
               <li><a href="{% url 'products:blog' %}">Blog & News</a></li>
               <li><a href="{% url 'products:faq' %}">FAQs</a></li>
               <li><a href="{% url 'products:contact' %}">Contact Us</a></li>
             </ul>
           </div>
+
           <div class="col-lg-3 col-md-6 mb-4">
             <h5><i class="bi bi-building"></i> Company</h5>
             <ul>
@@ -690,6 +635,7 @@
               <li><a href="{% url 'products:cookie-policy' %}">Cookie Policy</a></li>
             </ul>
           </div>
+
           <div class="col-lg-3 col-md-6 mb-4">
             <h5><i class="bi bi-envelope-paper"></i> Stay Updated</h5>
             <p class="small">Subscribe to get special offers, free giveaways, and exclusive deals.</p>
@@ -698,6 +644,7 @@
               <input type="email" name="email" placeholder="Your email address" required>
               <button type="submit"><i class="bi bi-send"></i></button>
             </form>
+            <p class="small mt-2">Already subscribed? <a href="{% url 'products:newsletter-unsubscribe' %}">Unsubscribe</a>.</p>
             <div class="social-links mt-4">
               <a href="#"><i class="bi bi-facebook"></i></a>
               <a href="#"><i class="bi bi-twitter-x"></i></a>
@@ -706,6 +653,7 @@
               <a href="#"><i class="bi bi-youtube"></i></a>
             </div>
           </div>
+
         </div>
         <div class="footer-bottom">
           <div class="row">
@@ -759,15 +707,13 @@
       }
       window.showToast = showToast;
 
-      // ============ LOADER — ROBUST 3-LAYER HIDE ============
+      // ============ LOADER ============
       function hideLoader() {
         const loader = document.getElementById('loader');
         if (loader) loader.style.display = 'none';
       }
       setTimeout(hideLoader, 3000);
-      document.addEventListener('DOMContentLoaded', function() {
-        setTimeout(hideLoader, 500);
-      });
+      document.addEventListener('DOMContentLoaded', function() { setTimeout(hideLoader, 500); });
       window.addEventListener('load', hideLoader);
 
       // ============ DJANGO MESSAGES ============
@@ -864,12 +810,10 @@
         const list = document.getElementById('recent-searches-list');
         const searches = getRecentSearches();
         if (!list) return;
-
         if (searches.length === 0) {
           list.innerHTML = '<div class="no-recent-searches">No recent searches</div>';
           return;
         }
-
         list.innerHTML = searches.map(s => `
           <div class="recent-search-item" onclick="applySearch('${escapeHtml(s)}')">
             <i class="bi bi-clock-history"></i>
@@ -899,7 +843,6 @@
             renderRecentSearches();
             dropdown.classList.add('show');
           });
-
           searchInput.addEventListener('input', () => {
             if (searchInput.value.trim().length === 0) {
               renderRecentSearches();
@@ -908,7 +851,6 @@
               dropdown.classList.remove('show');
             }
           });
-
           document.addEventListener('click', (e) => {
             if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
               dropdown.classList.remove('show');
@@ -942,11 +884,8 @@
 
       function setChatOpen(open) {
         const panel = document.getElementById('ai-chat-panel');
-        if (open) {
-          panel.classList.add('active');
-        } else {
-          panel.classList.remove('active');
-        }
+        if (open) { panel.classList.add('active'); }
+        else { panel.classList.remove('active'); }
       }
 
       async function sendAiChatMessage() {
@@ -956,7 +895,6 @@
         addChatMessage(text, 'user');
         input.value = '';
         addChatMessage('Thinking... 🤖', 'assistant');
-
         try {
           const response = await fetch('/products/api/chat/', {
             method: 'POST',
@@ -993,7 +931,6 @@
       async function updateNotificationBell() {
         try {
           const response = await fetch('/products/api/notifications/unread/count/');
-
           if (response.status === 401) {
             const badge = document.getElementById('notification-badge');
             const dropdownBadge = document.getElementById('dropdown-badge');
@@ -1001,20 +938,16 @@
             if (dropdownBadge) dropdownBadge.style.display = 'none';
             return;
           }
-
           const data = await response.json();
-
           if (data.success && data.unread_count > 0) {
             const badge = document.getElementById('notification-badge');
             const dropdownBadge = document.getElementById('dropdown-badge');
-
             if (badge) {
               badge.textContent = data.unread_count > 99 ? '99+' : data.unread_count;
               badge.style.display = 'inline-block';
               badge.style.animation = 'bellRing 0.5s ease';
               setTimeout(() => { if(badge) badge.style.animation = ''; }, 500);
             }
-
             if (dropdownBadge) {
               dropdownBadge.textContent = data.unread_count;
               dropdownBadge.style.display = 'inline-block';
@@ -1044,7 +977,6 @@
         if (!button) return;
         const productId = button.dataset.productId;
         if (!productId) return;
-
         const url = '{% url "products:toggle-wishlist" 0 %}'.replace('/0/', `/${productId}/`);
         const response = await fetch(url, {
           method: 'POST',
@@ -1052,13 +984,11 @@
           body: JSON.stringify({}),
         });
         const data = await response.json();
-
         if (!response.ok) {
           if (data.login_url) { window.location.href = data.login_url; return; }
           showToast(data.error || 'Unable to update wishlist.', 'error');
           return;
         }
-
         const liked = data.action === 'added';
         button.classList.toggle('btn-danger', liked);
         button.classList.toggle('btn-outline-danger', !liked);

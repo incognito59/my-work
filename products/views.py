@@ -11,48 +11,16 @@ import urllib.request
 import urllib.error
 
 from django.urls import reverse
-from django.http import JsonResponse
-from .models import Product, Comment, Order, Offer, Wishlist, Coupon, AbandonedCart
+from django.http import JsonResponse, HttpResponse
+from .models import Product, Comment, Order, OrderItem, Wishlist, AbandonedCart, Coupon
 from .utils import get_product_recommendations_ai, get_ai_chat_response
 from django.conf import settings
 
-# Add these to existing imports
 from django.views.decorators.http import require_http_methods
 from django.core.paginator import Paginator
 from django.db.models import Count
 from .models import Notification, UserNotificationSettings, PushNotificationSubscription, SystemAlert, NotificationLog
 from django.core.cache import cache
-
-def _get_coupon_context(request, subtotal):
-    coupon_code = request.session.get('coupon_code', '')
-    coupon = None
-    discount = 0
-    message = ''
-
-    if coupon_code:
-        coupon = Coupon.objects.filter(code__iexact=coupon_code).first()
-        if coupon and coupon.is_valid(subtotal):
-            discount = coupon.calculate_discount(subtotal)
-            message = f"Coupon '{coupon.code}' applied."
-        else:
-            discount = 0
-            request.session.pop('coupon_code', None)
-            if coupon:
-                if coupon.expiry_date <= timezone.now():
-                    message = 'This coupon has expired.'
-                elif subtotal < coupon.min_order_amount:
-                    message = f'Minimum order of ₦{coupon.min_order_amount:,.2f} required.'
-                else:
-                    message = 'This coupon is not valid for your order.'
-            else:
-                message = 'Coupon code not found.'
-
-    return {
-        'coupon_code': coupon_code,
-        'coupon_discount': discount,
-        'coupon_message': message,
-        'coupon': coupon,
-    }
 
 
 def _sync_abandoned_cart(request, cart):
@@ -129,7 +97,7 @@ def firebase_auth_callback(request):
 
         user.backend = 'django.contrib.auth.backends.ModelBackend'
         login(request, user)
-        
+
         messages.success(request, f"✅ Welcome back, {user.first_name or user.username}!")
 
         return JsonResponse({'success': True, 'created': created, 'email': email, 'redirect': '/products/'})
@@ -140,10 +108,9 @@ def firebase_auth_callback(request):
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
-# ============ PAYSTACK PAYMENT VERIFY (FIXED) ============
+# ============ PAYSTACK PAYMENT VERIFY ============
 
 def paystack_verify(request):
-    """Verify Paystack payment and complete order"""
     reference = request.GET.get('reference')
     if not reference:
         messages.error(request, '❌ No payment reference found.')
@@ -155,22 +122,16 @@ def paystack_verify(request):
             'Authorization': f'Bearer {settings.PAYSTACK_SECRET_KEY}',
             'Content-Type': 'application/json',
         }
-        
+
         response = requests.get(f'https://api.paystack.co/transaction/verify/{reference}', headers=headers)
         result = response.json()
-        
-        print(f"Paystack verification response: {result}")  # Debug log
 
         if result.get('status') and result.get('data', {}).get('status') == 'success':
-            # Payment successful
             amount = result['data']['amount'] / 100
-            
-            # Create order record if needed
+
             if request.user.is_authenticated:
-                # Get cart items from session
                 cart = request.session.get('cart', {})
-                
-                # Create an order record
+
                 order = Order.objects.create(
                     user=request.user,
                     subtotal=amount,
@@ -179,8 +140,7 @@ def paystack_verify(request):
                     payment_status='paid',
                     status='confirmed'
                 )
-                
-                # Create order items
+
                 for product_id, item_data in cart.items():
                     try:
                         product = Product.objects.get(id=int(product_id))
@@ -192,13 +152,10 @@ def paystack_verify(request):
                         )
                     except Product.DoesNotExist:
                         pass
-            
-            # Clear cart and coupons
+
             request.session['cart'] = {}
-            request.session.pop('coupon_code', None)
-            request.session.pop('offer_discount', None)
             _sync_abandoned_cart(request, {})
-            
+
             messages.success(request, f'✅ Payment successful! Amount: ₦{amount:,.2f}')
             return redirect('products:product-list')
         else:
@@ -207,12 +164,10 @@ def paystack_verify(request):
             return redirect('products:checkout')
 
     except Exception as e:
-        print(f"Paystack verification error: {str(e)}")
         messages.error(request, f'❌ Payment error: {str(e)}')
         return redirect('products:checkout')
 
 
-# ============ PAGES ============
 def index(request):
     query = request.GET.get('q') or request.GET.get('search')
 
@@ -223,8 +178,13 @@ def index(request):
 
     all_products = Product.objects.all().order_by('category', '-id')
 
+    if query:
+        all_products = all_products.filter(name__icontains=query)
+
     products_by_category = {}
     available_categories = []
+
+    HOMEPAGE_LIMIT = 10
 
     for product in all_products:
         code = product.category or 'Uncategorized'
@@ -233,12 +193,16 @@ def index(request):
             continue
 
         if code not in products_by_category:
-            products_by_category[code] = {'label': code, 'products': []}
+            products_by_category[code] = {'label': code, 'products': [], 'total': 0}
             available_categories.append((code, code))
 
-        products_by_category[code]['products'].append(product)
+        products_by_category[code]['total'] += 1
+
+        if len(products_by_category[code]['products']) < HOMEPAGE_LIMIT:
+            products_by_category[code]['products'].append(product)
 
     available_categories.sort(key=lambda x: x[1])
+
     latest_products = list(Product.objects.order_by('-id')[:8])
 
     wishlisted_ids = []
@@ -252,8 +216,8 @@ def index(request):
         'query': query,
         'available_categories': available_categories,
         'latest_products': latest_products,
-        'best_deals': Offer.objects.all()[:4],
         'wishlisted_ids': wishlisted_ids,
+        'total_products': Product.objects.count(),
     }
 
     if not query:
@@ -264,7 +228,6 @@ def index(request):
 
 def landing_page(request):
     featured_products = Product.objects.all().order_by('-id')[:6]
-    offers = Offer.objects.all()[:4]
 
     if request.user.is_authenticated:
         return redirect('products:product-list')
@@ -310,17 +273,7 @@ def landing_page(request):
         messages.success(request, f"✅ Account created! Welcome, {username}. Please log in.")
         return redirect('products:login')
 
-    return render(request, 'landing.html', {'featured_products': featured_products, 'offers': offers})
-
-
-def offers_page(request):
-    offers = Offer.objects.all()
-    products = Product.objects.filter(
-        sale_price__isnull=False,
-        sale_ends_at__gt=timezone.now(),
-        sale_price__lt=F('price')
-    ).order_by('-id')[:12]
-    return render(request, 'offers.html', {'offers': offers, 'products': products})
+    return render(request, 'landing.html', {'featured_products': featured_products})
 
 
 def login_page(request):
@@ -479,11 +432,18 @@ def logout_page(request):
 def user_profile(request):
     user = request.user
     orders = Order.objects.filter(user=user).order_by('-created_at')
+    loyalty_points = sum(int(order.total // 500) for order in orders if order.is_paid)
+    referral_link = request.build_absolute_uri(reverse('products:landing'))
+    if user.username:
+        referral_link += f'?ref={user.username}'
+
     messages.info(request, f"Welcome to your profile! You have {orders.count()} orders.")
     return render(request, 'profile.html', {
         'user': user,
         'orders': orders,
         'order_count': orders.count(),
+        'loyalty_points': loyalty_points,
+        'referral_link': referral_link,
     })
 
 
@@ -495,12 +455,12 @@ def add_to_cart(request, item_id):
 
     cart = request.session.get('cart', {})
     product_id = str(product.id)
-    
+
     if product.has_active_sale:
         price = float(product.sale_price)
     else:
         price = float(product.price)
-    
+
     if product_id in cart:
         cart[product_id]['quantity'] = cart[product_id]['quantity'] + 1
     else:
@@ -510,7 +470,7 @@ def add_to_cart(request, item_id):
             'name': product.name,
             'image': product.image_src
         }
-    
+
     request.session['cart'] = cart
     _sync_abandoned_cart(request, cart)
 
@@ -518,46 +478,62 @@ def add_to_cart(request, item_id):
     return redirect('products:product-list')
 
 
-def view_cart(request):
-    cart = request.session.get('cart', {})
+def _get_cart_products(request, cart):
     products = []
     total = 0
+    invalid_item_ids = []
 
-    for product_id, item_data in cart.items():
-        product = get_object_or_404(Product, id=product_id)
+    for product_id, item_data in list(cart.items()):
+        try:
+            product = Product.objects.get(id=int(product_id))
+        except (Product.DoesNotExist, ValueError, TypeError):
+            invalid_item_ids.append(product_id)
+            continue
+
         quantity = item_data.get('quantity', 1)
         price = item_data.get('price', product.sale_price if product.has_active_sale else product.price)
-        
         product.quantity = quantity
         product.cart_price = price
         product.total_price = price * quantity
         products.append(product)
         total += product.total_price
 
-    offer_discount = request.session.get('offer_discount', {})
-    
-    if offer_discount and offer_discount.get('amount', 0) > 0:
-        discount_amount = offer_discount['amount']
-        discount_code = offer_discount['code']
-        coupon_discount = discount_amount
-        coupon_code = discount_code
-        coupon_message = f"Offer '{discount_code}' applied ({offer_discount.get('percent', 0)}% off)"
-    else:
-        coupon_context = _get_coupon_context(request, total)
-        coupon_discount = coupon_context['coupon_discount']
-        coupon_code = coupon_context['coupon_code']
-        coupon_message = coupon_context['coupon_message']
-    
-    total_after_coupon = max(0, total - coupon_discount)
+    if invalid_item_ids:
+        for invalid_id in invalid_item_ids:
+            cart.pop(invalid_id, None)
+        request.session['cart'] = cart
+        _sync_abandoned_cart(request, cart)
+        messages.warning(request, "⚠️ Some unavailable items were removed from your cart.")
+
+    return products, total
+
+
+def _get_coupon_values(request, subtotal):
+    coupon_code = request.session.get('coupon_code', '')
+    coupon_discount = 0
+    if coupon_code:
+        coupon = Coupon.objects.filter(code__iexact=coupon_code, is_active=True).first()
+        if coupon and coupon.is_valid(total=subtotal):
+            coupon_discount = coupon.calculate_discount(subtotal)
+        else:
+            request.session.pop('coupon_code', None)
+            coupon_code = ''
+    return coupon_code, coupon_discount
+
+
+def view_cart(request):
+    cart = request.session.get('cart', {})
+    products, total = _get_cart_products(request, cart)
+    coupon_code, coupon_discount = _get_coupon_values(request, total)
+    total_after_coupon = max(total - coupon_discount, 0)
 
     return render(request, 'cart.html', {
         'products': products,
         'total': total,
-        'total_after_coupon': total_after_coupon,
+        'query': request.GET.get('q', ''),
         'coupon_discount': coupon_discount,
         'coupon_code': coupon_code,
-        'coupon_message': coupon_message,
-        'query': request.GET.get('q', ''),
+        'total_after_coupon': total_after_coupon,
     })
 
 
@@ -578,66 +554,158 @@ def delete_from_cart(request, product_id):
 
 def checkout(request):
     cart = request.session.get('cart', {})
-    products = []
-    total = 0
-
-    for product_id, item_data in cart.items():
-        product = get_object_or_404(Product, id=product_id)
-        quantity = item_data.get('quantity', 1)
-        price = item_data.get('price', product.sale_price if product.has_active_sale else product.price)
-        
-        product.quantity = quantity
-        product.cart_price = price
-        product.total_price = price * quantity
-        products.append(product)
-        total += product.total_price
-
-    offer_discount = request.session.get('offer_discount', {})
-    
-    if offer_discount and offer_discount.get('amount', 0) > 0:
-        discount_amount = offer_discount['amount']
-        discount_code = offer_discount['code']
-        coupon_discount = discount_amount
-        coupon_code = discount_code
-    else:
-        coupon_context = _get_coupon_context(request, total)
-        coupon_discount = coupon_context['coupon_discount']
-        coupon_code = coupon_context['coupon_code']
-    
-    total_after_coupon = max(0, total - coupon_discount)
+    products, total = _get_cart_products(request, cart)
+    coupon_code, coupon_discount = _get_coupon_values(request, total)
+    total_after_coupon = max(total - coupon_discount, 0)
 
     context = {
         'products': products,
         'total': total,
-        'total_after_coupon': total_after_coupon,
-        'coupon_discount': coupon_discount,
-        'coupon_code': coupon_code,
         'query': request.GET.get('q', ''),
-        'paystack_public_key': getattr(settings, 'PAYSTACK_PUBLIC_KEY', 'pk_test_4dc9ad4b7bac517bcfd33fb8398a1c3b865e6a2d'),
+        'paystack_public_key': getattr(settings, 'PAYSTACK_PUBLIC_KEY', ''),
+        'coupon_code': coupon_code,
+        'coupon_discount': coupon_discount,
+        'total_after_coupon': total_after_coupon,
     }
 
-    if stripe_api_available and settings.STRIPE_SECRET_KEY:
-        stripe.api_key = settings.STRIPE_SECRET_KEY
-        try:
-            intent = stripe.PaymentIntent.create(
-                amount=int(total_after_coupon * 100) or 0,
-                currency='usd',
-                automatic_payment_methods={'enabled': True},
-            )
-            context['stripe_publishable_key'] = settings.STRIPE_PUBLISHABLE_KEY
-            context['stripe_client_secret'] = intent.client_secret
-        except Exception:
-            pass
-
     return render(request, 'checkout.html', context)
+
+
+@require_http_methods(["POST"])
+def apply_coupon(request):
+    try:
+        payload = json.loads(request.body.decode('utf-8') or '{}')
+    except ValueError:
+        payload = {}
+    code = payload.get('code') or request.POST.get('code') or request.POST.get('coupon_code')
+    if not code:
+        return JsonResponse({'success': False, 'error': 'Coupon code is required.'}, status=400)
+
+    coupon = Coupon.objects.filter(code__iexact=code.strip(), is_active=True).first()
+    cart = request.session.get('cart', {})
+    products, total = _get_cart_products(request, cart)
+    if not coupon or not coupon.is_valid(total=total):
+        return JsonResponse({'success': False, 'error': 'Coupon code is not valid for your order.'}, status=400)
+
+    request.session['coupon_code'] = coupon.code
+    request.session.modified = True
+    discount_amount = coupon.calculate_discount(total)
+    return JsonResponse({
+        'success': True,
+        'message': f'Coupon "{coupon.code}" applied successfully.',
+        'coupon_code': coupon.code,
+        'coupon_discount': discount_amount,
+        'total_after_coupon': max(total - discount_amount, 0),
+    })
+
+
+@require_http_methods(["POST"])
+def remove_coupon(request):
+    request.session.pop('coupon_code', None)
+    request.session.modified = True
+    return JsonResponse({'success': True, 'message': 'Coupon removed.'})
+
+
+@login_required(login_url='products:login')
+def reorder_order(request, order_id):
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    cart = request.session.get('cart', {})
+    for item in order.items.all():
+        product_id = str(item.product.id)
+        cart[product_id] = {
+            'quantity': item.quantity,
+            'price': item.price,
+            'name': item.product.name,
+            'image': item.product.image_src,
+        }
+    request.session['cart'] = cart
+    _sync_abandoned_cart(request, cart)
+    messages.success(request, '🔄 Reorder added to your cart. You can review it before checkout.')
+    return redirect('products:view-cart')
+
+
+@login_required(login_url='products:login')
+def order_invoice(request, order_id):
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    items = order.items.select_related('product').all()
+    context = {
+        'order': order,
+        'items': items,
+        'user': request.user,
+    }
+
+    if request.GET.get('format') == 'pdf':
+        try:
+            from reportlab.pdfgen import canvas
+            from reportlab.lib.pagesizes import letter
+            from io import BytesIO
+
+            buffer = BytesIO()
+            pdf = canvas.Canvas(buffer, pagesize=letter)
+            pdf.setTitle(f'Invoice #{order.id}')
+            pdf.setFont('Helvetica-Bold', 16)
+            pdf.drawString(40, 740, f'Invoice #{order.id}')
+            pdf.setFont('Helvetica', 10)
+            pdf.drawString(40, 720, f'Date: {order.created_at.strftime("%Y-%m-%d")}')
+            pdf.drawString(40, 704, f'Customer: {request.user.get_full_name() or request.user.username}')
+            pdf.drawString(40, 688, f'Email: {request.user.email}')
+            y = 660
+            pdf.drawString(40, y, 'Product')
+            pdf.drawString(300, y, 'Qty')
+            pdf.drawString(360, y, 'Unit')
+            pdf.drawString(440, y, 'Total')
+            y -= 18
+            for item in items:
+                pdf.drawString(40, y, item.product.name[:35])
+                pdf.drawString(300, y, str(item.quantity))
+                pdf.drawString(360, y, f'₦{item.price:.2f}')
+                pdf.drawString(440, y, f'₦{item.total_price:.2f}')
+                y -= 16
+                if y < 80:
+                    pdf.showPage()
+                    y = 740
+            y -= 14
+            pdf.drawString(40, y, f'Subtotal: ₦{order.subtotal:.2f}')
+            pdf.drawString(40, y - 14, f'Discount: ₦{order.discount:.2f}')
+            pdf.drawString(40, y - 28, f'Shipping: ₦{order.shipping_cost:.2f}')
+            pdf.drawString(40, y - 42, f'Total: ₦{order.total:.2f}')
+            pdf.save()
+            buffer.seek(0)
+            pdf_response = HttpResponse(buffer, content_type='application/pdf')
+            pdf_response['Content-Disposition'] = f'attachment; filename="invoice_{order.id}.pdf"'
+            return pdf_response
+        except ImportError:
+            messages.warning(request, 'PDF generation is not available. Showing invoice as HTML instead.')
+
+    return render(request, 'invoice.html', context)
+
+
+@require_http_methods(["GET"])
+def product_autocomplete(request):
+    query = request.GET.get('q', '').strip()
+    products = Product.objects.none()
+    if query:
+        products = Product.objects.filter(name__icontains=query).order_by('-id')[:10]
+
+    return JsonResponse({
+        'success': True,
+        'results': [
+            {
+                'id': product.id,
+                'name': product.name,
+                'price': f'{product.sale_price if product.has_active_sale else product.price:.2f}',
+                'image_src': product.image_src,
+                'category': product.category,
+            }
+            for product in products
+        ]
+    })
 
 
 def confirm_payment(request):
     if request.method == 'POST':
         messages.success(request, "✅ Payment confirmed! Thank you for shopping with RedCart.")
         request.session['cart'] = {}
-        request.session.pop('coupon_code', None)
-        request.session.pop('offer_discount', None)
         _sync_abandoned_cart(request, {})
         return redirect('products:product-list')
     return redirect('products:checkout')
@@ -683,7 +751,7 @@ def buy_now(request, product_id):
         price = float(product.sale_price)
     else:
         price = float(product.price)
-    
+
     cart = {
         str(product.id): {
             'quantity': 1,
@@ -855,17 +923,50 @@ def analytics_dashboard(request):
 def newsletter_signup(request):
     if request.method == 'POST':
         from .models import Newsletter
+        from .utils import send_newsletter_confirmation_email
+
         email = request.POST.get('email', '').strip()
         if email:
             newsletter, created = Newsletter.objects.get_or_create(email=email)
+            if not created and not newsletter.subscribed:
+                newsletter.subscribed = True
+                newsletter.save()
+                created = True
+
             if created:
-                messages.success(request, "✅ Successfully subscribed to our newsletter!")
+                email_sent = send_newsletter_confirmation_email(email)
+                if email_sent:
+                    messages.success(request, "✅ Successfully subscribed to our newsletter! Check your inbox for a confirmation email.")
+                else:
+                    messages.success(request, "✅ Successfully subscribed to our newsletter! We could not send the confirmation email right now.")
             else:
                 messages.info(request, "📧 You're already subscribed!")
             return redirect('products:product-list')
 
     messages.error(request, "❌ Please provide a valid email address.")
     return redirect('products:product-list')
+
+
+def newsletter_unsubscribe(request):
+    from .models import Newsletter
+
+    email = request.GET.get('email', '').strip()
+
+    if request.method == 'POST':
+        email = request.POST.get('email', '').strip()
+        if email:
+            newsletter = Newsletter.objects.filter(email__iexact=email).first()
+            if newsletter and newsletter.subscribed:
+                newsletter.subscribed = False
+                newsletter.save()
+                messages.success(request, "✅ Your email has been unsubscribed from the newsletter.")
+            elif newsletter:
+                messages.info(request, "ℹ️ This email is already unsubscribed.")
+            else:
+                messages.info(request, "❌ We couldn't find that email in our subscriber list.")
+            return redirect('products:newsletter-unsubscribe')
+
+    return render(request, 'newsletter_unsubscribe.html', {'email': email})
 
 
 # ============ EMAIL PREVIEWS ============
@@ -975,108 +1076,6 @@ def ai_chat(request):
     return JsonResponse({'success': True, 'reply': reply})
 
 
-def apply_coupon(request):
-    if request.method != 'POST':
-        return JsonResponse({'success': False, 'error': 'Invalid method.'}, status=405)
-    try:
-        payload = json.loads(request.body.decode('utf-8') or '{}')
-    except ValueError:
-        payload = {}
-
-    code = (payload.get('code') or '').strip()
-    if not code:
-        return JsonResponse({'success': False, 'error': 'Coupon code required.'}, status=400)
-
-    cart = request.session.get('cart', {})
-    if not cart:
-        return JsonResponse({'success': False, 'error': 'Your cart is empty.'}, status=400)
-
-    subtotal = 0
-    for product_id, item_data in cart.items():
-        product = Product.objects.filter(id=product_id).first()
-        if product:
-            price = item_data.get('price', product.price)
-            quantity = item_data.get('quantity', 1)
-            subtotal += price * quantity
-
-    coupon = Coupon.objects.filter(code__iexact=code).first()
-    if not coupon:
-        return JsonResponse({'success': False, 'error': 'Coupon not found.'}, status=404)
-    if coupon.expiry_date <= timezone.now() or not coupon.is_active:
-        return JsonResponse({'success': False, 'error': 'This coupon is not active or has expired.'}, status=400)
-    if subtotal < coupon.min_order_amount:
-        return JsonResponse({'success': False, 'error': f'Minimum order amount is ₦{coupon.min_order_amount:,.2f}.'}, status=400)
-
-    discount = coupon.calculate_discount(subtotal)
-    if 'offer_discount' in request.session:
-        del request.session['offer_discount']
-    request.session['coupon_code'] = coupon.code
-    return JsonResponse({'success': True, 'discount': discount, 'coupon_code': coupon.code, 'message': f"Coupon '{coupon.code}' applied successfully."})
-
-
-@require_http_methods(["POST"])
-def remove_coupon(request):
-    if 'coupon_code' in request.session:
-        del request.session['coupon_code']
-    return JsonResponse({'success': True, 'message': 'Coupon removed'})
-
-
-# ============ OFFER FUNCTIONS ============
-
-@require_http_methods(["POST"])
-def apply_offer(request):
-    try:
-        data = json.loads(request.body)
-        offer_code = data.get('code', '').strip()
-    except:
-        offer_code = request.POST.get('code', '').strip()
-    
-    if not offer_code:
-        return JsonResponse({'success': False, 'error': 'Offer code required.'}, status=400)
-    
-    offer = Offer.objects.filter(code__iexact=offer_code).first()
-    if not offer:
-        return JsonResponse({'success': False, 'error': 'Offer not found.'}, status=404)
-    
-    cart = request.session.get('cart', {})
-    if not cart:
-        return JsonResponse({'success': False, 'error': 'Your cart is empty. Add items first.'}, status=400)
-    
-    subtotal = 0
-    for product_id, item_data in cart.items():
-        product = Product.objects.filter(id=product_id).first()
-        if product:
-            price = item_data.get('price', product.price)
-            quantity = item_data.get('quantity', 1)
-            subtotal += price * quantity
-    
-    discount_percent = offer.discount
-    discount_amount = (subtotal * discount_percent) / 100
-    
-    if 'coupon_code' in request.session:
-        del request.session['coupon_code']
-    
-    request.session['offer_discount'] = {
-        'code': offer.code,
-        'amount': discount_amount,
-        'percent': discount_percent
-    }
-    
-    return JsonResponse({
-        'success': True, 
-        'discount': discount_amount,
-        'code': offer.code,
-        'message': f"Offer '{offer.code}' applied! {discount_percent}% discount (₦{discount_amount:.2f})"
-    })
-
-
-@require_http_methods(["POST"])
-def remove_offer(request):
-    if 'offer_discount' in request.session:
-        del request.session['offer_discount']
-    return JsonResponse({'success': True, 'message': 'Offer removed'})
-
-
 def recently_viewed(request):
     if request.method != 'POST':
         return JsonResponse({'success': False, 'error': 'Invalid method.'}, status=405)
@@ -1158,23 +1157,18 @@ def about_page(request):
 # ============ LEGAL PAGES & CATEGORY PAGES ============
 
 def privacy_policy(request):
-    """Privacy Policy Page"""
     return render(request, 'legal/privacy_policy.html')
 
 
 def terms_of_service(request):
-    """Terms of Service Page"""
     return render(request, 'legal/terms_of_service.html')
 
 
 def cookie_policy(request):
-    """Cookie Policy Page"""
     return render(request, 'legal/cookie_policy.html')
 
 
 def category_page(request, category_slug):
-    """Display products by category"""
-    # Map URL-friendly slugs to actual category names
     category_mapping = {
         'electronics': 'Electronics',
         'clothing': 'Clothing',
@@ -1182,28 +1176,27 @@ def category_page(request, category_slug):
         'sports': 'Sports',
         'books': 'Books',
         'toys': 'Toys',
-        'artificial-intelligence': 'Artificial Intelligence',
-        'business-management': 'Business Management',
-        'finance-accounting': 'Finance & Accounting',
-        'marketing-sales-growth': 'Marketing, Sales & Growth',
-        'it-cybersecurity': 'IT & Cybersecurity',
-        'personal-development': 'Personal Development & Communication',
+        'accessories': 'Accessories',
+        'fashion': 'Fashion',
+        'fitness': 'Fitness',
+        'gaming': 'Gaming',
+        'home-appliances': 'Home Appliances',
+        'laptops': 'Laptops',
+        'phones': 'Phones',
+        'sneakers': 'Sneakers',
+        'watches': 'Watches',
+        'beauty': 'Beauty',
     }
-    
-    # Get the actual category name from slug, or use slug as is
+
     category_name = category_mapping.get(category_slug.lower(), category_slug.title())
-    
-    # Also try to find by exact match in database
     products = Product.objects.filter(category__iexact=category_name)
-    
-    # If no products found, try to search by category containing the term
+
     if not products.exists():
         products = Product.objects.filter(category__icontains=category_name)
-    
-    # Get all available categories for the sidebar
+
     all_categories = Product.objects.values_list('category', flat=True).distinct()
     available_categories = sorted(set([c for c in all_categories if c]))
-    
+
     context = {
         'category_name': category_name,
         'category_slug': category_slug,
@@ -1226,23 +1219,23 @@ def notification_center(request):
 def get_notifications(request):
     if not request.user.is_authenticated:
         return JsonResponse({'success': False, 'error': 'Please log in'}, status=401)
-    
+
     page = request.GET.get('page', 1)
     per_page = request.GET.get('per_page', 20)
     notification_type = request.GET.get('type', 'all')
     is_read = request.GET.get('is_read', None)
-    
+
     notifications = Notification.objects.filter(user=request.user)
-    
+
     if notification_type != 'all':
         notifications = notifications.filter(notification_type=notification_type)
-    
+
     if is_read is not None:
         notifications = notifications.filter(is_read=is_read == 'true')
-    
+
     paginator = Paginator(notifications, per_page)
     notifications_page = paginator.get_page(page)
-    
+
     data = {
         'success': True,
         'notifications': [
@@ -1271,7 +1264,7 @@ def get_notifications(request):
 def get_unread_count(request):
     if not request.user.is_authenticated:
         return JsonResponse({'success': True, 'unread_count': 0})
-    
+
     count = Notification.objects.filter(user=request.user, is_read=False).count()
     return JsonResponse({'success': True, 'unread_count': count})
 
@@ -1280,7 +1273,7 @@ def get_unread_count(request):
 def mark_notification_read(request, notification_id):
     if not request.user.is_authenticated:
         return JsonResponse({'success': False, 'error': 'Please log in'}, status=401)
-    
+
     try:
         notification = Notification.objects.get(id=notification_id, user=request.user)
         notification.mark_as_read()
@@ -1293,7 +1286,7 @@ def mark_notification_read(request, notification_id):
 def mark_all_notifications_read(request):
     if not request.user.is_authenticated:
         return JsonResponse({'success': False, 'error': 'Please log in'}, status=401)
-    
+
     updated = Notification.objects.filter(user=request.user, is_read=False).update(
         is_read=True, read_at=timezone.now()
     )
@@ -1304,7 +1297,7 @@ def mark_all_notifications_read(request):
 def delete_notification(request, notification_id):
     if not request.user.is_authenticated:
         return JsonResponse({'success': False, 'error': 'Please log in'}, status=401)
-    
+
     try:
         notification = Notification.objects.get(id=notification_id, user=request.user)
         notification.delete()
@@ -1317,7 +1310,7 @@ def delete_notification(request, notification_id):
 def clear_all_notifications(request):
     if not request.user.is_authenticated:
         return JsonResponse({'success': False, 'error': 'Please log in'}, status=401)
-    
+
     deleted = Notification.objects.filter(user=request.user).delete()
     return JsonResponse({'success': True, 'deleted_count': deleted[0] if deleted else 0})
 
@@ -1326,7 +1319,7 @@ def clear_all_notifications(request):
 def get_notification_settings(request):
     if not request.user.is_authenticated:
         return JsonResponse({'success': False, 'error': 'Please log in'}, status=401)
-    
+
     settings_obj, created = UserNotificationSettings.objects.get_or_create(user=request.user)
     data = {
         'success': True,
@@ -1353,15 +1346,15 @@ def get_notification_settings(request):
 def update_notification_settings(request):
     if not request.user.is_authenticated:
         return JsonResponse({'success': False, 'error': 'Please log in'}, status=401)
-    
+
     try:
         data = json.loads(request.body)
         settings_obj, created = UserNotificationSettings.objects.get_or_create(user=request.user)
-        
+
         for key, value in data.items():
             if hasattr(settings_obj, key):
                 setattr(settings_obj, key, value)
-        
+
         settings_obj.save()
         return JsonResponse({'success': True, 'message': 'Settings updated'})
     except Exception as e:
@@ -1371,14 +1364,14 @@ def update_notification_settings(request):
 def test_notification(request):
     if not request.user.is_authenticated:
         return JsonResponse({'success': False, 'error': 'Please log in'}, status=401)
-    
+
     notification = Notification.objects.create(
         user=request.user,
         title="Test Notification",
         message="Your notification system is working perfectly! 🎉",
         notification_type="success"
     )
-    
+
     return JsonResponse({
         'success': True,
         'message': 'Test notification sent!',
@@ -1398,13 +1391,13 @@ def get_vapid_public_key(request):
 def subscribe_push_notifications(request):
     if not request.user.is_authenticated:
         return JsonResponse({'success': False, 'error': 'Please log in'}, status=401)
-    
+
     try:
         data = json.loads(request.body)
         endpoint = data.get('endpoint')
         p256dh = data.get('keys', {}).get('p256dh')
         auth = data.get('keys', {}).get('auth')
-        
+
         PushNotificationSubscription.objects.update_or_create(
             endpoint=endpoint,
             defaults={
@@ -1423,17 +1416,17 @@ def subscribe_push_notifications(request):
 def unsubscribe_push_notifications(request):
     if not request.user.is_authenticated:
         return JsonResponse({'success': False, 'error': 'Please log in'}, status=401)
-    
+
     try:
         data = json.loads(request.body)
         endpoint = data.get('endpoint')
-        
+
         if endpoint:
             PushNotificationSubscription.objects.filter(
-                endpoint=endpoint, 
+                endpoint=endpoint,
                 user=request.user
             ).update(is_active=False)
-        
+
         return JsonResponse({'success': True, 'message': 'Unsubscribed successfully'})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
@@ -1442,13 +1435,13 @@ def unsubscribe_push_notifications(request):
 def get_system_alerts(request):
     if not request.user.is_staff:
         return JsonResponse({'success': False, 'error': 'Unauthorized'}, status=403)
-    
+
     alerts = SystemAlert.objects.filter(
         is_active=True
     ).filter(
         Q(expires_at__isnull=True) | Q(expires_at__gt=timezone.now())
     ).order_by('-created_at')
-    
+
     data = {
         'success': True,
         'alerts': [
@@ -1471,7 +1464,7 @@ def get_system_alerts(request):
 def dismiss_system_alert(request, alert_id):
     if not request.user.is_staff:
         return JsonResponse({'success': False, 'error': 'Unauthorized'}, status=403)
-    
+
     try:
         alert = SystemAlert.objects.get(id=alert_id)
         alert.is_active = False
@@ -1484,7 +1477,7 @@ def dismiss_system_alert(request, alert_id):
 def create_notification(user, title, message, notification_type='info', order=None, product=None, ticket=None):
     if not user or not user.is_authenticated:
         return None
-    
+
     return Notification.objects.create(
         user=user,
         title=title,
@@ -1493,4 +1486,4 @@ def create_notification(user, title, message, notification_type='info', order=No
         order=order,
         product=product,
         ticket=ticket
-    ) 
+    )

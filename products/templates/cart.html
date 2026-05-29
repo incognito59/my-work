@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 
 {% load static %}
+{% load humanize %}
 
 {% block title %}My Cart - RedCart{% endblock %}
 
@@ -729,15 +730,9 @@
   
 </style><p class="cart-page-title"><span>🛒</span> Shopping Cart</p><div class="row g-4">  <!-- ── LEFT: CART ITEMS ──────────────────────────────── -->  <div class="col-lg-8"><div class="rc-panel">
 
-
-
   {% if products %}
 
-
-
     <p class="rc-section-label">{{ products|length }} item{{ products|length|pluralize }} in your cart</p>
-
-
 
     <div class="table-responsive">
 
@@ -795,7 +790,7 @@
 
                   {% endif %}
 
-                  <p class="rc-desc mb-0">{{ product.description|truncatechars:52 }}</p>
+                  <p class="rc-desc mb-0">{{ product.description|default:'A small product description will appear here.'|truncatechars:72 }}</p>
 
                 </div>
 
@@ -823,18 +818,17 @@
 
               {% if product.has_active_sale %}
 
-                <span class="rc-price-sale sale-price-text">₦{{ product.sale_price|floatformat:2 }}</span>
+                <span class="rc-price-sale sale-price-text">₦{{ product.sale_price|floatformat:2|intcomma }}</span>
 
-                <span class="rc-price-original original-price-text">₦{{ product.price|floatformat:2 }}</span>
+                <span class="rc-price-original original-price-text">₦{{ product.price|floatformat:2|intcomma }}</span>
 
                 <span class="rc-badge-off d-block" style="width:fit-content;margin-left:auto">-{{ product.discount_percentage|floatformat:0 }}%</span>
 
               {% else %}
 
-                <span class="rc-price-regular regular-price-text">₦{{ product.price|floatformat:2 }}</span>
+                  <span class="rc-price-regular regular-price-text">₦{{ product.price|floatformat:2|intcomma }}</span>
 
               {% endif %}
-
             </td>
 
 
@@ -851,7 +845,7 @@
 
                 {% else %}
 
-                  ₦{{ product.total_price|floatformat:2 }}
+                  ₦{{ product.total_price|floatformat:2|intcomma }}
 
                 {% endif %}
 
@@ -885,62 +879,22 @@
 
     </div>
 
-
-
-    <!-- Coupon -->
-
     <div class="rc-coupon-wrap">
-
-      <p class="rc-section-label mb-2">Have a coupon?</p>
-
-      <div class="d-flex gap-2">
-
-        <input type="text" id="coupon-code" class="rc-coupon-input form-control"
-
-               placeholder="e.g. SAVE10, FLASH20">
-
-        <button onclick="applyCoupon()" class="rc-coupon-btn">
-
-          <i class="bi bi-ticket-perforated me-1"></i> Apply
-
-        </button>
-
+      <label for="coupon-code" class="form-label fw-semibold mb-2">Have a coupon code?</label>
+      <div class="d-flex flex-wrap gap-2 align-items-center">
+        <input id="coupon-code" name="coupon_code" type="text" class="form-control rc-coupon-input" placeholder="Enter coupon code" value="{{ coupon_code }}">
+        <button type="button" class="rc-coupon-btn" onclick="applyCoupon()">Apply</button>
       </div>
-
-      <div id="coupon-message" class="mt-2" style="font-size:0.82rem"></div>
-
-      {% if coupon_code %}
-
-        <div class="rc-coupon-applied d-flex justify-content-between align-items-center">
-
-          <span>
-
-            <i class="bi bi-check-circle me-1"></i>
-
-            "{{ coupon_code }}" applied{% if coupon_discount > 0 %} — saved ₦{{ coupon_discount|floatformat:2 }}{% endif %}
-
-          </span>
-
-          <a href="#" onclick="removeCoupon(); return false;"
-
-             style="color:var(--main-color);font-size:0.78rem;font-weight:700;text-decoration:none">
-
-            Remove
-
-          </a>
-
-        </div>
-
+      <div id="coupon-message" class="mt-2"></div>
+      {% if coupon_discount > 0 %}
+      <div class="rc-coupon-applied">
+        Coupon <strong>{{ coupon_code }}</strong> applied successfully — saved ₦{{ coupon_discount|floatformat:2|intcomma }}.
+        <button type="button" onclick="removeCoupon()" class="btn btn-link p-0">Remove</button>
+      </div>
       {% endif %}
-
     </div>
 
-
-
   {% else %}
-
-
-
     <!-- Empty state -->
 
     <div class="text-center py-5">
@@ -949,7 +903,7 @@
 
       <p class="rc-empty-title">Your cart is empty</p>
 
-      <p class="rc-empty-sub">Add something you love 🛍️</p>
+      <p class="rc-empty-sub">Add something you love ✨🛒</p>
 
       <a href="{% url 'products:product-list' %}" class="rc-btn-checkout"
 
@@ -979,7 +933,7 @@
 
     <span class="rc-sum-label">Subtotal</span>
 
-    <span class="rc-sum-value" id="summary-subtotal">₦{{ total|floatformat:2 }}</span>
+    <span class="rc-sum-value" id="summary-subtotal">₦{{ total|floatformat:2|intcomma }}</span>
 
   </div>
 
@@ -991,7 +945,7 @@
 
     <span class="rc-sum-label">Discount <small style="opacity:.7">({{ coupon_code }})</small></span>
 
-    <span class="rc-sum-discount fw-bold">-₦{{ coupon_discount|floatformat:2 }}</span>
+    <span class="rc-sum-discount fw-bold">-₦{{ coupon_discount|floatformat:2|intcomma }}</span>
 
   </div>
 
@@ -1017,7 +971,7 @@
 
     <span class="rc-sum-total-label">Total</span>
 
-    <span class="rc-sum-total-value" id="summary-total">₦{{ total_after_coupon|floatformat:2 }}</span>
+    <span class="rc-sum-total-value" id="summary-total">₦{{ total_after_coupon|floatformat:2|intcomma }}</span>
 
   </div>
 

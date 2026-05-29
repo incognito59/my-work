@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load humanize %}
 
 {% block title %}Welcome to RedCart - Shop Smart, Live Better{% endblock %}
 
@@ -546,7 +547,7 @@
             <div class="product-info">
               <div class="product-category">{{ product.get_category_display }}</div>
               <div class="product-name">{{ product.name|truncatewords:5 }}</div>
-              <div class="product-price">₦{{ product.price|floatformat:0 }}</div>
+              <div class="product-price">₦{{ product.price|floatformat:0|intcomma }}</div>
             </div>
           </a>
         {% endfor %}

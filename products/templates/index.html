@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load humanize %}
 
 {% block title %}Shop - Browse Products by Category - RedCart{% endblock %}
 
@@ -194,6 +195,26 @@
     gap: 16px;
     margin-bottom: 18px;
     flex-wrap: wrap;
+  }
+  .search-form {
+    display: flex;
+    flex: 1 1 360px;
+    gap: 10px;
+    min-width: 280px;
+  }
+  .search-input {
+    flex: 1;
+    min-width: 0;
+    padding: 12px 18px;
+    border-radius: 999px;
+    border: 1px solid rgba(102,126,234,0.18);
+    background: #fff;
+    color: #1f2937;
+    outline: none;
+  }
+  .search-input:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 4px rgba(102,126,234,0.12);
   }
   .filter-summary { color: #667eea; font-weight: 700; min-width: 200px; font-size: 0.92rem; }
   [data-theme="dark"] .filter-summary { color: #99aaff; }
@@ -600,7 +621,6 @@
       <p>Explore top products and flash savings across all categories.</p>
       <div class="hero-actions">
         <a href="{% url 'products:wishlist' %}" class="hero-btn hero-btn-primary">View Wishlist</a>
-        <a href="{% url 'products:offers' %}" class="hero-btn hero-btn-outline">See Offers</a>
       </div>
     </div>
     <div class="hero-highlights">
@@ -729,11 +749,11 @@
 
             <div class="price-block">
               {% if product.has_active_sale %}
-                <span class="product-price">₦{{ product.sale_price|floatformat:2 }}</span>
-                <span class="original-price">₦{{ product.price|floatformat:2 }}</span>
+                <span class="product-price">₦{{ product.sale_price|floatformat:2|intcomma }}</span>
+                <span class="original-price">₦{{ product.price|floatformat:2|intcomma }}</span>
                 <span class="discount-pct">-{{ product.discount_percentage|floatformat:0 }}%</span>
               {% else %}
-                <span class="product-price">₦{{ product.price|floatformat:2 }}</span>
+                <span class="product-price">₦{{ product.price|floatformat:2|intcomma }}</span>
               {% endif %}
             </div>
 
@@ -773,7 +793,6 @@
     </svg>
     <h3>No products found</h3>
     <p>We couldn't find any products matching "<strong>{{ query }}</strong>"</p>
-    <a href="{% url 'products:product-list' %}" class="clear-filters-btn">Clear Search</a>
   </div>
   {% endif %}
 
@@ -808,6 +827,32 @@
     };
 
     applyFilters();
+
+    const searchInput = document.getElementById('search-input');
+    const autocompleteList = document.getElementById('autocomplete-results');
+
+    if (searchInput && autocompleteList) {
+      let autocompleteTimer;
+      searchInput.addEventListener('input', () => {
+        clearTimeout(autocompleteTimer);
+        const query = searchInput.value.trim();
+        if (!query) {
+          autocompleteList.innerHTML = '';
+          return;
+        }
+        autocompleteTimer = setTimeout(async () => {
+          try {
+            const response = await fetch(`/products/api/autocomplete/?q=${encodeURIComponent(query)}`);
+            const result = await response.json();
+            if (result.success && Array.isArray(result.results)) {
+              autocompleteList.innerHTML = result.results.map(item => `<option value="${item.name}"></option>`).join('');
+            }
+          } catch (error) {
+            console.warn('Autocomplete failed:', error);
+          }
+        }, 220);
+      });
+    }
   });
 
   function clearAllFilters() {

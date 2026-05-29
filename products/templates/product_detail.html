@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load humanize %}
 
 {% block title %}{{ product.name }} - MyStore{% endblock %}
 
@@ -22,12 +23,19 @@
     <!-- Main image in the center -->
     <div class="col-md-6">
       <div class="main-img-container border rounded-4 shadow-sm overflow-hidden animate-img position-relative">
-        <img id="main-image" src="{{ product.image_src }}" class="img-fluid" alt="{{ product.name }}">
+        <img id="main-image" src="{{ product.image_src }}" class="img-fluid" alt="{{ product.name }}" onclick="openImageZoom(this)">
         {% if product.is_out_of_stock %}
           <div class="stock-badge stock-out">Out of Stock</div>
         {% elif product.is_low_stock %}
           <div class="stock-badge">Only {{ product.available_stock }} left!</div>
         {% endif %}
+      </div>
+
+      <div id="image-zoom-modal" class="image-zoom-modal" onclick="closeImageZoom()" style="display:none;">
+        <div class="image-zoom-inner" onclick="event.stopPropagation()">
+          <button type="button" class="btn btn-light btn-sm position-absolute top-0 end-0 m-3" onclick="closeImageZoom()">Close</button>
+          <img id="zoomed-image" src="{{ product.image_src }}" alt="{{ product.name }}" class="img-fluid rounded-4">
+        </div>
       </div>
     </div>
 
@@ -52,13 +60,13 @@
               <div class="sale-discount-percentage">{{ product.discount_percentage|floatformat:0 }}%</div>
             </div>
             <div style="text-align: right;">
-              <div class="sale-original-price">₦{{ product.price|floatformat:2 }}</div>
-              <div class="sale-current-price">₦{{ product.sale_price|floatformat:2 }}</div>
+              <div class="sale-original-price">₦{{ product.price|floatformat:2|intcomma }}</div>
+              <div class="sale-current-price">₦{{ product.sale_price|floatformat:2|intcomma }}</div>
             </div>
           </div>
         </div>
         {% else %}
-        <h4 class="fw-bold animated-price text-danger mb-4">₦{{ product.price|floatformat:2 }}</h4>
+        <h4 class="fw-bold animated-price text-danger mb-4">₦{{ product.price|floatformat:2|intcomma }}</h4>
         {% endif %}
 
         <div class="d-flex flex-column gap-2">
@@ -102,7 +110,7 @@
           <img src="{{ rec.image_src }}" class="card-img-top" alt="{{ rec.name }}">
           <div class="card-body">
             <h5 class="card-title">{{ rec.name|truncatechars:40 }}</h5>
-            <p class="card-text text-muted mb-2">₦{{ rec.price|floatformat:2 }}</p>
+            <p class="card-text text-muted mb-2">₦{{ rec.price|floatformat:2|intcomma }}</p>
             <a href="{% url 'products:product-detail' rec.id %}" class="btn btn-outline-danger btn-sm">View Product</a>
           </div>
         </div>
@@ -388,7 +396,48 @@
   .stock-out {
     background: #999;
   }
+
+  #image-zoom-modal {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(0,0,0,0.8);
+    z-index: 1050;
+  }
+  .image-zoom-inner {
+    position: relative;
+    width: 100%;
+    max-width: 900px;
+    max-height: 92vh;
+  }
+  #zoomed-image {
+    width: 100%;
+    height: auto;
+    border-radius: 18px;
+    box-shadow: 0 28px 80px rgba(0,0,0,0.45);
+  }
 </style>
+
+<script>
+  function openImageZoom(image) {
+    const modal = document.getElementById('image-zoom-modal');
+    const zoomedImage = document.getElementById('zoomed-image');
+    if (modal && zoomedImage) {
+      zoomedImage.src = image.src;
+      modal.style.display = 'flex';
+    }
+  }
+
+  function closeImageZoom() {
+    const modal = document.getElementById('image-zoom-modal');
+    if (modal) {
+      modal.style.display = 'none';
+    }
+  }
+</script>
 
 <script src="{% static 'js/flash-sale-timer.js' %}"></script>
 

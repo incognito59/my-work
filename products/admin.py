@@ -1,4 +1,6 @@
 from django.contrib import admin
+from import_export.admin import ImportExportModelAdmin
+from import_export import resources
 from django.utils.html import format_html
 from .models import (
     Product, Offer, Comment, Wishlist, Compare, Order, OrderItem,
@@ -16,13 +18,18 @@ admin.site.index_title = "Welcome to RedCart Admin"
 
 # ============ PRODUCT MANAGEMENT ============
 
+class ProductResource(resources.ModelResource):
+    class Meta:
+        model = Product
+
 class ProductVariantInline(admin.TabularInline):
     model = ProductVariant
     extra = 1
     fields = ('size', 'color', 'stock', 'sku', 'price_adjustment')
 
 
-class ProductAdmin(admin.ModelAdmin):
+class ProductAdmin(ImportExportModelAdmin):
+    resource_class = ProductResource
     list_display = ('name', 'price', 'stock', 'category', 'stock_status', 'flash_sale_status')
     list_filter = ('category',)
     search_fields = ('name', 'description')

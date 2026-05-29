@@ -18,12 +18,47 @@
   <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
     <div>
       <h1 class="fw-bold mb-2">{{ category_name }}</h1>
-      <p class="text-muted">{{ product_count }} product{{ product_count|pluralize }} found</p>
+      <p class="text-muted" id="product-count-label">{{ product_count }} product{{ product_count|pluralize }} found</p>
     </div>
-    
-    <!-- Sort Options -->
-    <div class="d-flex gap-2">
-      <label class="fw-semibold my-auto">Sort by:</label>
+
+    <!-- Grid / List Toggle -->
+    <div class="d-flex align-items-center gap-2">
+      <button id="grid-view-btn" class="btn btn-sm btn-primary rounded-pill px-3" title="Grid View">
+        <i class="bi bi-grid"></i>
+      </button>
+      <button id="list-view-btn" class="btn btn-sm btn-outline-secondary rounded-pill px-3" title="List View">
+        <i class="bi bi-list-ul"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Toolbar: Search + Filters + Sort -->
+  {% if products %}
+  <div class="toolbar-wrap mb-4 p-3 rounded-4 border d-flex flex-wrap gap-3 align-items-center">
+
+    <!-- Live Search -->
+    <div class="flex-grow-1" style="min-width: 180px;">
+      <div class="input-group input-group-sm">
+        <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-search"></i></span>
+        <input type="text" id="search-input" class="form-control border-start-0" placeholder="Search products...">
+      </div>
+    </div>
+
+    <!-- In Stock Toggle -->
+    <div class="form-check form-switch my-auto">
+      <input class="form-check-input" type="checkbox" id="instock-filter">
+      <label class="form-check-label fw-semibold" for="instock-filter">In Stock Only</label>
+    </div>
+
+    <!-- On Sale Toggle -->
+    <div class="form-check form-switch my-auto">
+      <input class="form-check-input" type="checkbox" id="sale-filter">
+      <label class="form-check-label fw-semibold" for="sale-filter">On Sale Only</label>
+    </div>
+
+    <!-- Sort -->
+    <div class="d-flex gap-2 align-items-center">
+      <label class="fw-semibold my-auto text-nowrap">Sort by:</label>
       <select id="sort-select" class="form-select form-select-sm" style="width: auto;">
         <option value="default">Default</option>
         <option value="price_low">Price: Low to High</option>
@@ -32,41 +67,51 @@
         <option value="name_desc">Name: Z to A</option>
       </select>
     </div>
+
   </div>
+  {% endif %}
 
   <!-- Products Grid -->
   {% if products %}
     <div class="row g-4" id="products-grid">
       {% for product in products %}
-      <div class="col-md-4 col-lg-3 product-item" 
+      <div class="col-md-4 col-lg-3 product-item"
            data-price="{{ product.price }}"
-           data-name="{{ product.name }}">
+           data-name="{{ product.name }}"
+           data-instock="{% if product.is_out_of_stock %}0{% else %}1{% endif %}"
+           data-onsale="{% if product.has_active_sale %}1{% else %}0{% endif %}">
         <div class="card product-card h-100 border-0 shadow-sm rounded-4">
           <a href="{% url 'products:product-detail' product.id %}" class="text-decoration-none">
-            <img src="{{ product.image_src|default:'https://via.placeholder.com/300x200?text=No+Image' }}" class="card-img-top rounded-top-4" alt="{{ product.name }}" style="height: 200px; object-fit: cover;">
+            <img src="{{ product.image_src|default:'https://via.placeholder.com/300x200?text=No+Image' }}"
+                 class="card-img-top rounded-top-4 product-img"
+                 alt="{{ product.name }}"
+                 style="height: 200px; object-fit: cover;">
           </a>
           <div class="card-body p-3">
             <a href="{% url 'products:product-detail' product.id %}" class="text-decoration-none">
               <h6 class="card-title product-title">{{ product.name|truncatechars:45 }}</h6>
             </a>
-            
+
             {% if product.has_active_sale %}
               <div class="mt-2">
-                <span class="fw-bold text-danger fs-5">₦{{ product.sale_price|floatformat:2 }}</span>
-                <span class="text-muted text-decoration-line-through ms-2">₦{{ product.price|floatformat:2 }}</span>
+                <span class="fw-bold text-danger fs-5">&#8358;{{ product.sale_price|floatformat:2 }}</span>
+                <span class="text-muted text-decoration-line-through ms-2">&#8358;{{ product.price|floatformat:2 }}</span>
                 <span class="badge bg-warning text-dark ms-2">-{{ product.discount_percentage|floatformat:0 }}%</span>
               </div>
             {% else %}
               <div class="mt-2">
-                <span class="fw-bold text-danger fs-5">₦{{ product.price|floatformat:2 }}</span>
+                <span class="fw-bold text-danger fs-5">&#8358;{{ product.price|floatformat:2 }}</span>
               </div>
             {% endif %}
-            
-            <div class="mt-3">
+
+            <div class="mt-3 d-flex gap-2 card-actions">
+              <a href="{% url 'products:product-detail' product.id %}" class="btn btn-outline-secondary w-50 btn-sm rounded-pill">
+                <i class="bi bi-eye"></i> View
+              </a>
               {% if product.is_out_of_stock %}
-                <button class="btn btn-secondary w-100 btn-sm rounded-pill" disabled>Out of Stock</button>
+                <button class="btn btn-secondary w-50 btn-sm rounded-pill" disabled>Out of Stock</button>
               {% else %}
-                <a href="{% url 'products:add-to-cart' product.id %}" class="btn btn-primary w-100 btn-sm rounded-pill">
+                <a href="{% url 'products:add-to-cart' product.id %}" class="btn btn-primary w-50 btn-sm rounded-pill">
                   <i class="bi bi-cart-plus"></i> Add to Cart
                 </a>
               {% endif %}
@@ -76,6 +121,15 @@
       </div>
       {% endfor %}
     </div>
+
+    <!-- No Results Message -->
+    <div id="no-results" class="text-center py-5 d-none">
+      <i class="bi bi-search display-1 text-muted"></i>
+      <h3 class="mt-3">No products match your filters</h3>
+      <p class="text-muted">Try adjusting your search or filter options.</p>
+      <button onclick="resetFilters()" class="btn btn-primary rounded-pill mt-2">Clear Filters</button>
+    </div>
+
   {% else %}
     <div class="text-center py-5">
       <i class="bi bi-box-seam display-1 text-muted"></i>
@@ -85,15 +139,6 @@
         Browse All Products
       </a>
     </div>
-  {% endif %}
-
-  <!-- Back to Top Button -->
-  {% if products %}
-  <div class="text-center mt-5">
-    <button onclick="window.scrollTo({top:0,behavior:'smooth'})" class="btn btn-outline-secondary rounded-pill">
-      <i class="bi bi-arrow-up"></i> Back to Top
-    </button>
-  </div>
   {% endif %}
 </div>
 
@@ -114,7 +159,53 @@
   .product-title:hover {
     color: #ff4747;
   }
-  
+
+  /* Toolbar */
+  .toolbar-wrap {
+    background-color: #f8f9fa;
+  }
+
+  /* List View */
+  #products-grid.list-view {
+    display: flex !important;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  #products-grid.list-view .product-item {
+    width: 100% !important;
+    max-width: 100%;
+    flex: 0 0 100%;
+  }
+  #products-grid.list-view .product-card {
+    flex-direction: row;
+    align-items: center;
+  }
+  #products-grid.list-view .product-img {
+    width: 140px !important;
+    min-width: 140px;
+    height: 120px !important;
+    border-radius: 1rem 0 0 1rem !important;
+    object-fit: cover;
+  }
+  #products-grid.list-view .rounded-top-4 {
+    border-radius: 1rem 0 0 1rem !important;
+  }
+  #products-grid.list-view .card-body {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    flex: 1;
+  }
+  #products-grid.list-view .card-title {
+    margin-bottom: 0;
+    min-width: 160px;
+  }
+  #products-grid.list-view .card-actions {
+    margin-top: 0 !important;
+    margin-left: auto;
+  }
+
   /* Dark Theme */
   [data-theme="dark"] .product-title {
     color: #e8e8e8;
@@ -128,7 +219,8 @@
   [data-theme="dark"] .breadcrumb-item.active {
     color: #aaa;
   }
-  [data-theme="dark"] .form-select {
+  [data-theme="dark"] .form-select,
+  [data-theme="dark"] .form-control {
     background-color: #2a2a2a;
     color: #e8e8e8;
     border-color: #444;
@@ -136,58 +228,112 @@
   [data-theme="dark"] .card {
     background-color: #1a1a24;
   }
+  [data-theme="dark"] .toolbar-wrap {
+    background-color: #1e1e2e;
+    border-color: #333 !important;
+  }
+  [data-theme="dark"] .input-group-text {
+    background-color: #2a2a2a;
+    border-color: #444;
+    color: #e8e8e8;
+  }
 </style>
 
 <script>
-  // Sorting functionality
-  document.addEventListener('DOMContentLoaded', function() {
-    const sortSelect = document.getElementById('sort-select');
-    if (sortSelect) {
-      sortSelect.addEventListener('change', function() {
-        const sortValue = this.value;
-        const productsGrid = document.getElementById('products-grid');
-        const products = Array.from(document.querySelectorAll('.product-item'));
-        
-        let sortedProducts = [...products];
-        
-        switch(sortValue) {
-          case 'price_low':
-            sortedProducts.sort((a, b) => {
-              const priceA = parseFloat(a.dataset.price);
-              const priceB = parseFloat(b.dataset.price);
-              return priceA - priceB;
-            });
-            break;
-          case 'price_high':
-            sortedProducts.sort((a, b) => {
-              const priceA = parseFloat(a.dataset.price);
-              const priceB = parseFloat(b.dataset.price);
-              return priceB - priceA;
-            });
-            break;
-          case 'name_asc':
-            sortedProducts.sort((a, b) => {
-              const nameA = a.dataset.name.toLowerCase();
-              const nameB = b.dataset.name.toLowerCase();
-              return nameA.localeCompare(nameB);
-            });
-            break;
-          case 'name_desc':
-            sortedProducts.sort((a, b) => {
-              const nameA = a.dataset.name.toLowerCase();
-              const nameB = b.dataset.name.toLowerCase();
-              return nameB.localeCompare(nameA);
-            });
-            break;
-          default:
-            return;
-        }
-        
-        sortedProducts.forEach(product => {
-          productsGrid.appendChild(product);
-        });
+  document.addEventListener('DOMContentLoaded', function () {
+
+    const sortSelect    = document.getElementById('sort-select');
+    const searchInput   = document.getElementById('search-input');
+    const instockFilter = document.getElementById('instock-filter');
+    const saleFilter    = document.getElementById('sale-filter');
+    const productsGrid  = document.getElementById('products-grid');
+    const noResults     = document.getElementById('no-results');
+    const countLabel    = document.getElementById('product-count-label');
+    const gridBtn       = document.getElementById('grid-view-btn');
+    const listBtn       = document.getElementById('list-view-btn');
+
+    function allItems() {
+      return Array.from(document.querySelectorAll('.product-item'));
+    }
+
+    function updateCount(visible) {
+      if (countLabel) {
+        countLabel.textContent = visible + ' product' + (visible !== 1 ? 's' : '') + ' found';
+      }
+    }
+
+    function applyFilters() {
+      const query     = searchInput   ? searchInput.value.toLowerCase().trim() : '';
+      const onlyStock = instockFilter ? instockFilter.checked : false;
+      const onlySale  = saleFilter    ? saleFilter.checked   : false;
+      const sortValue = sortSelect    ? sortSelect.value     : 'default';
+
+      let items = allItems();
+
+      items.forEach(item => {
+        const name    = (item.dataset.name || '').toLowerCase();
+        const inStock = item.dataset.instock === '1';
+        const onSale  = item.dataset.onsale  === '1';
+
+        const matchSearch = name.includes(query);
+        const matchStock  = !onlyStock || inStock;
+        const matchSale   = !onlySale  || onSale;
+
+        item.style.display = (matchSearch && matchStock && matchSale) ? '' : 'none';
+      });
+
+      const visible = items.filter(i => i.style.display !== 'none');
+
+      switch (sortValue) {
+        case 'price_low':
+          visible.sort((a, b) => parseFloat(a.dataset.price) - parseFloat(b.dataset.price));
+          break;
+        case 'price_high':
+          visible.sort((a, b) => parseFloat(b.dataset.price) - parseFloat(a.dataset.price));
+          break;
+        case 'name_asc':
+          visible.sort((a, b) => a.dataset.name.toLowerCase().localeCompare(b.dataset.name.toLowerCase()));
+          break;
+        case 'name_desc':
+          visible.sort((a, b) => b.dataset.name.toLowerCase().localeCompare(a.dataset.name.toLowerCase()));
+          break;
+      }
+
+      visible.forEach(item => productsGrid.appendChild(item));
+
+      const visibleCount = visible.length;
+      updateCount(visibleCount);
+      if (noResults)     noResults.classList.toggle('d-none', visibleCount > 0);
+      if (productsGrid)  productsGrid.classList.toggle('d-none', visibleCount === 0);
+    }
+
+    window.resetFilters = function () {
+      if (searchInput)   searchInput.value    = '';
+      if (instockFilter) instockFilter.checked = false;
+      if (saleFilter)    saleFilter.checked    = false;
+      if (sortSelect)    sortSelect.value      = 'default';
+      applyFilters();
+    };
+
+    if (sortSelect)    sortSelect.addEventListener('change', applyFilters);
+    if (searchInput)   searchInput.addEventListener('input', applyFilters);
+    if (instockFilter) instockFilter.addEventListener('change', applyFilters);
+    if (saleFilter)    saleFilter.addEventListener('change', applyFilters);
+
+    // Grid / List toggle
+    if (gridBtn && listBtn && productsGrid) {
+      gridBtn.addEventListener('click', function () {
+        productsGrid.classList.remove('list-view');
+        gridBtn.classList.replace('btn-outline-secondary', 'btn-primary');
+        listBtn.classList.replace('btn-primary', 'btn-outline-secondary');
+      });
+      listBtn.addEventListener('click', function () {
+        productsGrid.classList.add('list-view');
+        listBtn.classList.replace('btn-outline-secondary', 'btn-primary');
+        gridBtn.classList.replace('btn-primary', 'btn-outline-secondary');
       });
     }
+
   });
 </script>
 {% endblock %}

@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load humanize %}
 
 {% block title %}Checkout - RedCart{% endblock %}
 
@@ -72,12 +73,18 @@
           </div>
         </div>
 
+        <div class="mb-4">
+          <label class="form-label fw-semibold">Promo Code</label>
+          <div class="input-group">
+            <input type="text" id="coupon-code" name="coupon_code" class="form-control rounded-pill px-4" placeholder="Enter coupon code" value="{{ coupon_code }}">
+            <button type="button" id="apply-coupon-btn" class="btn btn-outline-primary rounded-pill" onclick="applyCoupon()">Apply</button>
+          </div>
+          <div id="coupon-message" class="text-success mt-2"></div>
+        </div>
+
         <!-- Paystack Pay Button -->
-        {% if products %}
         <button id="paystack-btn" class="btn btn-success w-100 py-3 fw-semibold rounded-pill shadow-sm btn-glow">
-          💳 Pay ₦{{ total_after_coupon|default:total|floatformat:2 }} with Paystack
-        </button>
-        {% endif %}
+          💳 Pay ₦{{ total_after_coupon|default:total|floatformat:2|intcomma }} with Paystack
 
       </div>
     </div>
@@ -95,7 +102,7 @@
               <p class="mb-1 fw-semibold">{{ product.name|truncatechars:30 }}</p>
               <small class="text-muted">Qty: {{ product.quantity }}</small>
             </div>
-            <span class="fw-semibold">₦{{ product.total_price|floatformat:2 }}</span>
+            <span class="fw-semibold">₦{{ product.total_price|floatformat:2|intcomma }}</span>
           </li>
           {% endfor %}
         </ul>
@@ -104,13 +111,13 @@
 
         <div class="d-flex justify-content-between mb-2">
           <span>Subtotal:</span>
-          <span>₦{{ total|floatformat:2 }}</span>
+          <span>₦{{ total|floatformat:2|intcomma }}</span>
         </div>
 
         {% if coupon_discount %}
         <div class="d-flex justify-content-between text-success mb-2">
           <span>Discount:</span>
-          <span>-₦{{ coupon_discount|floatformat:2 }}</span>
+          <span>-₦{{ coupon_discount|floatformat:2|intcomma }}</span>
         </div>
         {% endif %}
 
@@ -123,7 +130,7 @@
 
         <div class="d-flex justify-content-between fw-bold fs-5">
           <span>Total:</span>
-          <span class="text-danger fw-bold">₦{{ total_after_coupon|default:total|floatformat:2 }}</span>
+          <span class="text-danger fw-bold">₦{{ total_after_coupon|default:total|floatformat:2|intcomma }}</span>
         </div>
         {% else %}
         <p class="text-muted text-center mt-3">No items in your order.</p>
@@ -313,6 +320,49 @@
 
       handler.openIframe();
     });
+
+    function getCookie(name) {
+      const cookieValue = document.cookie.split('; ').find(row => row.startsWith(name + '='));
+      return cookieValue ? decodeURIComponent(cookieValue.split('=')[1]) : null;
+    }
+
+    async function applyCoupon() {
+      const code = document.getElementById('coupon-code').value.trim();
+      const message = document.getElementById('coupon-message');
+      if (!code) {
+        if (message) {
+          message.textContent = 'Please enter a coupon code to apply.';
+        }
+        return;
+      }
+      try {
+        const response = await fetch('/products/api/apply-coupon/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken'),
+          },
+          body: JSON.stringify({ code })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          if (message) {
+            message.textContent = data.message || 'Coupon applied successfully.';
+          }
+          setTimeout(() => window.location.reload(), 700);
+        } else {
+          if (message) {
+            message.textContent = data.error || 'Unable to apply coupon.';
+          }
+        }
+      } catch (error) {
+        console.error('Coupon error:', error);
+        if (message) {
+          message.textContent = 'Network error. Please try again.';
+        }
+      }
+    }
   });
 </script>
 

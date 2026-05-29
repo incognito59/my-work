@@ -4,6 +4,7 @@ Utility functions for RedCart e-commerce
 import json
 import re
 import requests
+from urllib.parse import quote
 
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
@@ -53,13 +54,14 @@ def send_email(user, email_type, context=None, recipient_email=None):
             fail_silently=False,
         )
 
-        EmailLog.objects.create(
-            user=user,
-            email_type=email_type,
-            recipient=recipient,
-            subject=template.subject,
-            status='sent'
-        )
+        if user is not None:
+            EmailLog.objects.create(
+                user=user,
+                email_type=email_type,
+                recipient=recipient,
+                subject=template.subject,
+                status='sent'
+            )
 
         logger.info(f"Email sent: {email_type} to {recipient}")
         return True
@@ -67,13 +69,49 @@ def send_email(user, email_type, context=None, recipient_email=None):
     except Exception as e:
         logger.error(f"Error sending email {email_type}: {str(e)}")
 
-        EmailLog.objects.create(
-            user=user,
-            email_type=email_type,
-            recipient=recipient_email or user.email,
-            subject='',
-            status='failed'
+        if user is not None:
+            EmailLog.objects.create(
+                user=user,
+                email_type=email_type,
+                recipient=recipient_email or user.email,
+                subject='',
+                status='failed'
+            )
+        return False
+
+
+def send_newsletter_confirmation_email(email):
+    """Send a confirmation email to a new newsletter subscriber."""
+    try:
+        template = EmailTemplate.objects.filter(email_type='newsletter', is_active=True).first()
+        if not template:
+            logger.warning('Email template not found: newsletter')
+            return False
+
+        unsubscribe_url = f"{settings.SITE_URL.rstrip('/')}/products/newsletter/unsubscribe/?email={quote(email)}"
+
+        context = {
+            'email': email,
+            'site_name': 'RedCart',
+            'unsubscribe_url': unsubscribe_url,
+        }
+
+        html_message = render_to_string('emails/newsletter.html', context)
+        plain_message = strip_tags(html_message)
+
+        send_mail(
+            subject=template.subject,
+            message=plain_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[email],
+            html_message=html_message,
+            fail_silently=False,
         )
+
+        logger.info(f"Newsletter confirmation email sent to {email}")
+        return True
+    except Exception as e:
+        logger.error(f"Error sending newsletter confirmation email to {email}: {str(e)}")
         return False
 
 

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(45deg, #ff6b6b, #ff9900); color: white; padding: 20px; border-radius: 5px; }
+        .section { margin: 20px 0; }
+        .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 12px; }
+        .button { display: inline-block; background: #ff4747; color: #fff; text-decoration: none; padding: 12px 20px; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📬 Thanks for subscribing to {{ site_name }}!</h1>
+        </div>
+
+        <div class="section">
+            <p>Hello,</p>
+            <p>Thanks for joining our newsletter list. You’ll now receive the latest offers, product drops, and special discounts straight to your inbox.</p>
+        </div>
+
+        <div class="section">
+            <h3>What to expect</h3>
+            <ul>
+                <li>Exclusive deals and flash sales</li>
+                <li>New product announcements</li>
+                <li>Shopping tips and guides</li>
+                <li>Seasonal promotions and giveaways</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <p>If you ever want to unsubscribe, <a href="{{ unsubscribe_url }}">click here</a> to stop receiving newsletter messages.</p>
+        </div>
+
+        <div class="footer">
+            <p>Welcome aboard! We’re excited to keep you in the loop.</p>
+            <p>— The {{ site_name }} team</p>
+        </div>
+    </div>
+</body>
+</html>

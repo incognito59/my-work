@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Unsubscribe from Newsletter{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-6">
+      <div class="card shadow-sm p-4 border-0 rounded-4">
+        <h1 class="h3 mb-3">Unsubscribe from RedCart Newsletter</h1>
+        <p class="text-muted mb-4">Enter the email you used to subscribe and we’ll stop sending newsletter offers.</p>
+
+        <form method="post">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label for="email" class="form-label">Email address</label>
+            <input id="email" type="email" name="email" value="{{ email }}" class="form-control" placeholder="you@example.com" required>
+          </div>
+          <button type="submit" class="btn btn-danger w-100">Unsubscribe</button>
+        </form>
+
+        <p class="small text-muted mt-3">If we don't recognize your email, we will let you know on the next page.</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}

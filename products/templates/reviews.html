@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load humanize %}
 
 {% block title %}Product Reviews - RedCart{% endblock %}
 
@@ -178,7 +179,7 @@
         <div>
           <h4>{{ product.name }}</h4>
           <p class="mb-1 text-muted">{{ product.get_category_display }}</p>
-          <p class="fw-semibold">₦{{ product.price|floatformat:2 }}</p>
+          <p class="fw-semibold">₦{{ product.price|floatformat:2|intcomma }}</p>
           <a href="{% url 'products:product-detail' product.id %}" class="text-decoration-none text-danger fw-bold">View product →</a>
         </div>
       </div>
