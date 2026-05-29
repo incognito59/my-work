@@ -112,7 +112,35 @@
       .navbar-nav .dropdown-toggle { display: flex; align-items: center; gap: 6px; }
       .navbar .form-control { border-radius: 30px; padding: 8px 16px; width: 300px; border: none; }
       .navbar .btn { border-radius: 30px; }
-      .theme-toggle { border: none; background: transparent; color: #fff; font-size: 1.3rem; margin-left: 10px; cursor: pointer; }
+
+      /* ============ THEME TOGGLE FIX ============ */
+      .theme-toggle {
+        border: none;
+        background: rgba(255,255,255,0.15);
+        color: #fff;
+        font-size: 1.3rem;
+        margin-left: 10px;
+        cursor: pointer;
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s ease, transform 0.2s ease;
+      }
+      .theme-toggle:hover {
+        background: rgba(255,255,255,0.3);
+        transform: rotate(20deg);
+      }
+      /* Sun icon in light mode */
+      [data-theme="light"] .theme-toggle #theme-icon {
+        color: #fff;
+      }
+      /* Moon icon in dark mode */
+      [data-theme="dark"] .theme-toggle #theme-icon {
+        color: #ffd700;
+      }
 
       /* Notification Bell Badge */
       .notification-bell {
@@ -241,6 +269,7 @@
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         background: var(--bg-color); display: flex;
         align-items: center; justify-content: center; z-index: 2000;
+        transition: opacity 0.3s ease;
       }
       .spinner-border { color: var(--main-color); }
 
@@ -254,27 +283,27 @@
       .btn-wishlist { border-radius: 999px; padding: 0.55rem 0.85rem; min-width: 50px; transition: background-color 0.25s ease, color 0.25s ease; }
       .btn-wishlist i { margin-right: 0.25rem; }
 
-      /* ============ AI CHAT - SMALLER, FIXED HEADER (CLOSE BUTTON ALWAYS VISIBLE) ============ */
-      .ai-chat-widget { 
-        position: fixed; 
-        right: 20px; 
-        bottom: 20px; 
-        z-index: 1100; 
-        max-width: 280px; 
-        font-family: inherit; 
+      /* ============ AI CHAT ============ */
+      .ai-chat-widget {
+        position: fixed;
+        right: 20px;
+        bottom: 20px;
+        z-index: 1100;
+        max-width: 280px;
+        font-family: inherit;
       }
-      .ai-chat-toggle { 
-        width: 50px; 
-        height: 50px; 
-        border-radius: 50%; 
-        border: none; 
-        background-color: var(--main-color); 
-        color: #fff; 
-        font-size: 1.3rem; 
-        box-shadow: 0 4px 12px rgba(0,0,0,0.2); 
-        cursor: pointer; 
+      .ai-chat-toggle {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        border: none;
+        background-color: var(--main-color);
+        color: #fff;
+        font-size: 1.3rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        cursor: pointer;
       }
-      
+
       .ai-chat-panel {
         display: none;
         width: 100%;
@@ -286,11 +315,10 @@
         max-height: 400px;
         overflow: hidden;
       }
-      .ai-chat-panel.active { 
-        display: flex; 
+      .ai-chat-panel.active {
+        display: flex;
       }
 
-      /* LOCK header — never moves, always visible */
       .ai-chat-header {
         padding: 10px 14px;
         display: flex;
@@ -304,12 +332,11 @@
         z-index: 10;
         border-radius: 16px 16px 0 0;
       }
-      .ai-chat-header span { 
-        font-weight: 600; 
-        font-size: 0.85rem; 
+      .ai-chat-header span {
+        font-weight: 600;
+        font-size: 0.85rem;
       }
 
-      /* Close button - ALWAYS VISIBLE */
       #ai-chat-close {
         background: rgba(255,255,255,0.2) !important;
         border: none !important;
@@ -326,11 +353,10 @@
         align-items: center;
         justify-content: center;
       }
-      #ai-chat-close:hover { 
-        background: rgba(255,255,255,0.35) !important; 
+      #ai-chat-close:hover {
+        background: rgba(255,255,255,0.35) !important;
       }
 
-      /* Messages scroll independently */
       .ai-chat-messages {
         flex: 1;
         overflow-y: auto;
@@ -338,34 +364,33 @@
         min-height: 0;
         max-height: 280px;
       }
-      
-      .ai-chat-message { 
-        margin-bottom: 10px; 
-        line-height: 1.4; 
+
+      .ai-chat-message {
+        margin-bottom: 10px;
+        line-height: 1.4;
       }
-      .ai-chat-message.user { 
-        text-align: right; 
+      .ai-chat-message.user {
+        text-align: right;
       }
-      .ai-chat-message.user .message-bubble { 
-        display: inline-block; 
-        background: #e3f2fd; 
-        color: #1a1a2e; 
+      .ai-chat-message.user .message-bubble {
+        display: inline-block;
+        background: #e3f2fd;
+        color: #1a1a2e;
         border-radius: 16px 16px 4px 16px;
         font-size: 0.8rem;
         padding: 8px 12px;
         max-width: 90%;
       }
-      .ai-chat-message.assistant .message-bubble { 
-        display: inline-block; 
-        background: #f0f0f0; 
-        color: #1a1a2e; 
+      .ai-chat-message.assistant .message-bubble {
+        display: inline-block;
+        background: #f0f0f0;
+        color: #1a1a2e;
         border-radius: 16px 16px 16px 4px;
         font-size: 0.8rem;
         padding: 8px 12px;
         max-width: 90%;
       }
-      
-      /* Lock footer too */
+
       .ai-chat-footer {
         display: flex;
         gap: 8px;
@@ -375,30 +400,28 @@
         flex-shrink: 0;
         border-radius: 0 0 16px 16px;
       }
-      .ai-chat-footer input { 
-        flex: 1; 
-        border-radius: 20px; 
-        border: 1px solid #ddd; 
-        padding: 8px 12px; 
+      .ai-chat-footer input {
+        flex: 1;
+        border-radius: 20px;
+        border: 1px solid #ddd;
+        padding: 8px 12px;
         font-size: 0.8rem;
       }
       .ai-chat-footer input:focus {
         outline: none;
         border-color: var(--main-color);
       }
-      .ai-chat-footer button { 
-        min-width: 60px; 
-        border-radius: 20px; 
-        font-size: 0.8rem; 
+      .ai-chat-footer button {
+        min-width: 60px;
+        border-radius: 20px;
+        font-size: 0.8rem;
         padding: 8px 12px;
         background-color: var(--main-color);
         border: none;
         color: #fff;
         cursor: pointer;
       }
-      .ai-chat-footer button:hover {
-        opacity: 0.9;
-      }
+      .ai-chat-footer button:hover { opacity: 0.9; }
 
       /* Dark theme fixes for AI chat */
       [data-theme="dark"] .ai-chat-message.user .message-bubble {
@@ -465,7 +488,7 @@
         .ai-chat-messages { max-height: 260px; }
       }
 
-      /* ===== FORCE CART TEXT VISIBILITY (FINAL FIX) ===== */
+      /* ===== FORCE CART TEXT VISIBILITY ===== */
       .cart-product-description {
         color: #111 !important;
         opacity: 1 !important;
@@ -485,32 +508,19 @@
         opacity: 1 !important;
       }
 
-      /* REMOVE ANY FADE EFFECT */
-      .cart-row {
-        opacity: 1 !important;
-      }
+      .cart-row { opacity: 1 !important; }
 
-      /* KILL BOOTSTRAP MUTED FADE */
       .text-muted,
       small,
-      .small {
-        opacity: 1 !important;
-      }
+      .small { opacity: 1 !important; }
 
-      /* ===== DARK MODE FIX ===== */
-      [data-theme="dark"] .cart-product-description {
-        color: #e0e0e0 !important;
-      }
+      [data-theme="dark"] .cart-product-description { color: #e0e0e0 !important; }
 
       [data-theme="dark"] .sale-price-text,
       [data-theme="dark"] .regular-price-text,
-      [data-theme="dark"] .cart-total-cell {
-        color: #ffffff !important;
-      }
+      [data-theme="dark"] .cart-total-cell { color: #ffffff !important; }
 
-      [data-theme="dark"] .original-price-text {
-        color: #aaaaaa !important;
-      }
+      [data-theme="dark"] .original-price-text { color: #aaaaaa !important; }
     </style>
   </head>
 
@@ -574,7 +584,7 @@
             <li class="nav-item"><a class="nav-link" href="{% url 'products:wishlist' %}"><i class="bi bi-heart"></i> Wishlist</a></li>
             <li class="nav-item"><a class="nav-link" href="{% url 'products:view-cart' %}"><i class="bi bi-cart3"></i> Cart</a></li>
 
-            <!-- 🔔 NOTIFICATION BELL -->
+            <!-- Notification Bell -->
             <li class="nav-item">
               <a class="nav-link notification-bell" href="{% url 'products:notification-center' %}">
                 <i class="bi bi-bell-fill"></i>
@@ -613,7 +623,7 @@
       </div>
     </nav>
 
-    <!-- AI Chat Widget - SMALLER, FIXED HEADER (CLOSE BUTTON ALWAYS VISIBLE) -->
+    <!-- AI Chat Widget -->
     <div class="ai-chat-widget">
       <div id="ai-chat-panel" class="ai-chat-panel">
         <div class="ai-chat-header">
@@ -643,7 +653,7 @@
     <!-- Scroll to top -->
     <button id="scrollTopBtn" title="Go to top"><i class="bi bi-arrow-up"></i></button>
 
-    <!-- Footer with UPDATED category links that go to proper category pages -->
+    <!-- Footer -->
     <footer class="footer">
       <div class="container">
         <div class="row">
@@ -657,7 +667,6 @@
               <li><a href="{% url 'products:category-page' 'books' %}">📚 Books</a></li>
               <li><a href="{% url 'products:category-page' 'toys' %}">🎮 Toys & Games</a></li>
               <li><a href="{% url 'products:category-page' 'other' %}">🗂️ Other</a></li>
-              
             </ul>
           </div>
           <div class="col-lg-3 col-md-6 mb-4">
@@ -713,7 +722,6 @@
       </div>
     </footer>
 
-    <!-- Rest of your scripts stay the same -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
       // ============ TOAST SYSTEM ============
@@ -751,9 +759,19 @@
       }
       window.showToast = showToast;
 
-      // ============ LOADER + DJANGO MESSAGES ============
-      window.addEventListener("load", () => {
-        document.getElementById("loader").style.display = "none";
+      // ============ LOADER — ROBUST 3-LAYER HIDE ============
+      function hideLoader() {
+        const loader = document.getElementById('loader');
+        if (loader) loader.style.display = 'none';
+      }
+      setTimeout(hideLoader, 3000);
+      document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(hideLoader, 500);
+      });
+      window.addEventListener('load', hideLoader);
+
+      // ============ DJANGO MESSAGES ============
+      function processDjangoMessages() {
         const script = document.getElementById('django-messages-data');
         if (script) {
           try {
@@ -768,7 +786,8 @@
             });
           } catch(e) { console.log('Message parse error:', e); }
         }
-      });
+      }
+      document.addEventListener('DOMContentLoaded', processDjangoMessages);
 
       // ============ THEME TOGGLE ============
       const themeToggle = document.getElementById('theme-toggle');
@@ -777,7 +796,13 @@
       function applyTheme(theme) {
         document.documentElement.setAttribute('data-theme', theme);
         localStorage.setItem('theme', theme);
-        themeIcon.className = theme === 'dark' ? 'bi bi-moon-fill' : 'bi bi-brightness-high-fill';
+        if (theme === 'dark') {
+          themeIcon.className = 'bi bi-moon-fill';
+          themeIcon.style.color = '#ffd700';
+        } else {
+          themeIcon.className = 'bi bi-brightness-high-fill';
+          themeIcon.style.color = '#fff';
+        }
       }
 
       applyTheme(localStorage.getItem('theme') || 'light');
@@ -786,11 +811,11 @@
       });
 
       // ============ SCROLL TO TOP ============
-      const scrollTopBtn = document.getElementById("scrollTopBtn");
+      const scrollTopBtn = document.getElementById('scrollTopBtn');
       window.onscroll = () => {
-        scrollTopBtn.style.display = (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) ? "block" : "none";
+        scrollTopBtn.style.display = (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) ? 'block' : 'none';
       };
-      scrollTopBtn.addEventListener("click", () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+      scrollTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
       // ============ CSRF ============
       function getCookie(name) {
@@ -864,7 +889,6 @@
         }
       }
 
-      // Search input events
       document.addEventListener('DOMContentLoaded', () => {
         const searchInput = document.getElementById('navbar-search-input');
         const dropdown    = document.getElementById('recent-searches-dropdown');
@@ -965,11 +989,11 @@
         if (e.key === 'Enter') { e.preventDefault(); sendAiChatMessage(); }
       });
 
-      // ============ NOTIFICATION BELL UPDATE ============
+      // ============ NOTIFICATION BELL ============
       async function updateNotificationBell() {
         try {
           const response = await fetch('/products/api/notifications/unread/count/');
-          
+
           if (response.status === 401) {
             const badge = document.getElementById('notification-badge');
             const dropdownBadge = document.getElementById('dropdown-badge');
@@ -977,20 +1001,20 @@
             if (dropdownBadge) dropdownBadge.style.display = 'none';
             return;
           }
-          
+
           const data = await response.json();
-          
+
           if (data.success && data.unread_count > 0) {
             const badge = document.getElementById('notification-badge');
             const dropdownBadge = document.getElementById('dropdown-badge');
-            
+
             if (badge) {
               badge.textContent = data.unread_count > 99 ? '99+' : data.unread_count;
               badge.style.display = 'inline-block';
               badge.style.animation = 'bellRing 0.5s ease';
               setTimeout(() => { if(badge) badge.style.animation = ''; }, 500);
             }
-            
+
             if (dropdownBadge) {
               dropdownBadge.textContent = data.unread_count;
               dropdownBadge.style.display = 'inline-block';
@@ -1002,7 +1026,6 @@
             if (dropdownBadge) dropdownBadge.style.display = 'none';
           }
         } catch(e) {
-          console.log('Error updating notification bell:', e);
           const badge = document.getElementById('notification-badge');
           const dropdownBadge = document.getElementById('dropdown-badge');
           if (badge) badge.style.display = 'none';
@@ -1064,7 +1087,8 @@
           });
         });
       }
-      window.addEventListener('load', applyImageFallbacks());
+      window.addEventListener('load', applyImageFallbacks);
+      document.addEventListener('DOMContentLoaded', applyImageFallbacks);
     </script>
   </body>
 </html>
