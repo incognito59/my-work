@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: retail-logistics-core
+    env: python
+    plan: free
+    buildCommand: bash build.sh
+    startCommand: gunicorn mywork.wsgi:application
+    envVars:
+      - key: DEBUG
+        value: "False"
+      - key: PYTHON_VERSION
+        value: "3.11.7"
+    envVarDefaults:
+      DEBUG: "False"
+databases:
+  - name: postgres_db
+    databaseName: retail_db
+    user: postgres
+    ipAllowList: []
