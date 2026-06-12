@@ -10,7 +10,7 @@
 
   <div class="row g-2 g-md-4 align-items-start">
     
-    <!-- Thumbnails on the left - compact on mobile, larger on desktop -->
+    <!-- Thumbnails on the left -->
     <div class="col-auto d-flex flex-column align-items-center mobile-thumbs-col">
       <img src="{{ product.image_src }}" class="thumb-img mb-2" alt="Main" onclick="changeImage(this)" loading="lazy">
       {% if product.additional_images %}
@@ -23,136 +23,186 @@
     <!-- Main image and details wrapper -->
     <div class="col">
       <div class="row g-2 g-md-4 align-items-start">
+
         <!-- Main image -->
         <div class="col-12 col-md-6">
-      <div class="main-img-container border rounded-4 shadow-sm overflow-hidden animate-img position-relative">
-        <img id="main-image" src="{{ product.image_src }}" class="img-fluid" alt="{{ product.name }}" onclick="openImageZoom(this)" loading="lazy">
-        {% if product.is_out_of_stock %}
-          <div class="stock-badge stock-out">🚫 Out of Stock</div>
-        {% elif product.is_low_stock %}
-          <div class="stock-badge stock-warning">⚠️ Only {{ product.available_stock }} left!</div>
-        {% else %}
-          <div class="stock-badge stock-in">✅ In Stock</div>
-        {% endif %}
-      </div>
-
-      <div id="image-zoom-modal" class="image-zoom-modal" onclick="closeImageZoom()" style="display:none;">
-        <div class="image-zoom-inner" onclick="event.stopPropagation()">
-          <button type="button" class="btn btn-light btn-sm position-absolute top-0 end-0 m-3" onclick="closeImageZoom()">Close</button>
-          <img id="zoomed-image" src="{{ product.image_src }}" alt="{{ product.name }}" class="img-fluid rounded-4">
-        </div>
-      </div>
-    </div>
-
-    <!-- Product details -->
-    <div class="col-12 col-md-6">
-      <div class="p-3 p-md-4 rounded-4 shadow-sm theme-card border animate-card h-100">
-        <div class="d-flex justify-content-between align-items-start mb-2">
-          <div>
-            <h3 class="fw-bold mb-1 fs-5 fs-md-6">{{ product.name }}</h3>
-            <small class="text-muted">SKU: #{{ product.id }}</small>
+          <div class="main-img-container border rounded-4 shadow-sm overflow-hidden animate-img position-relative">
+            <img id="main-image" src="{{ product.image_src }}" class="img-fluid" alt="{{ product.name }}" onclick="openImageZoom(this)" loading="lazy">
+            {% if product.is_out_of_stock %}
+              <div class="stock-badge stock-out">🚫 Out of Stock</div>
+            {% elif product.is_low_stock %}
+              <div class="stock-badge stock-warning">⚠️ Only {{ product.available_stock }} left!</div>
+            {% else %}
+              <div class="stock-badge stock-in">✅ In Stock</div>
+            {% endif %}
           </div>
-          {% if comments %}
-            <div class="rating-badge">
-              <span class="stars">★ {{ comments|length|add:"0"|default:"0" }}/5</span>
-              <small class="text-muted d-block">{{ comments|length }} reviews</small>
-            </div>
-          {% endif %}
-        </div>
-        <p class="text-muted mb-3 small">{{ product.description }}</p>
 
-        {% if product.has_active_sale %}
-        <!-- Flash Sale Banner -->
-        <div class="product-detail-sale">
-          <div class="sale-status-icon">⚡</div>
-          <div class="sale-ends-label">Flash Sale Ends In</div>
-          <div class="sale-timer-display" data-product-id="{{ product.id }}" data-sale-ends-at="{{ product.sale_ends_at|date:'c' }}">
-            Loading...
-          </div>
-          
-          <div class="sale-discount-info">
-            <div>
-              <div class="sale-ends-label">Save</div>
-              <div class="sale-discount-percentage">{{ product.discount_percentage|floatformat:0 }}%</div>
-            </div>
-            <div style="text-align: right;">
-              <div class="sale-original-price">₦{{ product.price|floatformat:2|intcomma }}</div>
-              <div class="sale-current-price">₦{{ product.sale_price|floatformat:2|intcomma }}</div>
+          <div id="image-zoom-modal" class="image-zoom-modal" onclick="closeImageZoom()" style="display:none;">
+            <div class="image-zoom-inner" onclick="event.stopPropagation()">
+              <button type="button" class="btn btn-light btn-sm position-absolute top-0 end-0 m-3" onclick="closeImageZoom()">Close</button>
+              <img id="zoomed-image" src="{{ product.image_src }}" alt="{{ product.name }}" class="img-fluid rounded-4">
             </div>
           </div>
         </div>
-        {% else %}
-        <div class="d-flex align-items-center gap-3 mb-4">
-          <h4 class="fw-bold animated-price text-danger mb-0">₦{{ product.price|floatformat:2|intcomma }}</h4>
-        </div>
-        {% endif %}
-        
-        <!-- Savings Display -->
-        {% if product.has_active_sale %}
-        <div class="savings-banner mb-3">
-          <span class="savings-text">💚 You save: <strong>₦{{ product.price|add:"-"|add:product.sale_price|floatformat:2|intcomma }}</strong></span>
-        </div>
-        {% endif %}
 
-        <!-- Social Share Buttons -->
-        <div class="social-share-section mb-3 pb-3 border-bottom">
-          <small class="text-muted d-block mb-2">Share Product:</small>
-          <div class="d-flex gap-2 flex-wrap">
-            <a href="https://wa.me/?text=Check%20out%20this%20product:%20{{ product.name }}%20₦{{ product.price|floatformat:2|intcomma }}%20https://retail-logistics-core-t0xz.onrender.com/products/{{ product.id }}/" 
-               target="_blank" class="btn btn-sm btn-outline-success" title="Share on WhatsApp">
-              <i class="bi bi-whatsapp"></i> WhatsApp
-            </a>
-            <a href="https://www.facebook.com/sharer/sharer.php?u=https://retail-logistics-core-t0xz.onrender.com/products/{{ product.id }}/" 
-               target="_blank" class="btn btn-sm btn-outline-primary" title="Share on Facebook">
-              <i class="bi bi-facebook"></i> Facebook
-            </a>
-            <a href="https://twitter.com/intent/tweet?text=Check%20out%20{{ product.name }}%20https://retail-logistics-core-t0xz.onrender.com/products/{{ product.id }}/" 
-               target="_blank" class="btn btn-sm btn-outline-info" title="Share on Twitter">
-              <i class="bi bi-twitter"></i> Twitter
-            </a>
+        <!-- Product details -->
+        <div class="col-12 col-md-6">
+          <div class="p-3 p-md-4 rounded-4 shadow-sm theme-card border animate-card h-100">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div>
+                <h3 class="fw-bold mb-1 fs-5 fs-md-6">{{ product.name }}</h3>
+                <small class="text-muted">SKU: #{{ product.id }}</small>
+              </div>
+              {% if comments %}
+                <div class="rating-badge">
+                  <span class="stars">★ {{ comments|length|add:"0"|default:"0" }}/5</span>
+                  <small class="text-muted d-block">{{ comments|length }} reviews</small>
+                </div>
+              {% endif %}
+            </div>
+            <p class="text-muted mb-3 small">{{ product.description }}</p>
+
+            {% if product.has_active_sale %}
+            <!-- Flash Sale Banner -->
+            <div class="product-detail-sale">
+              <div class="sale-status-icon">⚡</div>
+              <div class="sale-ends-label">Flash Sale Ends In</div>
+              <div class="sale-timer-display" data-product-id="{{ product.id }}" data-sale-ends-at="{{ product.sale_ends_at|date:'c' }}">
+                Loading...
+              </div>
+              <div class="sale-discount-info">
+                <div>
+                  <div class="sale-ends-label">Save</div>
+                  <div class="sale-discount-percentage">{{ product.discount_percentage|floatformat:0 }}%</div>
+                </div>
+                <div style="text-align: right;">
+                  <div class="sale-original-price">₦{{ product.price|floatformat:2|intcomma }}</div>
+                  <div class="sale-current-price">₦{{ product.sale_price|floatformat:2|intcomma }}</div>
+                </div>
+              </div>
+            </div>
+            {% else %}
+            <div class="d-flex align-items-center gap-3 mb-4">
+              <h4 class="fw-bold animated-price text-danger mb-0">₦{{ product.price|floatformat:2|intcomma }}</h4>
+            </div>
+            {% endif %}
+
+            <!-- Savings Display -->
+            {% if product.has_active_sale %}
+            <div class="savings-banner mb-3">
+              <span class="savings-text">💚 You save: <strong>₦{{ product.price|add:"-"|add:product.sale_price|floatformat:2|intcomma }}</strong></span>
+            </div>
+            {% endif %}
+
+            <!-- Social Share Buttons -->
+            <div class="social-share-section mb-3 pb-3 border-bottom">
+              <small class="text-muted d-block mb-2">Share Product:</small>
+              <div class="d-flex gap-2 flex-wrap">
+                <a href="https://wa.me/?text=Check%20out%20this%20product:%20{{ product.name }}%20₦{{ product.price|floatformat:2|intcomma }}%20https://retail-logistics-core-t0xz.onrender.com/products/{{ product.id }}/" 
+                   target="_blank" class="btn btn-sm btn-outline-success" title="Share on WhatsApp">
+                  <i class="bi bi-whatsapp"></i> WhatsApp
+                </a>
+                <a href="https://www.facebook.com/sharer/sharer.php?u=https://retail-logistics-core-t0xz.onrender.com/products/{{ product.id }}/" 
+                   target="_blank" class="btn btn-sm btn-outline-primary" title="Share on Facebook">
+                  <i class="bi bi-facebook"></i> Facebook
+                </a>
+                <a href="https://twitter.com/intent/tweet?text=Check%20out%20{{ product.name }}%20https://retail-logistics-core-t0xz.onrender.com/products/{{ product.id }}/" 
+                   target="_blank" class="btn btn-sm btn-outline-info" title="Share on Twitter">
+                  <i class="bi bi-twitter"></i> Twitter
+                </a>
+              </div>
+            </div>
+
+            <div class="d-flex flex-column gap-2">
+              <button type="button" class="btn btn-wishlist {% if is_in_wishlist %}btn-danger{% else %}btn-outline-danger{% endif %}" data-product-id="{{ product.id }}" data-update-text="true" title="Save to wishlist">
+                <i class="bi {% if is_in_wishlist %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
+                {% if is_in_wishlist %}Saved{% else %}Save{% endif %}
+              </button>
+              {% if product.is_out_of_stock %}
+                <button type="button" class="btn btn-secondary w-100 fw-semibold text-light btn-legendary disabled" disabled>
+                  🚫 Out of Stock
+                </button>
+              {% else %}
+                <a href="{% url 'products:add-to-cart' product.id %}" 
+                   class="btn btn-warning w-100 fw-semibold text-dark btn-legendary">
+                  🛒 Add to Cart
+                </a>
+              {% endif %}
+              <a href="{% url 'products:buy-now' product.id %}" 
+                 class="btn btn-dark w-100 fw-semibold btn-legendary {% if product.is_out_of_stock %}disabled{% endif %}"
+                 {% if product.is_out_of_stock %}aria-disabled="true" tabindex="-1"{% endif %}>
+                ⚡ Buy Now
+              </a>
+            </div>
+
+            <!-- Product Info Card (SVG-enhanced) -->
+            <div class="product-info-card mt-4">
+              <div class="product-info-header">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="product-info-icon">
+                  <rect x="2" y="7" width="20" height="14" rx="2" fill="#F68B1E" opacity="0.15" stroke="#F68B1E" stroke-width="1.5"/>
+                  <path d="M16 7V5a4 4 0 0 0-8 0v2" stroke="#F68B1E" stroke-width="1.5" stroke-linecap="round"/>
+                  <circle cx="12" cy="13" r="2" fill="#F68B1E"/>
+                  <path d="M12 15v2" stroke="#F68B1E" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+                <span class="product-info-title">Product Info</span>
+              </div>
+
+              <div class="product-info-rows">
+
+                <div class="product-info-row">
+                  <span class="info-icon-wrap">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                      <path d="M4 6h16M4 12h16M4 18h10" stroke="#F68B1E" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                  </span>
+                  <span class="info-label">Category</span>
+                  <span class="info-value">{{ product.category }}</span>
+                </div>
+
+                <div class="product-info-row">
+                  <span class="info-icon-wrap">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="9" stroke="#F68B1E" stroke-width="2"/>
+                      <path d="M12 7v5l3 3" stroke="#F68B1E" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                  </span>
+                  <span class="info-label">Price</span>
+                  <span class="info-value fw-bold" style="color:#F68B1E;">₦{{ product.price|floatformat:2|intcomma }}</span>
+                </div>
+
+                <div class="product-info-row">
+                  <span class="info-icon-wrap">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                      <rect x="3" y="3" width="18" height="18" rx="2" stroke="#F68B1E" stroke-width="2"/>
+                      <path d="M3 9h18M9 21V9" stroke="#F68B1E" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                  </span>
+                  <span class="info-label">Stock</span>
+                  <span class="info-value">{{ product.available_stock|default:product.stock }} units</span>
+                </div>
+
+                <div class="product-info-row" style="border-bottom: none;">
+                  <span class="info-icon-wrap">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                      <path d="M3 12l4-4 4 4 4-4 4 4" stroke="#F68B1E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M5 20h14a1 1 0 0 0 1-1V8H4v11a1 1 0 0 0 1 1z" stroke="#F68B1E" stroke-width="1.5"/>
+                    </svg>
+                  </span>
+                  <span class="info-label">Delivery</span>
+                  <span class="info-value">Free shipping nationwide</span>
+                </div>
+
+              </div>
+            </div>
+
+            <div class="mt-3 text-muted small">
+              <p><strong>⏱️ Estimated Arrival:</strong> 3 - 7 business days</p>
+            </div>
           </div>
         </div>
-        
-        <div class="d-flex flex-column gap-2">
-          <button type="button" class="btn btn-wishlist {% if is_in_wishlist %}btn-danger{% else %}btn-outline-danger{% endif %}" data-product-id="{{ product.id }}" data-update-text="true" title="Save to wishlist">
-            <i class="bi {% if is_in_wishlist %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
-            {% if is_in_wishlist %}Saved{% else %}Save{% endif %}
-          </button>
-          {% if product.is_out_of_stock %}
-            <button type="button" class="btn btn-secondary w-100 fw-semibold text-light btn-legendary disabled" disabled>
-              🚫 Out of Stock
-            </button>
-          {% else %}
-            <a href="{% url 'products:add-to-cart' product.id %}" 
-               class="btn btn-warning w-100 fw-semibold text-dark btn-legendary">
-              🛒 Add to Cart
-            </a>
-          {% endif %}
-          <a href="{% url 'products:buy-now' product.id %}" 
-             class="btn btn-dark w-100 fw-semibold btn-legendary {% if product.is_out_of_stock %}disabled{% endif %}"
-             {% if product.is_out_of_stock %}aria-disabled="true" tabindex="-1"{% endif %}>
-            ⚡ Buy Now
-          </a>
-        </div>
 
-        <!-- Product Specifications -->
-        <div class="mt-4 p-3 bg-light rounded-3 small">
-          <h6 class="fw-bold mb-2">📦 Product Info</h6>
-          <p class="mb-1"><strong>Category:</strong> {{ product.category }}</p>
-          <p class="mb-1"><strong>Price:</strong> ₦{{ product.price|floatformat:2|intcomma }}</p>
-          <p class="mb-1"><strong>Stock Available:</strong> {{ product.available_stock|default:product.stock }} units</p>
-          <p class="mb-0"><strong>Delivery:</strong> Free shipping nationwide</p>
-        </div>
-        
-        <div class="mt-3 text-muted small">
-          <p><strong>⏱️ Estimated Arrival:</strong> 3 - 7 business days</p>
-        </div>
       </div>
     </div>
-      </div>
-    </div>
-
-
   </div>
 
   {% if ai_recommendations %}
@@ -174,8 +224,6 @@
     </div>
   </div>
   {% endif %}
-
-  <!-- REMOVED: Recently Viewed Section - Moved to Cart and Shop pages -->
 
   <!-- Q&A Section -->
   <div class="mt-5 pt-4 border-top">
@@ -202,11 +250,7 @@
           <strong>{{ comment.name }}</strong>
           <span class="text-warning">
             {% for i in "12345" %}
-              {% if forloop.counter <= comment.rating %}
-                ★
-              {% else %}
-                ☆
-              {% endif %}
+              {% if forloop.counter <= comment.rating %}★{% else %}☆{% endif %}
             {% endfor %}
           </span>
         </div>
@@ -221,17 +265,14 @@
     <form method="post" class="mt-4 p-4 border rounded-4 shadow-sm theme-card animate-card">
       {% csrf_token %}
       <h5 class="fw-semibold mb-3">Write a Review</h5>
-
       <div class="mb-3">
         <label class="form-label">Your Name</label>
         <input type="text" name="name" class="form-control" required>
       </div>
-
       <div class="mb-3">
         <label class="form-label">Your Review</label>
         <textarea name="text" class="form-control" rows="3" required></textarea>
       </div>
-
       <div class="mb-3">
         <label class="form-label">Rating</label>
         <select name="rating" class="form-select" required>
@@ -241,7 +282,6 @@
           {% endfor %}
         </select>
       </div>
-
       <button type="submit" class="btn btn-warning w-100 fw-semibold text-dark btn-legendary">
         Submit Review
       </button>
@@ -249,25 +289,15 @@
   </div>
 </div>
 
-<!-- Recently Viewed Script - Add to localStorage when viewing product -->
+<!-- Recently Viewed Script -->
 <script>
-  // Add current product to recently viewed
   function addToRecentlyViewed(productId) {
     let recentlyViewed = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
-    
-    // Remove if already exists
     recentlyViewed = recentlyViewed.filter(id => id != productId);
-    
-    // Add to beginning
     recentlyViewed.unshift(parseInt(productId));
-    
-    // Keep only last 10 items
     recentlyViewed = recentlyViewed.slice(0, 10);
-    
     localStorage.setItem('recentlyViewed', JSON.stringify(recentlyViewed));
   }
-  
-  // Add current product to recently viewed
   const productId = {{ product.id }};
   addToRecentlyViewed(productId);
 </script>
@@ -281,490 +311,7 @@
       main.style.opacity = 1;
     }, 150);
   }
-</script>
 
-<!-- Styles -->
-<style>
-  /* Rating Badge */
-  .rating-badge {
-    background: linear-gradient(135deg, #ffd700, #ffed4e);
-    padding: 8px 12px;
-    border-radius: 8px;
-    text-align: right;
-    min-width: 70px;
-    box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
-  }
-  
-  .rating-badge .stars {
-    font-weight: bold;
-    color: #ff6b00;
-    display: block;
-    font-size: 1rem;
-  }
-  
-  /* Stock Status Badges */
-  .stock-badge {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-weight: 600;
-    font-size: 0.85rem;
-    z-index: 10;
-    animation: slidein 0.3s ease;
-  }
-  
-  .stock-badge.stock-in {
-    background: #10b981;
-    color: white;
-  }
-  
-  .stock-badge.stock-warning {
-    background: #f59e0b;
-    color: white;
-  }
-  
-  .stock-badge.stock-out {
-    background: #ef4444;
-    color: white;
-  }
-  
-  /* Savings Banner */
-  .savings-banner {
-    background: linear-gradient(135deg, #ff6b6b, #ff8e72);
-    color: white;
-    padding: 10px 14px;
-    border-radius: 8px;
-    font-size: 0.95rem;
-    text-align: center;
-    animation: pulse 2s infinite;
-  }
-  
-  .savings-text {
-    display: block;
-  }
-  
-  /* Social Share Section */
-  .social-share-section .btn-sm {
-    border-radius: 20px;
-    font-size: 0.85rem;
-    padding: 6px 12px;
-    transition: all 0.3s ease;
-  }
-  
-  .social-share-section .btn-sm:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  }
-  
-  /* Responsive thumbnail sizing */
-  .mobile-thumbs-col {
-    gap: 0.5rem;
-  }
-
-  /* Main image and thumbnail hover effects */
-  .main-img-container img {
-    width: 100%;
-    height: auto;
-    min-height: 280px;
-    max-height: 420px;
-    object-fit: cover;
-    transition: transform 0.3s ease, opacity 0.3s ease;
-  }
-  .main-img-container:hover img {
-    transform: scale(1.03);
-  }
-
-  .thumb-img {
-    width: 60px;
-    height: 60px;
-    object-fit: cover;
-    border-radius: 10px;
-    cursor: pointer;
-    border: 2px solid #eee;
-    transition: all 0.3s ease;
-  }
-  .thumb-img:hover {
-    border-color: #F68B1E;
-    transform: scale(1.1);
-  }
-
-  /* Mobile optimizations */
-  @media (max-width: 767px) {
-    .mobile-thumbs-col {
-      gap: 0.3rem;
-    }
-    
-    .thumb-img {
-      width: 50px;
-      height: 50px;
-    }
-    
-    .main-img-container img {
-      min-height: 240px;
-      max-height: 300px;
-    }
-    
-    .animate-card {
-      padding: 1rem !important;
-    }
-    
-    h3 {
-      font-size: 1.1rem;
-    }
-    
-    .rating-badge {
-      min-width: 60px;
-      padding: 6px 10px;
-      font-size: 0.85rem;
-    }
-    
-    .product-detail-sale {
-      padding: 12px !important;
-      margin-bottom: 15px !important;
-    }
-    
-    .sale-timer-display {
-      font-size: 16px !important;
-    }
-    
-    .sale-discount-percentage {
-      font-size: 22px !important;
-    }
-    
-    .btn-legendary {
-      padding: 0.6rem 1rem !important;
-      font-size: 0.9rem !important;
-    }
-    
-    .social-share-section .btn-sm {
-      padding: 5px 10px !important;
-      font-size: 0.75rem !important;
-    }
-  }
-
-  /* Tablet and above */
-  @media (min-width: 768px) {
-    .thumb-img {
-      width: 70px;
-      height: 70px;
-    }
-    
-    .main-img-container img {
-      min-height: 350px;
-      max-height: 450px;
-    }
-  }
-
-  /* Animated price */
-  .animated-price {
-    animation: colorShift 6s infinite alternate;
-  }
-
-  @keyframes colorShift {
-    0% { color: #ff4747; }
-    25% { color: #f8b400; }
-    50% { color: #4cd137; }
-    75% { color: #0097e6; }
-    100% { color: #ff47a3; }
-  }
-  
-  @keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.02); }
-  }
-  
-  @keyframes slidein {
-    from { opacity: 0; transform: translateX(20px); }
-    to { opacity: 1; transform: translateX(0); }
-  }
-
-  /* Animated card backgrounds */
-  .animate-card {
-    animation: bgShift 12s infinite alternate;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
-  .animate-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-  }
-  @keyframes bgShift {
-    0% { background-color: #fff5f5; }
-    25% { background-color: #fef6e4; }
-    50% { background-color: #f1fff1; }
-    75% { background-color: #eaf7ff; }
-    100% { background-color: #fff0fa; }
-  }
-
-  /* Legendary buttons */
-  .btn-legendary {
-    border-radius: 25px;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  }
-  .btn-legendary:hover {
-    transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
-  }
-
-  /* Flash Sale Styles */
-  .product-detail-sale {
-    background: linear-gradient(135deg, #ff6b6b, #ff8e72);
-    border-radius: 16px;
-    padding: 16px;
-    margin-bottom: 20px;
-    color: white;
-  }
-  .sale-status-icon {
-    font-size: 24px;
-    margin-bottom: 8px;
-  }
-  .sale-ends-label {
-    font-size: 12px;
-    opacity: 0.9;
-    margin-bottom: 5px;
-  }
-  .sale-timer-display {
-    font-size: 20px;
-    font-weight: bold;
-    letter-spacing: 1px;
-    margin-bottom: 12px;
-  }
-  .sale-discount-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-top: 1px solid rgba(255,255,255,0.3);
-    padding-top: 12px;
-    margin-top: 8px;
-  }
-  .sale-discount-percentage {
-    font-size: 28px;
-    font-weight: bold;
-  }
-  .sale-original-price {
-    font-size: 14px;
-    text-decoration: line-through;
-    opacity: 0.8;
-  }
-  .sale-current-price {
-    font-size: 22px;
-    font-weight: bold;
-  }
-
-  /* Theme support */
-  .theme-card {
-    transition: background-color 0.5s ease, color 0.5s ease;
-  }
-
-  /* Dark theme text visibility */
-  [data-theme="dark"] .theme-card {
-    background-color: #1e1e1e;
-    color: #e0e0e0;
-  }
-
-  [data-theme="dark"] h3,
-  [data-theme="dark"] h4,
-  [data-theme="dark"] h5,
-  [data-theme="dark"] .fw-bold {
-    color: #e0e0e0;
-  }
-
-  [data-theme="dark"] p,
-  [data-theme="dark"] .text-muted {
-    color: #aaa;
-  }
-</style>
-
-  [data-theme="dark"] .animated-price {
-    color: #66b3ff;
-  }
-
-  [data-theme="dark"] .thumb-img {
-    border-color: #444;
-  }
-
-  [data-theme="dark"] .animate-card {
-    background-color: #2a2a2a;
-    color: #ddd;
-  }
-
-  [data-theme="dark"] .bg-light {
-    background-color: #2a2a2a !important;
-    color: #ddd;
-  }
-
-  [data-theme="dark"] .form-control,
-  [data-theme="dark"] .form-select {
-    background-color: #2a2a2a;
-    color: #e0e0e0;
-    border-color: #444;
-  }
-
-  [data-theme="dark"] .form-label {
-    color: #ddd;
-  }
-
-  [data-theme="dark"] strong {
-    color: #e0e0e0;
-  }
-  
-  .stock-badge {
-    position: absolute;
-    bottom: 15px;
-    left: 15px;
-    background: #ff6b6b;
-    color: white;
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: bold;
-  }
-  .stock-out {
-    background: #999;
-  }
-
-  #image-zoom-modal {
-    position: fixed;
-    inset: 0;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-    background: rgba(0,0,0,0.8);
-    z-index: 1050;
-  }
-  .image-zoom-inner {
-    position: relative;
-    width: 100%;
-    max-width: 900px;
-    max-height: 92vh;
-  }
-  #zoomed-image {
-    width: 100%;
-    height: auto;
-    border-radius: 18px;
-    box-shadow: 0 28px 80px rgba(0,0,0,0.45);
-  }
-
-  /* ============ DARK THEME SUPPORT ============ */
-  [data-theme="dark"] .animated-price { 
-    color: #66b3ff; 
-  }
-  
-  [data-theme="dark"] .thumb-img { 
-    border-color: #444; 
-  }
-  
-  [data-theme="dark"] .animate-card { 
-    background-color: #2a2a2a;
-    color: #ddd;
-  }
-  
-  [data-theme="dark"] .bg-light { 
-    background-color: #2a2a2a !important;
-    color: #ddd;
-  }
-  
-  [data-theme="dark"] .form-control,
-  [data-theme="dark"] .form-select { 
-    background-color: #2a2a2a;
-    color: #e0e0e0;
-    border-color: #444;
-  }
-  
-  [data-theme="dark"] .form-label { 
-    color: #ddd;
-  }
-  
-  [data-theme="dark"] strong { 
-    color: #e0e0e0;
-  }
-  
-  [data-theme="dark"] .rating-badge {
-    background: linear-gradient(135deg, #cc9900, #ffb300);
-    color: #000;
-  }
-  
-  [data-theme="dark"] .savings-banner {
-    background: linear-gradient(135deg, #cc3333, #ff6666);
-  }
-  
-  [data-theme="dark"] .social-share-section .btn-sm {
-    background-color: #2a2a2a;
-    border-color: #555;
-    color: #e0e0e0;
-  }
-  
-  [data-theme="dark"] .social-share-section .btn-sm:hover {
-    background-color: #ff6b00;
-    border-color: #ff6b00;
-  }
-  
-  [data-theme="dark"] .product-detail-sale {
-    background: linear-gradient(135deg, #cc3333, #ff6666);
-  }
-  
-  [data-theme="dark"] .main-img-container {
-    background-color: #1a1a24;
-    border-color: #333;
-  }
-  
-  [data-theme="dark"] h3,
-  [data-theme="dark"] h4,
-  [data-theme="dark"] h5,
-  [data-theme="dark"] h6 {
-    color: #e0e0e0;
-  }
-  
-  [data-theme="dark"] .text-muted {
-    color: #aaa;
-  }
-  
-  [data-theme="dark"] .border,
-  [data-theme="dark"] .border-bottom {
-    border-color: #333 !important;
-  }
-  
-  [data-theme="dark"] .alert-info {
-    background-color: #1a3a52;
-    color: #87ceeb;
-    border-color: #2a5a82;
-  }
-  
-  [data-theme="dark"] .btn-outline-success {
-    color: #20c997;
-    border-color: #20c997;
-  }
-  
-  [data-theme="dark"] .btn-outline-success:hover {
-    background-color: #20c997;
-    color: #000;
-  }
-  
-  [data-theme="dark"] .btn-outline-primary {
-    color: #0d6efd;
-    border-color: #0d6efd;
-  }
-  
-  [data-theme="dark"] .btn-outline-primary:hover {
-    background-color: #0d6efd;
-    color: #fff;
-  }
-  
-  [data-theme="dark"] .btn-outline-info {
-    color: #0dcaf0;
-    border-color: #0dcaf0;
-  }
-  
-  [data-theme="dark"] .btn-outline-info:hover {
-    background-color: #0dcaf0;
-    color: #000;
-  }
-</style>
-
-<script>
   function openImageZoom(image) {
     const modal = document.getElementById('image-zoom-modal');
     const zoomedImage = document.getElementById('zoomed-image');
@@ -781,6 +328,289 @@
     }
   }
 </script>
+
+<style>
+  /* ── Rating Badge ── */
+  .rating-badge {
+    background: linear-gradient(135deg, #ffd700, #ffed4e);
+    padding: 8px 12px;
+    border-radius: 8px;
+    text-align: right;
+    min-width: 70px;
+    box-shadow: 0 2px 8px rgba(255,215,0,0.3);
+  }
+  .rating-badge .stars {
+    font-weight: bold;
+    color: #ff6b00;
+    display: block;
+    font-size: 1rem;
+  }
+
+  /* ── Stock Badges ── */
+  .stock-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    z-index: 10;
+    animation: slidein 0.3s ease;
+  }
+  .stock-badge.stock-in      { background: #10b981; color: white; }
+  .stock-badge.stock-warning { background: #f59e0b; color: white; }
+  .stock-badge.stock-out     { background: #ef4444; color: white; }
+
+  /* ── Savings Banner ── */
+  .savings-banner {
+    background: linear-gradient(135deg, #ff6b6b, #ff8e72);
+    color: white;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    text-align: center;
+    animation: pulse 2s infinite;
+  }
+
+  /* ── Social Share ── */
+  .social-share-section .btn-sm {
+    border-radius: 20px;
+    font-size: 0.85rem;
+    padding: 6px 12px;
+    transition: all 0.3s ease;
+  }
+  .social-share-section .btn-sm:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+
+  /* ── Thumbnails ── */
+  .mobile-thumbs-col { gap: 0.5rem; }
+  .thumb-img {
+    width: 60px; height: 60px;
+    object-fit: cover;
+    border-radius: 10px;
+    cursor: pointer;
+    border: 2px solid #eee;
+    transition: all 0.3s ease;
+  }
+  .thumb-img:hover { border-color: #F68B1E; transform: scale(1.1); }
+
+  /* ── Main Image ── */
+  .main-img-container img {
+    width: 100%; height: auto;
+    min-height: 280px; max-height: 420px;
+    object-fit: cover;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+  .main-img-container:hover img { transform: scale(1.03); }
+
+  /* ── Image Zoom Modal ── */
+  #image-zoom-modal {
+    position: fixed; inset: 0;
+    display: none;
+    align-items: center; justify-content: center;
+    padding: 24px;
+    background: rgba(0,0,0,0.8);
+    z-index: 1050;
+  }
+  .image-zoom-inner {
+    position: relative;
+    width: 100%; max-width: 900px; max-height: 92vh;
+  }
+  #zoomed-image {
+    width: 100%; height: auto;
+    border-radius: 18px;
+    box-shadow: 0 28px 80px rgba(0,0,0,0.45);
+  }
+
+  /* ── Animated Price ── */
+  .animated-price { animation: colorShift 6s infinite alternate; }
+  @keyframes colorShift {
+    0%   { color: #ff4747; }
+    25%  { color: #f8b400; }
+    50%  { color: #4cd137; }
+    75%  { color: #0097e6; }
+    100% { color: #ff47a3; }
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50%       { transform: scale(1.02); }
+  }
+  @keyframes slidein {
+    from { opacity: 0; transform: translateX(20px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  /* ── Animate Card ── */
+  .animate-card {
+    animation: bgShift 12s infinite alternate;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .animate-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  }
+  @keyframes bgShift {
+    0%   { background-color: #fff5f5; }
+    25%  { background-color: #fef6e4; }
+    50%  { background-color: #f1fff1; }
+    75%  { background-color: #eaf7ff; }
+    100% { background-color: #fff0fa; }
+  }
+
+  /* ── Legendary Buttons ── */
+  .btn-legendary {
+    border-radius: 25px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+  .btn-legendary:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+  }
+
+  /* ── Flash Sale ── */
+  .product-detail-sale {
+    background: linear-gradient(135deg, #ff6b6b, #ff8e72);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 20px;
+    color: white;
+  }
+  .sale-status-icon   { font-size: 24px; margin-bottom: 8px; }
+  .sale-ends-label    { font-size: 12px; opacity: 0.9; margin-bottom: 5px; }
+  .sale-timer-display { font-size: 20px; font-weight: bold; letter-spacing: 1px; margin-bottom: 12px; }
+  .sale-discount-info {
+    display: flex; justify-content: space-between; align-items: center;
+    border-top: 1px solid rgba(255,255,255,0.3);
+    padding-top: 12px; margin-top: 8px;
+  }
+  .sale-discount-percentage { font-size: 28px; font-weight: bold; }
+  .sale-original-price { font-size: 14px; text-decoration: line-through; opacity: 0.8; }
+  .sale-current-price  { font-size: 22px; font-weight: bold; }
+
+  /* ── Theme Card ── */
+  .theme-card { transition: background-color 0.5s ease, color 0.5s ease; }
+
+  /* ════════════════════════════════
+     PRODUCT INFO CARD
+  ════════════════════════════════ */
+  .product-info-card {
+    border: 1.5px solid #F68B1E33;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 2px 12px rgba(246,139,30,0.08);
+  }
+  .product-info-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #fff7ee, #fff3e0);
+    border-bottom: 1.5px solid #F68B1E22;
+  }
+  .product-info-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #c4610a;
+    letter-spacing: 0.3px;
+  }
+  .product-info-rows { padding: 4px 0; }
+  .product-info-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    border-bottom: 1px solid #f5f0eb;
+    transition: background 0.2s ease;
+  }
+  .product-info-row:hover { background: #fff7ee; }
+  .info-icon-wrap {
+    width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    background: #fff3e0;
+    border-radius: 8px;
+    flex-shrink: 0;
+  }
+  .info-label {
+    font-size: 0.8rem;
+    color: #888;
+    font-weight: 500;
+    width: 70px;
+    flex-shrink: 0;
+  }
+  .info-value {
+    font-size: 0.88rem;
+    color: #222;
+    font-weight: 600;
+    flex: 1;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 767px) {
+    .mobile-thumbs-col { gap: 0.3rem; }
+    .thumb-img { width: 50px; height: 50px; }
+    .main-img-container img { min-height: 240px; max-height: 300px; }
+    .animate-card { padding: 1rem !important; }
+    h3 { font-size: 1.1rem; }
+    .rating-badge { min-width: 60px; padding: 6px 10px; font-size: 0.85rem; }
+    .product-detail-sale { padding: 12px !important; margin-bottom: 15px !important; }
+    .sale-timer-display { font-size: 16px !important; }
+    .sale-discount-percentage { font-size: 22px !important; }
+    .btn-legendary { padding: 0.6rem 1rem !important; font-size: 0.9rem !important; }
+    .social-share-section .btn-sm { padding: 5px 10px !important; font-size: 0.75rem !important; }
+  }
+  @media (min-width: 768px) {
+    .thumb-img { width: 70px; height: 70px; }
+    .main-img-container img { min-height: 350px; max-height: 450px; }
+  }
+
+  /* ════════════════════════════════
+     DARK THEME
+  ════════════════════════════════ */
+  [data-theme="dark"] .animated-price     { color: #66b3ff; }
+  [data-theme="dark"] .thumb-img          { border-color: #444; }
+  [data-theme="dark"] .animate-card       { background-color: #2a2a2a; color: #ddd; }
+  [data-theme="dark"] .bg-light           { background-color: #2a2a2a !important; color: #ddd; }
+  [data-theme="dark"] .form-control,
+  [data-theme="dark"] .form-select        { background-color: #2a2a2a; color: #e0e0e0; border-color: #444; }
+  [data-theme="dark"] .form-label         { color: #ddd; }
+  [data-theme="dark"] strong              { color: #e0e0e0; }
+  [data-theme="dark"] .rating-badge       { background: linear-gradient(135deg, #cc9900, #ffb300); color: #000; }
+  [data-theme="dark"] .savings-banner     { background: linear-gradient(135deg, #cc3333, #ff6666); }
+  [data-theme="dark"] .social-share-section .btn-sm { background-color: #2a2a2a; border-color: #555; color: #e0e0e0; }
+  [data-theme="dark"] .social-share-section .btn-sm:hover { background-color: #ff6b00; border-color: #ff6b00; }
+  [data-theme="dark"] .product-detail-sale  { background: linear-gradient(135deg, #cc3333, #ff6666); }
+  [data-theme="dark"] .main-img-container   { background-color: #1a1a24; border-color: #333; }
+  [data-theme="dark"] h3,
+  [data-theme="dark"] h4,
+  [data-theme="dark"] h5,
+  [data-theme="dark"] h6                   { color: #e0e0e0; }
+  [data-theme="dark"] .text-muted          { color: #aaa; }
+  [data-theme="dark"] .border,
+  [data-theme="dark"] .border-bottom       { border-color: #333 !important; }
+  [data-theme="dark"] .alert-info          { background-color: #1a3a52; color: #87ceeb; border-color: #2a5a82; }
+  [data-theme="dark"] .btn-outline-success { color: #20c997; border-color: #20c997; }
+  [data-theme="dark"] .btn-outline-success:hover { background-color: #20c997; color: #000; }
+  [data-theme="dark"] .btn-outline-primary { color: #0d6efd; border-color: #0d6efd; }
+  [data-theme="dark"] .btn-outline-primary:hover { background-color: #0d6efd; color: #fff; }
+  [data-theme="dark"] .btn-outline-info    { color: #0dcaf0; border-color: #0dcaf0; }
+  [data-theme="dark"] .btn-outline-info:hover { background-color: #0dcaf0; color: #000; }
+
+  /* dark: product info card */
+  [data-theme="dark"] .product-info-card   { background: #1e1e1e; border-color: #F68B1E44; box-shadow: 0 2px 12px rgba(0,0,0,0.3); }
+  [data-theme="dark"] .product-info-header { background: linear-gradient(135deg, #2a1f10, #2e1e08); border-bottom-color: #F68B1E33; }
+  [data-theme="dark"] .product-info-title  { color: #F68B1E; }
+  [data-theme="dark"] .product-info-row    { border-bottom-color: #2a2a2a; }
+  [data-theme="dark"] .product-info-row:hover { background: #261a0e; }
+  [data-theme="dark"] .info-icon-wrap      { background: #2a1e0e; }
+  [data-theme="dark"] .info-label          { color: #888; }
+  [data-theme="dark"] .info-value          { color: #e0e0e0; }
+</style>
 
 <script src="{% static 'js/flash-sale-timer.js' %}"></script>
 
