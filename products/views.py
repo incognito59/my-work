@@ -942,8 +942,11 @@ def newsletter_signup(request):
             else:
                 messages.info(request, "📧 You're already subscribed!")
             return redirect('products:product-list')
-
-    messages.error(request, "❌ Please provide a valid email address.")
+        else:
+            messages.error(request, "❌ Please provide a valid email address.")
+            return redirect('products:product-list')
+    
+    messages.error(request, "❌ Invalid request method.")
     return redirect('products:product-list')
 
 

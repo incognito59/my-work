@@ -639,10 +639,10 @@
           <div class="col-lg-3 col-md-6 mb-4">
             <h5><i class="bi bi-envelope-paper"></i> Stay Updated</h5>
             <p class="small">Subscribe to get special offers, free giveaways, and exclusive deals.</p>
-            <form class="newsletter-input" method="post" action="{% url 'products:newsletter-signup' %}">
+            <form class="newsletter-input" id="newsletter-form" method="post" action="{% url 'products:newsletter-signup' %}">
               {% csrf_token %}
-              <input type="email" name="email" placeholder="Your email address" required>
-              <button type="submit"><i class="bi bi-send"></i></button>
+              <input type="email" name="email" id="newsletter-email" placeholder="Your email address" required>
+              <button type="submit" id="newsletter-btn"><i class="bi bi-send"></i></button>
             </form>
             <p class="small mt-2">Already subscribed? <a href="{% url 'products:newsletter-unsubscribe' %}">Unsubscribe</a>.</p>
             <div class="social-links mt-4">
@@ -925,6 +925,45 @@
       document.getElementById('ai-chat-send')?.addEventListener('click', sendAiChatMessage);
       document.getElementById('ai-chat-input')?.addEventListener('keydown', e => {
         if (e.key === 'Enter') { e.preventDefault(); sendAiChatMessage(); }
+      });
+
+      // ============ NEWSLETTER SUBSCRIPTION ============
+      document.getElementById('newsletter-form')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const email = document.getElementById('newsletter-email').value.trim();
+        const btn = document.getElementById('newsletter-btn');
+        
+        if (!email) {
+          showToast('Please enter a valid email address', 'error');
+          return;
+        }
+        
+        btn.disabled = true;
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+        
+        try {
+          const formData = new FormData(form);
+          const response = await fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+          });
+          
+          if (response.ok) {
+            showToast('✅ Successfully subscribed! Check your email for confirmation.', 'success');
+            document.getElementById('newsletter-email').value = '';
+          } else {
+            showToast('Already subscribed or invalid email', 'info');
+          }
+        } catch (error) {
+          console.error('Newsletter signup error:', error);
+          showToast('Error subscribing. Please try again.', 'error');
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = originalHTML;
+        }
       });
 
       // ============ NOTIFICATION BELL ============
