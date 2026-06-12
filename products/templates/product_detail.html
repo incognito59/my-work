@@ -8,10 +8,10 @@
 <link rel="stylesheet" href="{% static 'css/flash-sale-timer.css' %}">
 <div class="container my-5">
 
-  <div class="row g-4 align-items-start">
+  <div class="row g-2 g-md-4 align-items-start">
     
-    <!-- Thumbnails on the left -->
-    <div class="col-md-2 d-flex flex-column align-items-center">
+    <!-- Thumbnails on the left - compact on mobile, larger on desktop -->
+    <div class="col-auto d-flex flex-column align-items-center mobile-thumbs-col">
       <img src="{{ product.image_src }}" class="thumb-img mb-2" alt="Main" onclick="changeImage(this)">
       {% if product.additional_images %}
         {% for img in product.additional_images %}
@@ -20,8 +20,11 @@
       {% endif %}
     </div>
 
-    <!-- Main image in the center -->
-    <div class="col-md-6">
+    <!-- Main image and details wrapper -->
+    <div class="col">
+      <div class="row g-2 g-md-4 align-items-start">
+        <!-- Main image -->
+        <div class="col-12 col-md-6">
       <div class="main-img-container border rounded-4 shadow-sm overflow-hidden animate-img position-relative">
         <img id="main-image" src="{{ product.image_src }}" class="img-fluid" alt="{{ product.name }}" onclick="openImageZoom(this)">
         {% if product.is_out_of_stock %}
@@ -39,11 +42,11 @@
       </div>
     </div>
 
-    <!-- Product details on the right -->
-    <div class="col-md-4">
-      <div class="p-4 rounded-4 shadow-sm theme-card border animate-card">
-        <h3 class="fw-bold mb-2">{{ product.name }}</h3>
-        <p class="text-muted mb-3">{{ product.description }}</p>
+    <!-- Product details -->
+    <div class="col-12 col-md-6">
+      <div class="p-3 p-md-4 rounded-4 shadow-sm theme-card border animate-card h-100">
+        <h3 class="fw-bold mb-2 fs-5 fs-md-6">{{ product.name }}</h3>
+        <p class="text-muted mb-3 small">{{ product.description }}</p>
 
         {% if product.has_active_sale %}
         <!-- Flash Sale Banner -->
