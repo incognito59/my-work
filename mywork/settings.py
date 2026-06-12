@@ -10,7 +10,7 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-me-in-producti
 DEBUG = config('DEBUG', cast=bool, default=False)
 
 # Render.com hostname and localhost for development
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,retail-logistics-core-t0xz.onrender.com').split(',')
 
 # CSRF and Security
 CSRF_TRUSTED_ORIGINS = config(
