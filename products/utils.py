@@ -5,6 +5,8 @@ import json
 import re
 import requests
 from urllib.parse import quote
+import time
+from functools import wraps
 
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
@@ -14,6 +16,12 @@ from .models import EmailLog, EmailTemplate, Product
 import logging
 
 logger = logging.getLogger(__name__)
+
+# Simple in-memory cache for AI responses
+_AI_RESPONSE_CACHE = {}
+_CATALOG_CACHE = None
+_CATALOG_CACHE_TIME = 0
+CATALOG_CACHE_TTL = 300  # 5 minutes
 
 
 # ============ EMAIL UTILITIES ============
@@ -259,46 +267,84 @@ def get_product_recommendations(product, limit=4):
 
 # ============ AI UTILITIES (Groq) ============
 
-def _call_groq(prompt, max_tokens=250):
-    """Send a prompt to Groq and return the assistant response."""
+def _get_cached_catalog():
+    """Get all products with caching to reduce database queries."""
+    global _CATALOG_CACHE, _CATALOG_CACHE_TIME
+    current_time = time.time()
+    
+    if _CATALOG_CACHE is not None and (current_time - _CATALOG_CACHE_TIME) < CATALOG_CACHE_TTL:
+        return _CATALOG_CACHE
+    
+    # Build lightweight product inventory (name, price, category)
+    products = Product.objects.all().values('id', 'name', 'price', 'category', 'description').order_by('category', 'name')
+    catalog = [
+        f"{p['name']} (Category: {p['category']}) — ₦{p['price']:,.0f}"
+        for p in products
+    ]
+    
+    _CATALOG_CACHE = catalog
+    _CATALOG_CACHE_TIME = current_time
+    return catalog
+
+
+def _call_groq(prompt, max_tokens=250, retries=2):
+    """Send a prompt to Groq with retry logic and improved settings."""
     api_key = getattr(settings, 'GROQ_API_KEY', '')
 
     if not api_key:
         raise RuntimeError('Groq API key is not configured.')
 
-    payload = {
-        'model': 'llama-3.1-8b-instant',
-        'max_tokens': max_tokens,
-        'messages': [
-            {'role': 'user', 'content': prompt}
-        ],
-        'temperature': 0.3,
-    }
+    for attempt in range(retries):
+        try:
+            payload = {
+                'model': 'llama-3.1-8b-instant',
+                'max_tokens': max_tokens,
+                'messages': [
+                    {'role': 'user', 'content': prompt}
+                ],
+                'temperature': 0.65,  # Increased from 0.3 for varied responses
+            }
 
-    headers = {
-        'Content-Type': 'application/json',
-        'Authorization': f'Bearer {api_key}',
-        'User-Agent': 'Mozilla/5.0',
-    }
+            headers = {
+                'Content-Type': 'application/json',
+                'Authorization': f'Bearer {api_key}',
+                'User-Agent': 'Mozilla/5.0',
+            }
 
-    try:
-        response = requests.post(
-            'https://api.groq.com/openai/v1/chat/completions',
-            json=payload,
-            headers=headers,
-            timeout=20
-        )
-        response.raise_for_status()
-        return response.json()['choices'][0]['message']['content'].strip()
-    except requests.exceptions.HTTPError as exc:
-        logger.error('Groq API error (%s): %s', exc.response.status_code, exc.response.text)
-        return ''
-    except (KeyError, IndexError) as exc:
-        logger.error('Unexpected Groq API response structure: %s', exc)
-        return ''
-    except Exception as exc:
-        logger.error('Groq API request failed: %s', exc)
-        return ''
+            response = requests.post(
+                'https://api.groq.com/openai/v1/chat/completions',
+                json=payload,
+                headers=headers,
+                timeout=30  # Increased from 20 for reliability
+            )
+            response.raise_for_status()
+            return response.json()['choices'][0]['message']['content'].strip()
+        except requests.exceptions.Timeout:
+            if attempt < retries - 1:
+                logger.warning('Groq API timeout (attempt %d/%d), retrying...', attempt + 1, retries)
+                time.sleep(1)  # Short delay before retry
+                continue
+            logger.error('Groq API timeout after %d attempts', retries)
+            return ''
+        except requests.exceptions.HTTPError as exc:
+            if attempt < retries - 1 and exc.response.status_code >= 500:
+                logger.warning('Groq API error (attempt %d/%d): %s, retrying...', attempt + 1, retries, exc.response.status_code)
+                time.sleep(1)
+                continue
+            logger.error('Groq API error (%s): %s', exc.response.status_code, exc.response.text)
+            return ''
+        except (KeyError, IndexError) as exc:
+            logger.error('Unexpected Groq API response structure: %s', exc)
+            return ''
+        except Exception as exc:
+            if attempt < retries - 1:
+                logger.warning('Groq API request failed (attempt %d/%d): %s, retrying...', attempt + 1, retries, exc)
+                time.sleep(1)
+                continue
+            logger.error('Groq API request failed: %s', exc)
+            return ''
+    
+    return ''
 
 
 def _parse_ai_items(text, limit=4):
@@ -365,25 +411,54 @@ def get_product_recommendations_ai(product, limit=4):
 
 
 def get_ai_chat_response(message, limit=4):
-    """Build an AI chat response using product catalog context."""
+    """Build an AI chat response using full product catalog with caching."""
+    # Check cache first
+    cache_key = message.lower().strip()
+    if cache_key in _AI_RESPONSE_CACHE:
+        cached = _AI_RESPONSE_CACHE[cache_key]
+        if time.time() - cached['time'] < 600:  # 10 minute cache TTL
+            return cached['response']
+    
     try:
-        products = list(Product.objects.all().order_by('-id')[:25])
-        product_lines = [
-            f"{p.name} — Category: {p.category} — ₦{p.price:,.2f} — {p.description[:80].strip()}"
-            for p in products
-        ]
+        # Get all products (lightweight: name, price, category)
+        catalog_items = _get_cached_catalog()
+        
+        if not catalog_items:
+            return (
+                'Sorry, our product catalog is empty. '
+                'Please check back later.'
+            )
 
+        # Format catalog for prompt (all products, concise)
+        catalog_text = '\n'.join(catalog_items)
+        
         prompt = (
-            f"You are the RedCart AI shopping assistant. Use only the product details below to answer customer questions. "
-            f"Recommend only actual items from the catalog. Do not invent products.\n\n"
-            f"Catalog:\n" + '\n'.join(product_lines) + "\n\n"
-            f"User question: {message}\n\n"
-            f"Answer clearly, mention product names and prices when relevant. "
-            f"If nothing matches, say so and suggest available alternatives."
+            f"You are the RedCart AI shopping assistant. You have access to our COMPLETE product catalog below. "
+            f"Always check the full catalog before saying something is unavailable.\n\n"
+            f"COMPLETE CATALOG ({len(catalog_items)} products):\n"
+            f"{catalog_text}\n\n"
+            f"Customer question: {message}\n\n"
+            f"Instructions:\n"
+            f"1. Search the catalog for relevant products by name or category\n"
+            f"2. Recommend actual products from the list above ONLY\n"
+            f"3. Never say we don't have something without checking the full catalog\n"
+            f"4. Mention product names and prices when recommending\n"
+            f"5. Be helpful and conversational\n\n"
+            f"Answer:"
         )
 
-        response_text = _call_groq(prompt, max_tokens=320)
+        response_text = _call_groq(prompt, max_tokens=320, retries=2)
         if response_text:
+            # Cache the response
+            _AI_RESPONSE_CACHE[cache_key] = {
+                'response': response_text,
+                'time': time.time()
+            }
+            # Limit cache size to 100 entries
+            if len(_AI_RESPONSE_CACHE) > 100:
+                oldest_key = min(_AI_RESPONSE_CACHE.keys(), key=lambda k: _AI_RESPONSE_CACHE[k]['time'])
+                del _AI_RESPONSE_CACHE[oldest_key]
+            
             return response_text
     except RuntimeError:
         pass
@@ -392,7 +467,7 @@ def get_ai_chat_response(message, limit=4):
 
     return (
         'Sorry, the AI assistant is unavailable right now. '
-        'Browse our product categories or use the search bar to find items.'
+        'Try browsing our categories or use the search bar to find items.'
     )
 
 
