@@ -1,3 +1,5 @@
+
+
 import os
 import dj_database_url
 from pathlib import Path
@@ -5,14 +7,11 @@ from decouple import config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Security settings for production
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-me-in-production')
 DEBUG = config('DEBUG', cast=bool, default=False)
 
-# Render.com hostname and localhost for development
 ALLOWED_HOSTS = ['retail-logistics-core-t0xz.onrender.com', 'localhost', '127.0.0.1']
 
-# CSRF and Security
 CSRF_TRUSTED_ORIGINS = config(
     'CSRF_TRUSTED_ORIGINS',
     default='http://localhost:3000,http://localhost:8000'
@@ -40,7 +39,6 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
-    'allauth.socialaccount.providers.github',
     'import_export',
 ]
 
@@ -76,9 +74,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'mywork.wsgi.application'
 
-# Database Configuration
-# Uses PostgreSQL on Render.com via DATABASE_URL environment variable
-# Falls back to SQLite for local development
 if 'DATABASE_URL' in os.environ:
     DATABASES = {
         'default': dj_database_url.config(
@@ -110,7 +105,6 @@ AUTHENTICATION_BACKENDS = [
 LOGIN_REDIRECT_URL = '/products/'
 LOGOUT_REDIRECT_URL = '/products/'
 
-# ============ ALLAUTH SETTINGS ============
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
@@ -134,20 +128,10 @@ SOCIALACCOUNT_PROVIDERS = {
             'prompt': 'consent select_account',
         },
     },
-    'github': {
-        'APP': {
-            'client_id': config('GITHUB_CLIENT_ID'),
-            'secret': config('GITHUB_CLIENT_SECRET'),
-        },
-        'SCOPE': ['user', 'user:email'],
-    },
 }
 
-# Firebase
 FIREBASE_PROJECT_ID = 'redcart-d792b'
 
-# Email settings for real inbox delivery.
-# Use a real SMTP server (Gmail, Outlook, SendGrid, etc.) in production.
 EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
 EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
 EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
@@ -159,18 +143,14 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
 SERVER_EMAIL = config('DEFAULT_FROM_EMAIL')
 SITE_URL = config('SITE_URL', default='http://localhost:8000')
 
-# Stripe (keep for later)
 STRIPE_PUBLISHABLE_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY', '')
 STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY', '')
 
-# Paystack
 PAYSTACK_PUBLIC_KEY = config('PAYSTACK_PUBLIC_KEY')
 PAYSTACK_SECRET_KEY = config('PAYSTACK_SECRET_KEY')
 
-# Groq
 GROQ_API_KEY = config('GROQ_API_KEY')
 
-# ============ NOTIFICATION SYSTEM SETTINGS ============
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels.layers.InMemoryChannelLayer',
@@ -218,16 +198,15 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'frontend', BASE_DIR / 'static']
 
-# WhiteNoise configuration for serving static files
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+```
+
