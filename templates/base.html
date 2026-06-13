@@ -875,7 +875,12 @@
         wrapper.className = `ai-chat-message ${role}`;
         const bubble = document.createElement('div');
         bubble.className = 'message-bubble';
-        bubble.textContent = message;
+        bubble.innerHTML = message
+       .replace(/&/g, '&amp;')
+       .replace(/</g, '&lt;')
+       .replace(/>/g, '&gt;')
+       .replace(/\n/g, '<br>')
+       .replace(/- (.+)/g, '• $1<br>');
         wrapper.appendChild(bubble);
         msgs.appendChild(wrapper);
         msgs.scrollTop = msgs.scrollHeight;
@@ -906,7 +911,12 @@
           const bubble = allMsgs[allMsgs.length - 1]?.querySelector('.message-bubble');
           if (bubble) {
             if (data.success && data.reply) {
-              bubble.textContent = data.reply;
+              bubble.innerHTML = data.reply
+             .replace(/&/g, '&amp;')
+             .replace(/</g, '&lt;')
+             .replace(/>/g, '&gt;')
+             .replace(/\n/g, '<br>')
+             .replace(/- (.+)/g, '• $1<br>');
               chatHistory[chatHistory.length - 1].content = data.reply;
             } else {
               bubble.textContent = 'Sorry, I could not process that. Please try again.';
