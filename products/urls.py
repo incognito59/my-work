@@ -54,6 +54,9 @@ urlpatterns = [
     # 📱 Newsletter
     path('newsletter/signup/', views.newsletter_signup, name='newsletter-signup'),
     path('newsletter/unsubscribe/', views.newsletter_unsubscribe, name='newsletter-unsubscribe'),
+
+    # 🧪 Email Delivery Test (debugging only — remove once SMTP delivery is confirmed working)
+    path('test-email/', views.test_email, name='test-email'),
     
     # 📝 Blog & Content Pages
     path('blog/', views.blog_page, name='blog'),
