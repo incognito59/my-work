@@ -6,7 +6,9 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
+from django.core.mail import send_mail
 import json
+import traceback
 import urllib.request
 import urllib.error
 
@@ -970,6 +972,22 @@ def newsletter_unsubscribe(request):
             return redirect('products:newsletter-unsubscribe')
 
     return render(request, 'newsletter_unsubscribe.html', {'email': email})
+
+
+# ============ EMAIL DELIVERY TEST ============
+
+def test_email(request):
+    try:
+        send_mail(
+            'RedCart Test Email',
+            'This is a test email to check delivery.',
+            None,  # uses DEFAULT_FROM_EMAIL
+            ['your-real-email@gmail.com'],  # put an email you can actually check
+            fail_silently=False,
+        )
+        return HttpResponse('SUCCESS: send_mail did not raise an error.')
+    except Exception as e:
+        return HttpResponse(f'<pre>ERROR: {str(e)}\n\n{traceback.format_exc()}</pre>')
 
 
 # ============ EMAIL PREVIEWS ============
