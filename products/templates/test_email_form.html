@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card shadow p-4">
+        <h2 class="text-center mb-4">🧪 Email Test Form</h2>
+        
+        <form method="post" action="{% url 'products:test-email' %}">
+          {% csrf_token %}
+          
+          <div class="mb-4">
+            <label for="email" class="form-label"><strong>Recipient Email Address</strong></label>
+            <input 
+              type="email" 
+              class="form-control" 
+              id="email" 
+              name="email" 
+              placeholder="your-email@gmail.com"
+              required
+            >
+            <small class="text-muted">Enter an email where you want to receive the test email.</small>
+          </div>
+
+          <button type="submit" class="btn btn-success w-100 py-2 fw-bold">📧 Send Test Email</button>
+        </form>
+
+        <hr class="my-4">
+
+        <div class="alert alert-info">
+          <h5>📋 How to set up Gmail:</h5>
+          <ol>
+            <li>Go to <a href="https://myaccount.google.com/apppasswords" target="_blank">myaccount.google.com/apppasswords</a></li>
+            <li>Select <strong>Mail</strong> and <strong>Windows Computer</strong> (or your device)</li>
+            <li>Google will generate a <strong>16-character password</strong></li>
+            <li>Copy and add it to your <code>.env</code> file as:
+              <pre><code>EMAIL_HOST_PASSWORD='your-16-char-password'</code></pre>
+            </li>
+            <li>Restart your Django server: <code>python manage.py runserver</code></li>
+            <li>Then use this form to test</li>
+          </ol>
+        </div>
+
+        <div class="alert alert-warning">
+          <h5>⚠️ Current Configuration:</h5>
+          <pre><code>EMAIL_BACKEND: {{ email_backend }}
+EMAIL_HOST: {{ email_host }}
+EMAIL_PORT: {{ email_port }}
+EMAIL_HOST_USER: {{ email_user }}
+EMAIL_USE_TLS: {{ email_tls }}
+DEFAULT_FROM_EMAIL: {{ default_from_email }}</code></pre>
+        </div>
+
+        <a href="{% url 'products:product-list' %}" class="btn btn-secondary w-100 mt-2">← Back to Shop</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

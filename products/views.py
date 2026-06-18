@@ -979,17 +979,84 @@ def newsletter_unsubscribe(request):
 # ============ EMAIL DELIVERY TEST ============
 
 def test_email(request):
-    try:
-        send_mail(
-            'RedCart Test Email',
-            'This is a test email to check delivery.',
-            settings.DEFAULT_FROM_EMAIL,
-            ['your-real-email@gmail.com'],  # put an email you can actually check
-            fail_silently=False,
-        )
-        return HttpResponse('SUCCESS: send_mail did not raise an error.')
-    except Exception as e:
-        return HttpResponse(f'<pre>ERROR: {str(e)}\n\n{traceback.format_exc()}</pre>')
+    """Test email delivery with user-provided recipient."""
+    if request.method == 'POST':
+        recipient_email = request.POST.get('email', '').strip()
+        if not recipient_email:
+            return HttpResponse(
+                '<h2>❌ Error: No email provided</h2>'
+                '<p>Please provide a recipient email address.</p>'
+                '<a href="/products/test-email/">Go back</a>',
+                status=400
+            )
+        
+        try:
+            send_mail(
+                subject='🧪 RedCart Test Email',
+                message='This is a test email from RedCart to verify email delivery is working correctly.',
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[recipient_email],
+                html_message=(
+                    f'<h2>🧪 RedCart Email Test</h2>'
+                    f'<p>This is a test email from <strong>RedCart</strong>.</p>'
+                    f'<p><strong>From:</strong> {settings.DEFAULT_FROM_EMAIL}</p>'
+                    f'<p><strong>To:</strong> {recipient_email}</p>'
+                    f'<p>✅ If you received this email, your email configuration is working correctly!</p>'
+                ),
+                fail_silently=False,
+            )
+            return HttpResponse(
+                f'<h2>✅ Success!</h2>'
+                f'<p>Test email sent to: <strong>{recipient_email}</strong></p>'
+                f'<p><strong>From:</strong> {settings.DEFAULT_FROM_EMAIL}</p>'
+                f'<p>Check your inbox (including spam folder) for the email.</p>'
+                f'<hr>'
+                f'<h3>Email Configuration:</h3>'
+                f'<pre>'
+                f'EMAIL_BACKEND: {settings.EMAIL_BACKEND}\n'
+                f'EMAIL_HOST: {settings.EMAIL_HOST}\n'
+                f'EMAIL_PORT: {settings.EMAIL_PORT}\n'
+                f'EMAIL_HOST_USER: {settings.EMAIL_HOST_USER}\n'
+                f'EMAIL_USE_TLS: {settings.EMAIL_USE_TLS}\n'
+                f'DEFAULT_FROM_EMAIL: {settings.DEFAULT_FROM_EMAIL}'
+                f'</pre>'
+                f'<a href="/products/test-email/">Send another test</a>'
+            )
+        except Exception as e:
+            return HttpResponse(
+                f'<h2>❌ Error Sending Email</h2>'
+                f'<p><strong>Error:</strong> {str(e)}</p>'
+                f'<hr>'
+                f'<h3>Email Configuration:</h3>'
+                f'<pre>'
+                f'EMAIL_BACKEND: {settings.EMAIL_BACKEND}\n'
+                f'EMAIL_HOST: {settings.EMAIL_HOST}\n'
+                f'EMAIL_PORT: {settings.EMAIL_PORT}\n'
+                f'EMAIL_HOST_USER: {settings.EMAIL_HOST_USER}\n'
+                f'EMAIL_USE_TLS: {settings.EMAIL_USE_TLS}\n'
+                f'DEFAULT_FROM_EMAIL: {settings.DEFAULT_FROM_EMAIL}'
+                f'</pre>'
+                f'<h3>Troubleshooting:</h3>'
+                f'<ul>'
+                f'<li>Check that EMAIL_HOST_USER and EMAIL_HOST_PASSWORD are set in .env</li>'
+                f'<li>For Gmail, use an App Password (not your regular password)</li>'
+                f'<li>Enable "Less secure app access" if needed</li>'
+                f'<li>Check .env file has no typos or extra spaces</li>'
+                f'</ul>'
+                f'<a href="/products/test-email/">Try again</a>',
+                status=500
+            )
+    
+    # GET: Show test form
+    context = {
+        'email_backend': settings.EMAIL_BACKEND,
+        'email_host': settings.EMAIL_HOST,
+        'email_port': settings.EMAIL_PORT,
+        'email_user': settings.EMAIL_HOST_USER,
+        'email_tls': settings.EMAIL_USE_TLS,
+        'default_from_email': settings.DEFAULT_FROM_EMAIL,
+    }
+    return render(request, 'test_email_form.html', context)
 
 
 # ============ EMAIL PREVIEWS ============
