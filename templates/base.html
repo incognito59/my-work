@@ -345,25 +345,31 @@
         min-height: 0;
         max-height: 280px;
       }
-      .ai-chat-message { margin-bottom: 10px; line-height: 1.4; }
+      .ai-chat-message { margin-bottom: 12px; line-height: 1.5; }
       .ai-chat-message.user { text-align: right; }
       .ai-chat-message.user .message-bubble {
         display: inline-block;
         background: #e3f2fd;
         color: #1a1a2e;
         border-radius: 16px 16px 4px 16px;
-        font-size: 0.8rem;
-        padding: 8px 12px;
+        font-size: 0.85rem;
+        padding: 10px 14px;
         max-width: 90%;
+        white-space: pre-wrap;
+        word-break: break-word;
+        overflow-wrap: anywhere;
       }
       .ai-chat-message.assistant .message-bubble {
         display: inline-block;
         background: #f0f0f0;
         color: #1a1a2e;
         border-radius: 16px 16px 16px 4px;
-        font-size: 0.8rem;
-        padding: 8px 12px;
+        font-size: 0.85rem;
+        padding: 10px 14px;
         max-width: 90%;
+        white-space: pre-wrap;
+        word-break: break-word;
+        overflow-wrap: anywhere;
       }
       .ai-chat-footer {
         display: flex;
@@ -875,12 +881,14 @@
         wrapper.className = `ai-chat-message ${role}`;
         const bubble = document.createElement('div');
         bubble.className = 'message-bubble';
-        bubble.innerHTML = message
-       .replace(/&/g, '&amp;')
-       .replace(/</g, '&lt;')
-       .replace(/>/g, '&gt;')
-       .replace(/\n/g, '<br>')
-       .replace(/- (.+)/g, '• $1<br>');
+        const safeMessage = message
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/\r?\n/g, '<br>')
+          .replace(/(^|<br>)-\s+/g, '$1• ')
+          .replace(/(^|<br>)(\d+)\.\s+/g, '$1$2. ');
+        bubble.innerHTML = safeMessage;
         wrapper.appendChild(bubble);
         msgs.appendChild(wrapper);
         msgs.scrollTop = msgs.scrollHeight;
