@@ -15,7 +15,7 @@ import urllib.error
 from django.urls import reverse
 from django.http import JsonResponse, HttpResponse
 from .models import Product, Comment, Order, OrderItem, Wishlist, AbandonedCart, Coupon
-from .utils import get_product_recommendations_ai, get_ai_chat_response
+from .utils import get_product_recommendations_ai, get_ai_chat_response, update_stock
 from django.conf import settings
 
 from django.views.decorators.http import require_http_methods
@@ -146,12 +146,14 @@ def paystack_verify(request):
                 for product_id, item_data in cart.items():
                     try:
                         product = Product.objects.get(id=int(product_id))
-                        OrderItem.objects.create(
+                        quantity = int(item_data.get('quantity', 1))
+                        order_item = OrderItem.objects.create(
                             order=order,
                             product=product,
-                            quantity=item_data.get('quantity', 1),
+                            quantity=quantity,
                             price=item_data.get('price', product.price)
                         )
+                        update_stock(product, -quantity, reason='sale')
                     except Product.DoesNotExist:
                         pass
 
@@ -981,7 +983,7 @@ def test_email(request):
         send_mail(
             'RedCart Test Email',
             'This is a test email to check delivery.',
-            None,  # uses DEFAULT_FROM_EMAIL
+            settings.DEFAULT_FROM_EMAIL,
             ['your-real-email@gmail.com'],  # put an email you can actually check
             fail_silently=False,
         )

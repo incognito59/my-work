@@ -182,7 +182,11 @@ def update_stock(product, quantity, reason='adjustment'):
     """
     from .models import InventoryLog
 
-    product.stock += quantity
+    if product.stock_quantity is not None:
+        product.stock_quantity += quantity
+    else:
+        product.stock += quantity
+
     product.save()
 
     InventoryLog.objects.create(
