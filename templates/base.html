@@ -969,15 +969,17 @@
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
           });
           
-          if (response.ok) {
-            showToast('✅ Successfully subscribed! Check your email for confirmation.', 'success');
+          const data = await response.json();
+          
+          if (response.ok && data.success) {
+            showToast(data.message || '✅ Successfully subscribed! Check your email.', 'success');
             document.getElementById('newsletter-email').value = '';
           } else {
-            showToast('Already subscribed or invalid email', 'info');
+            showToast(data.message || 'Error subscribing. Please try again.', 'error');
           }
         } catch (error) {
           console.error('Newsletter signup error:', error);
-          showToast('Error subscribing. Please try again.', 'error');
+          showToast('Network error. Please check your connection and try again.', 'error');
         } finally {
           btn.disabled = false;
           btn.innerHTML = originalHTML;

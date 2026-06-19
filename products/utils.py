@@ -91,24 +91,41 @@ def send_email(user, email_type, context=None, recipient_email=None):
 def send_newsletter_confirmation_email(email):
     """Send a confirmation email to a new newsletter subscriber."""
     try:
-        template = EmailTemplate.objects.filter(email_type='newsletter', is_active=True).first()
-        if not template:
-            logger.warning('Email template not found: newsletter')
-            return False
-
+        from django.core.mail import send_mail
+        from django.conf import settings
+        
+        # Try to use template first, if it doesn't exist, use simple HTML
+        template = None
+        try:
+            template = EmailTemplate.objects.filter(email_type='newsletter', is_active=True).first()
+        except:
+            pass
+        
         unsubscribe_url = f"{settings.SITE_URL.rstrip('/')}/products/newsletter/unsubscribe/?email={quote(email)}"
 
-        context = {
-            'email': email,
-            'site_name': 'RedCart',
-            'unsubscribe_url': unsubscribe_url,
-        }
-
-        html_message = render_to_string('emails/newsletter.html', context)
-        plain_message = strip_tags(html_message)
+        if template:
+            context = {
+                'email': email,
+                'site_name': 'RedCart',
+                'unsubscribe_url': unsubscribe_url,
+            }
+            html_message = render_to_string('emails/newsletter.html', context)
+            plain_message = strip_tags(html_message)
+            subject = template.subject
+        else:
+            # Fallback HTML if template doesn't exist
+            html_message = f'''
+            <h2>Welcome to RedCart Newsletter!</h2>
+            <p>Hi {email},</p>
+            <p>Thank you for subscribing to our newsletter. You'll now receive updates about new products, special offers, and exclusive deals.</p>
+            <hr>
+            <p><a href="{unsubscribe_url}">Unsubscribe from newsletter</a></p>
+            '''
+            plain_message = f'Welcome to RedCart Newsletter!\n\nThank you for subscribing. Unsubscribe: {unsubscribe_url}'
+            subject = '📧 Welcome to RedCart Newsletter'
 
         send_mail(
-            subject=template.subject,
+            subject=subject,
             message=plain_message,
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[email],
@@ -119,8 +136,10 @@ def send_newsletter_confirmation_email(email):
         logger.info(f"Newsletter confirmation email sent to {email}")
         return True
     except Exception as e:
-        logger.error(f"Error sending newsletter confirmation email to {email}: {str(e)}")
-        return False
+        error_msg = f"Error sending newsletter confirmation email to {email}: {str(e)}"
+        logger.error(error_msg)
+        print(f'NEWSLETTER EMAIL ERROR: {error_msg}')  # Also print to console
+        raise  # Re-raise so view can handle it
 
 
 def send_order_confirmation_email(order):

@@ -1034,9 +1034,18 @@ def newsletter_signup(request):
     if request.method == 'POST':
         from .models import Newsletter
         from .utils import send_newsletter_confirmation_email
+        import json
 
         email = request.POST.get('email', '').strip()
-        if email:
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        
+        if not email:
+            if is_ajax:
+                return JsonResponse({'success': False, 'message': 'Please provide a valid email address.'}, status=400)
+            messages.error(request, "❌ Please provide a valid email address.")
+            return redirect('products:product-list')
+        
+        try:
             newsletter, created = Newsletter.objects.get_or_create(email=email)
             if not created and not newsletter.subscribed:
                 newsletter.subscribed = True
@@ -1044,18 +1053,34 @@ def newsletter_signup(request):
                 created = True
 
             if created:
-                email_sent = send_newsletter_confirmation_email(email)
-                if email_sent:
-                    messages.success(request, "✅ Successfully subscribed to our newsletter! Check your inbox for a confirmation email.")
-                else:
-                    messages.success(request, "✅ Successfully subscribed to our newsletter! We could not send the confirmation email right now.")
+                try:
+                    email_sent = send_newsletter_confirmation_email(email)
+                    if email_sent:
+                        success_msg = "✅ Successfully subscribed! Check your email for confirmation."
+                    else:
+                        success_msg = "✅ Subscribed, but couldn't send confirmation email right now."
+                except Exception as e:
+                    print(f'Newsletter email error: {str(e)}')
+                    success_msg = f"⚠️ Subscribed, but email failed: {str(e)[:50]}"
+                
+                if is_ajax:
+                    return JsonResponse({'success': True, 'message': success_msg})
+                messages.success(request, success_msg)
             else:
-                messages.info(request, "📧 You're already subscribed!")
-            return redirect('products:product-list')
-        else:
-            messages.error(request, "❌ Please provide a valid email address.")
-            return redirect('products:product-list')
+                msg = "📧 You're already subscribed!"
+                if is_ajax:
+                    return JsonResponse({'success': False, 'message': msg})
+                messages.info(request, msg)
+        except Exception as e:
+            error_msg = f"❌ Error: {str(e)}"
+            if is_ajax:
+                return JsonResponse({'success': False, 'message': error_msg}, status=500)
+            messages.error(request, error_msg)
+        
+        return redirect('products:product-list')
     
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=400)
     messages.error(request, "❌ Invalid request method.")
     return redirect('products:product-list')
 
