@@ -144,24 +144,77 @@ def paystack_verify(request):
                     status='confirmed'
                 )
 
+                items_html = '<table style="width: 100%; border-collapse: collapse;"><tr style="background: #f5f5f5;"><th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">Product</th><th style="padding: 8px; text-align: center; border-bottom: 1px solid #ddd;">Qty</th><th style="padding: 8px; text-align: right; border-bottom: 1px solid #ddd;">Price</th></tr>'
+                
                 for product_id, item_data in cart.items():
                     try:
                         product = Product.objects.get(id=int(product_id))
                         quantity = int(item_data.get('quantity', 1))
+                        price = item_data.get('price', product.price)
                         order_item = OrderItem.objects.create(
                             order=order,
                             product=product,
                             quantity=quantity,
-                            price=item_data.get('price', product.price)
+                            price=price
                         )
                         update_stock(product, -quantity, reason='sale')
+                        items_html += f'<tr><td style="padding: 8px; border-bottom: 1px solid #eee;">{product.name}</td><td style="padding: 8px; text-align: center; border-bottom: 1px solid #eee;">{quantity}</td><td style="padding: 8px; text-align: right; border-bottom: 1px solid #eee;">₦{price:,.2f}</td></tr>'
                     except Product.DoesNotExist:
                         pass
+                
+                items_html += '</table>'
+                
+                # Send order confirmation email to customer
+                try:
+                    send_mail(
+                        subject=f'📦 Order Confirmation #{order.id}',
+                        message=f'Hi {request.user.first_name or request.user.username},\n\nThank you for your purchase! Your order #{order.id} has been confirmed.\n\nAmount: ₦{amount:,.2f}\n\nWe will notify you when your items ship.\n\nBest regards,\nRedCart Team',
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[request.user.email],
+                        html_message=f'''
+                        <h2>📦 Order Confirmation</h2>
+                        <p>Hi {request.user.first_name or request.user.username},</p>
+                        <p>Thank you for your purchase! Your order has been confirmed.</p>
+                        <p><strong>Order ID:</strong> #{order.id}</p>
+                        <h3>Order Details:</h3>
+                        {items_html}
+                        <p style="margin-top: 15px;"><strong>Total Amount:</strong> ₦{amount:,.2f}</p>
+                        <p>We will notify you when your items ship.</p>
+                        <hr>
+                        <p>If you have any questions, please reply to this email or visit our support page.</p>
+                        <p>Best regards,<br><strong>RedCart Team</strong></p>
+                        ''',
+                        fail_silently=False,
+                    )
+                except Exception as e:
+                    print(f'Error sending order confirmation email: {str(e)}')
+                
+                # Send order notification to admin
+                try:
+                    send_mail(
+                        subject=f'📦 New Order #{order.id} from {request.user.first_name or request.user.username}',
+                        message=f'New order received:\n\nOrder ID: {order.id}\nCustomer: {request.user.first_name or request.user.username}\nEmail: {request.user.email}\nAmount: ₦{amount:,.2f}',
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[settings.DEFAULT_FROM_EMAIL],
+                        html_message=f'''
+                        <h2>📦 New Order Received</h2>
+                        <p><strong>Order ID:</strong> #{order.id}</p>
+                        <p><strong>Customer:</strong> {request.user.first_name or request.user.username}</p>
+                        <p><strong>Email:</strong> {request.user.email}</p>
+                        <p><strong>Amount:</strong> ₦{amount:,.2f}</p>
+                        <h3>Items:</h3>
+                        {items_html}
+                        <p><a href="{settings.SITE_URL}/admin/products/order/{order.id}/change/">View in Admin</a></p>
+                        ''',
+                        fail_silently=False,
+                    )
+                except Exception as e:
+                    print(f'Error sending order admin notification: {str(e)}')
 
             request.session['cart'] = {}
             _sync_abandoned_cart(request, {})
 
-            messages.success(request, f'✅ Payment successful! Amount: ₦{amount:,.2f}')
+            messages.success(request, f'✅ Payment successful! Amount: ₦{amount:,.2f}. Order confirmation sent to {request.user.email}')
             return redirect('products:product-list')
         else:
             error_msg = result.get('data', {}).get('gateway_response', 'Payment verification failed')
@@ -780,8 +833,56 @@ def contact_us(request):
         message = request.POST.get('message', '').strip()
 
         if all([name, email, subject, message]):
+            # Save contact form submission
             ContactFormSubmission.objects.create(name=name, email=email, subject=subject, message=message)
-            messages.success(request, "✅ Thank you! We've received your message. We'll respond within 24 hours.")
+            
+            # Send confirmation email to user
+            try:
+                send_mail(
+                    subject=f'✅ We Received Your Message - {subject}',
+                    message=f'Hi {name},\n\nThank you for contacting RedCart! We have received your message:\n\n{message}\n\nWe will respond within 24 hours.\n\nBest regards,\nRedCart Team',
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[email],
+                    html_message=f'''
+                    <h2>✅ We Received Your Message</h2>
+                    <p>Hi {name},</p>
+                    <p>Thank you for contacting <strong>RedCart</strong>! We have received your message:</p>
+                    <blockquote style="background: #f5f5f5; padding: 10px; border-left: 4px solid #007bff;">
+                        <strong>{subject}</strong><br>
+                        {message}
+                    </blockquote>
+                    <p>We will respond within 24 hours.</p>
+                    <p>Best regards,<br><strong>RedCart Team</strong></p>
+                    ''',
+                    fail_silently=False,
+                )
+            except Exception as e:
+                print(f'Error sending contact confirmation email: {str(e)}')
+            
+            # Send admin notification email
+            try:
+                send_mail(
+                    subject=f'📧 New Contact Form Submission: {subject}',
+                    message=f'New contact form submission:\n\nName: {name}\nEmail: {email}\nSubject: {subject}\nMessage: {message}',
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[settings.DEFAULT_FROM_EMAIL],
+                    html_message=f'''
+                    <h2>📧 New Contact Form Submission</h2>
+                    <p><strong>Name:</strong> {name}</p>
+                    <p><strong>Email:</strong> <a href="mailto:{email}">{email}</a></p>
+                    <p><strong>Subject:</strong> {subject}</p>
+                    <p><strong>Message:</strong></p>
+                    <blockquote style="background: #f5f5f5; padding: 10px; border-left: 4px solid #28a745;">
+                        {message}
+                    </blockquote>
+                    <p><a href="http://admin.redcart.com/products/contactformsubmission/">View in Admin</a></p>
+                    ''',
+                    fail_silently=False,
+                )
+            except Exception as e:
+                print(f'Error sending contact admin notification: {str(e)}')
+            
+            messages.success(request, "✅ Thank you! We've received your message and sent a confirmation email. We'll respond within 24 hours.")
             return redirect('products:contact')
         else:
             messages.error(request, "❌ Please fill in all fields.")
