@@ -134,6 +134,7 @@ def send_newsletter_confirmation_email(email):
         )
 
         logger.info(f"Newsletter confirmation email sent to {email}")
+        print(f'NEWSLETTER EMAIL SENT: {email} via {settings.EMAIL_HOST}')
         return True
     except Exception as e:
         error_msg = f"Error sending newsletter confirmation email to {email}: {str(e)}"

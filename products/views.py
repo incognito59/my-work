@@ -1049,12 +1049,16 @@ def newsletter_signup(request):
                 created = True
 
             if created:
+                if not settings.EMAIL_HOST_USER or not settings.EMAIL_HOST_PASSWORD:
+                    messages.error(request, "❌ Email provider is not configured on this site. Please contact the site administrator.")
+                    return redirect('products:product-list')
+
                 try:
                     email_sent = send_newsletter_confirmation_email(email)
                     if email_sent:
                         messages.success(request, "✅ Successfully subscribed! Check your email for confirmation.")
                     else:
-                        messages.success(request, "✅ Subscribed, but couldn't send confirmation email right now.")
+                        messages.warning(request, "⚠️ Subscribed, but could not send confirmation email right now.")
                 except Exception as e:
                     print(f'Newsletter email error: {str(e)}')
                     messages.warning(request, f"⚠️ Subscribed, but email failed: {str(e)[:100]}")
