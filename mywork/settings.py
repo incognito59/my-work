@@ -38,7 +38,6 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
     'import_export',
-    'anymail',
 ]
 
 MIDDLEWARE = [
@@ -131,12 +130,14 @@ SOCIALACCOUNT_PROVIDERS = {
 
 FIREBASE_PROJECT_ID = 'redcart-d792b'
 
-# ============ EMAIL (Resend via Anymail) ============
-EMAIL_BACKEND = 'anymail.backends.resend.EmailBackend'
-ANYMAIL = {
-    'RESEND_API_KEY': config('RESEND_API_KEY', default=''),
-}
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='onboarding@resend.dev')
+# ============ EMAIL (Gmail SMTP) ============
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default=config('EMAIL_HOST_USER', default=''))
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
 SITE_URL = config('SITE_URL', default='http://localhost:8000')
 
