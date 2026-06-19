@@ -1041,9 +1041,10 @@ def newsletter_signup(request):
             messages.error(request, "❌ Please provide a valid email address.")
             return redirect('products:product-list')
         
-        # Check if email provider is configured (Resend API key for Anymail backend)
-        resend_api_key = config('RESEND_API_KEY', default='')
-        if not resend_api_key:
+        # Check if email provider is configured (Gmail SMTP credentials)
+        email_host_user = config('EMAIL_HOST_USER', default='')
+        email_host_password = config('EMAIL_HOST_PASSWORD', default='')
+        if not email_host_user or not email_host_password:
             messages.error(request, "❌ Email provider is not configured on this site. Please contact the site administrator.")
             return redirect('products:product-list')
 
