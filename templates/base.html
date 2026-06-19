@@ -946,45 +946,8 @@
       });
 
       // ============ NEWSLETTER SUBSCRIPTION ============
-      document.getElementById('newsletter-form')?.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const form = e.target;
-        const email = document.getElementById('newsletter-email').value.trim();
-        const btn = document.getElementById('newsletter-btn');
-        
-        if (!email) {
-          showToast('Please enter a valid email address', 'error');
-          return;
-        }
-        
-        btn.disabled = true;
-        const originalHTML = btn.innerHTML;
-        btn.innerHTML = '<i class="bi bi-hourglass-split"></i>';
-        
-        try {
-          const formData = new FormData(form);
-          const response = await fetch(form.action, {
-            method: 'POST',
-            body: formData,
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-          });
-          
-          const data = await response.json();
-          
-          if (response.ok && data.success) {
-            showToast(data.message || '✅ Successfully subscribed! Check your email.', 'success');
-            document.getElementById('newsletter-email').value = '';
-          } else {
-            showToast(data.message || 'Error subscribing. Please try again.', 'error');
-          }
-        } catch (error) {
-          console.error('Newsletter signup error:', error);
-          showToast('Network error. Please check your connection and try again.', 'error');
-        } finally {
-          btn.disabled = false;
-          btn.innerHTML = originalHTML;
-        }
-      });
+      // Remove AJAX - let form submit normally so it processes server-side and redirects
+      // The view will handle messages and show success/error
 
       // ============ NOTIFICATION BELL ============
       async function updateNotificationBell() {
