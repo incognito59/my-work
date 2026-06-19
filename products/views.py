@@ -17,6 +17,7 @@ from django.http import JsonResponse, HttpResponse
 from .models import Product, Comment, Order, OrderItem, Wishlist, AbandonedCart, Coupon
 from .utils import get_product_recommendations_ai, get_ai_chat_response, update_stock
 from django.conf import settings
+from decouple import config
 
 from django.views.decorators.http import require_http_methods
 from django.core.paginator import Paginator
@@ -990,6 +991,33 @@ def test_email(request):
                 status=400
             )
         
+        # Check if credentials are configured
+        if not settings.EMAIL_HOST_USER or not config('EMAIL_HOST_PASSWORD', default=''):
+            return HttpResponse(
+                f'<h2>⚠️ Email Credentials Not Configured</h2>'
+                f'<p>EMAIL_HOST_PASSWORD is not set in environment variables.</p>'
+                f'<hr>'
+                f'<h3>Setup Instructions:</h3>'
+                f'<ol>'
+                f'<li>Go to <a href="https://myaccount.google.com/apppasswords" target="_blank">myaccount.google.com/apppasswords</a></li>'
+                f'<li>Select <strong>Mail</strong> and <strong>Windows Computer</strong></li>'
+                f'<li>Copy the 16-character password Google generates</li>'
+                f'<li><strong>On Render Dashboard:</strong> Add to Environment Variables:<br><code>EMAIL_HOST_PASSWORD=your-16-char-password</code></li>'
+                f'<li>Redeploy your app</li>'
+                f'<li>Then test again</li>'
+                f'</ol>'
+                f'<hr>'
+                f'<h3>Current Configuration:</h3>'
+                f'<pre>'
+                f'EMAIL_BACKEND: {settings.EMAIL_BACKEND}\n'
+                f'EMAIL_HOST: {settings.EMAIL_HOST}\n'
+                f'EMAIL_HOST_USER: {settings.EMAIL_HOST_USER}\n'
+                f'EMAIL_HOST_PASSWORD: {"SET ✓" if config("EMAIL_HOST_PASSWORD", default="") else "NOT SET ✗"}'
+                f'</pre>'
+                f'<a href="/products/test-email/">Go back</a>',
+                status=400
+            )
+        
         try:
             send_mail(
                 subject='🧪 RedCart Test Email',
@@ -1038,10 +1066,10 @@ def test_email(request):
                 f'</pre>'
                 f'<h3>Troubleshooting:</h3>'
                 f'<ul>'
-                f'<li>Check that EMAIL_HOST_USER and EMAIL_HOST_PASSWORD are set in .env</li>'
-                f'<li>For Gmail, use an App Password (not your regular password)</li>'
-                f'<li>Enable "Less secure app access" if needed</li>'
-                f'<li>Check .env file has no typos or extra spaces</li>'
+                f'<li>Check that EMAIL_HOST_USER and EMAIL_HOST_PASSWORD are set in environment variables</li>'
+                f'<li>For Gmail, use an App Password from <a href="https://myaccount.google.com/apppasswords" target="_blank">myaccount.google.com/apppasswords</a></li>'
+                f'<li>On Render: Add EMAIL_HOST_PASSWORD to Environment Variables, then redeploy</li>'
+                f'<li>Check for typos in the password</li>'
                 f'</ul>'
                 f'<a href="/products/test-email/">Try again</a>',
                 status=500
