@@ -1041,16 +1041,18 @@ def newsletter_signup(request):
             messages.error(request, "❌ Please provide a valid email address.")
             return redirect('products:product-list')
         
+        # Check if email provider is configured (Resend API key for Anymail backend)
+        resend_api_key = config('RESEND_API_KEY', default='')
+        if not resend_api_key:
+            messages.error(request, "❌ Email provider is not configured on this site. Please contact the site administrator.")
+            return redirect('products:product-list')
+
         try:
             newsletter, created = Newsletter.objects.get_or_create(email=email)
             if not created and not newsletter.subscribed:
                 newsletter.subscribed = True
                 newsletter.save()
                 created = True
-
-            if not settings.EMAIL_HOST_USER or not settings.EMAIL_HOST_PASSWORD:
-                messages.error(request, "❌ Email provider is not configured on this site. Please contact the site administrator.")
-                return redirect('products:product-list')
 
             if created:
                 try:
@@ -1117,18 +1119,18 @@ def test_email(request):
                 status=400
             )
         
-        # Check if credentials are configured
-        if not settings.EMAIL_HOST_USER or not config('EMAIL_HOST_PASSWORD', default=''):
+        # Check if Resend API key is configured
+        resend_api_key = config('RESEND_API_KEY', default='')
+        if not resend_api_key:
             return HttpResponse(
-                f'<h2>⚠️ Email Credentials Not Configured</h2>'
-                f'<p>EMAIL_HOST_PASSWORD is not set in environment variables.</p>'
+                f'<h2>⚠️ Email Provider Not Configured</h2>'
+                f'<p>RESEND_API_KEY is not set in environment variables.</p>'
                 f'<hr>'
                 f'<h3>Setup Instructions:</h3>'
                 f'<ol>'
-                f'<li>Go to <a href="https://myaccount.google.com/apppasswords" target="_blank">myaccount.google.com/apppasswords</a></li>'
-                f'<li>Select <strong>Mail</strong> and <strong>Windows Computer</strong></li>'
-                f'<li>Copy the 16-character password Google generates</li>'
-                f'<li><strong>On Render Dashboard:</strong> Add to Environment Variables:<br><code>EMAIL_HOST_PASSWORD=your-16-char-password</code></li>'
+                f'<li>Sign up at <a href="https://resend.com" target="_blank">resend.com</a></li>'
+                f'<li>Create a new API key in the Resend dashboard</li>'
+                f'<li><strong>On Render Dashboard:</strong> Add to Environment Variables:<br><code>RESEND_API_KEY=your-api-key</code></li>'
                 f'<li>Redeploy your app</li>'
                 f'<li>Then test again</li>'
                 f'</ol>'
@@ -1136,9 +1138,8 @@ def test_email(request):
                 f'<h3>Current Configuration:</h3>'
                 f'<pre>'
                 f'EMAIL_BACKEND: {settings.EMAIL_BACKEND}\n'
-                f'EMAIL_HOST: {settings.EMAIL_HOST}\n'
-                f'EMAIL_HOST_USER: {settings.EMAIL_HOST_USER}\n'
-                f'EMAIL_HOST_PASSWORD: {"SET ✓" if config("EMAIL_HOST_PASSWORD", default="") else "NOT SET ✗"}'
+                f'RESEND_API_KEY: {"SET ✓" if resend_api_key else "NOT SET ✗"}\n'
+                f'DEFAULT_FROM_EMAIL: {settings.DEFAULT_FROM_EMAIL}'
                 f'</pre>'
                 f'<a href="/products/test-email/">Go back</a>',
                 status=400
@@ -1168,10 +1169,7 @@ def test_email(request):
                 f'<h3>Email Configuration:</h3>'
                 f'<pre>'
                 f'EMAIL_BACKEND: {settings.EMAIL_BACKEND}\n'
-                f'EMAIL_HOST: {settings.EMAIL_HOST}\n'
-                f'EMAIL_PORT: {settings.EMAIL_PORT}\n'
-                f'EMAIL_HOST_USER: {settings.EMAIL_HOST_USER}\n'
-                f'EMAIL_USE_TLS: {settings.EMAIL_USE_TLS}\n'
+                f'RESEND_API_KEY: SET ✓\n'
                 f'DEFAULT_FROM_EMAIL: {settings.DEFAULT_FROM_EMAIL}'
                 f'</pre>'
                 f'<a href="/products/test-email/">Send another test</a>'
@@ -1184,30 +1182,25 @@ def test_email(request):
                 f'<h3>Email Configuration:</h3>'
                 f'<pre>'
                 f'EMAIL_BACKEND: {settings.EMAIL_BACKEND}\n'
-                f'EMAIL_HOST: {settings.EMAIL_HOST}\n'
-                f'EMAIL_PORT: {settings.EMAIL_PORT}\n'
-                f'EMAIL_HOST_USER: {settings.EMAIL_HOST_USER}\n'
-                f'EMAIL_USE_TLS: {settings.EMAIL_USE_TLS}\n'
+                f'RESEND_API_KEY: {"SET ✓" if resend_api_key else "NOT SET ✗"}\n'
                 f'DEFAULT_FROM_EMAIL: {settings.DEFAULT_FROM_EMAIL}'
                 f'</pre>'
                 f'<h3>Troubleshooting:</h3>'
                 f'<ul>'
-                f'<li>Check that EMAIL_HOST_USER and EMAIL_HOST_PASSWORD are set in environment variables</li>'
-                f'<li>For Gmail, use an App Password from <a href="https://myaccount.google.com/apppasswords" target="_blank">myaccount.google.com/apppasswords</a></li>'
-                f'<li>On Render: Add EMAIL_HOST_PASSWORD to Environment Variables, then redeploy</li>'
-                f'<li>Check for typos in the password</li>'
+                f'<li>Verify RESEND_API_KEY is set in environment variables on Render</li>'
+                f'<li>Check that your Resend API key is valid and not expired</li>'
+                f'<li>Ensure the sender email is verified in your Resend account</li>'
+                f'<li>Check Render logs for detailed error messages</li>'
                 f'</ul>'
                 f'<a href="/products/test-email/">Try again</a>',
                 status=500
             )
     
     # GET: Show test form
+    resend_api_key = config('RESEND_API_KEY', default='')
     context = {
         'email_backend': settings.EMAIL_BACKEND,
-        'email_host': settings.EMAIL_HOST,
-        'email_port': settings.EMAIL_PORT,
-        'email_user': settings.EMAIL_HOST_USER,
-        'email_tls': settings.EMAIL_USE_TLS,
+        'resend_configured': bool(resend_api_key),
         'default_from_email': settings.DEFAULT_FROM_EMAIL,
     }
     return render(request, 'test_email_form.html', context)
