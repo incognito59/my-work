@@ -1048,11 +1048,11 @@ def newsletter_signup(request):
                 newsletter.save()
                 created = True
 
-            if created:
-                if not settings.EMAIL_HOST_USER or not settings.EMAIL_HOST_PASSWORD:
-                    messages.error(request, "❌ Email provider is not configured on this site. Please contact the site administrator.")
-                    return redirect('products:product-list')
+            if not settings.EMAIL_HOST_USER or not settings.EMAIL_HOST_PASSWORD:
+                messages.error(request, "❌ Email provider is not configured on this site. Please contact the site administrator.")
+                return redirect('products:product-list')
 
+            if created:
                 try:
                     email_sent = send_newsletter_confirmation_email(email)
                     if email_sent:
@@ -1063,7 +1063,15 @@ def newsletter_signup(request):
                     print(f'Newsletter email error: {str(e)}')
                     messages.warning(request, f"⚠️ Subscribed, but email failed: {str(e)[:100]}")
             else:
-                messages.info(request, "📧 You're already subscribed!")
+                try:
+                    email_sent = send_newsletter_confirmation_email(email)
+                    if email_sent:
+                        messages.success(request, "✅ You're already subscribed. A confirmation email has been resent.")
+                    else:
+                        messages.warning(request, "⚠️ You're already subscribed, but we could not resend the confirmation email right now.")
+                except Exception as e:
+                    print(f'Newsletter resend error: {str(e)}')
+                    messages.warning(request, f"⚠️ You're already subscribed, but resend failed: {str(e)[:100]}")
         except Exception as e:
             messages.error(request, f"❌ Error: {str(e)}")
         
