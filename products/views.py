@@ -837,6 +837,7 @@ def contact_us(request):
             ContactFormSubmission.objects.create(name=name, email=email, subject=subject, message=message)
             
             # Send confirmation email to user
+            email_sent = False
             try:
                 send_mail(
                     subject=f'✅ We Received Your Message - {subject}',
@@ -856,8 +857,12 @@ def contact_us(request):
                     ''',
                     fail_silently=False,
                 )
+                email_sent = True
+                messages.success(request, f"✅ Message received! Confirmation email sent to {email}")
             except Exception as e:
-                print(f'Error sending contact confirmation email: {str(e)}')
+                error_msg = f'Error sending confirmation email: {str(e)}'
+                print(f'Contact Form Error: {error_msg}')
+                messages.warning(request, f"⚠️ Message saved, but email confirmation failed: {str(e)[:100]}")
             
             # Send admin notification email
             try:
@@ -875,15 +880,14 @@ def contact_us(request):
                     <blockquote style="background: #f5f5f5; padding: 10px; border-left: 4px solid #28a745;">
                         {message}
                     </blockquote>
-                    <p><a href="http://admin.redcart.com/products/contactformsubmission/">View in Admin</a></p>
                     ''',
                     fail_silently=False,
                 )
             except Exception as e:
-                print(f'Error sending contact admin notification: {str(e)}')
+                print(f'Contact Form Admin Notification Error: {str(e)}')
             
-            messages.success(request, "✅ Thank you! We've received your message and sent a confirmation email. We'll respond within 24 hours.")
-            return redirect('products:contact')
+            if email_sent:
+                return redirect('products:contact')
         else:
             messages.error(request, "❌ Please fill in all fields.")
 
