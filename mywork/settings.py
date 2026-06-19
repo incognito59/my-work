@@ -141,6 +141,7 @@ EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)
 # FORCE SMTP BACKEND - don't default to console
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default=EMAIL_HOST_USER or 'no-reply@retail-logistics-core.com')
+EMAIL_TIMEOUT = 10
 SERVER_EMAIL = config('DEFAULT_FROM_EMAIL', default=DEFAULT_FROM_EMAIL)
 SITE_URL = config('SITE_URL', default='http://localhost:8000')
 
