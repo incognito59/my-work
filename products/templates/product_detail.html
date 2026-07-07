@@ -60,7 +60,7 @@
                 </div>
               {% endif %}
             </div>
-            <p class="text-muted mb-3 small">{{ product.description }}</p>
+            <p class="text-muted mb-3 small">{{ product.description|default:'No description available for this product. Please check back soon for details.' }}</p>
 
             {% if product.has_active_sale %}
             <!-- Flash Sale Banner -->
