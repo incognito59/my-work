@@ -2,7 +2,7 @@ from django.urls import reverse
 from django.contrib.auth.models import User
 from django.test import TestCase
 
-from .models import Product, Comment, Order, OrderItem
+from .models import Product, Comment, Order, OrderItem, Review
 
 
 class ProductModelTests(TestCase):
@@ -82,6 +82,22 @@ class ProductDetailTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertTrue(Comment.objects.filter(product=self.product, name='Alice', rating=4).exists())
+
+    def test_review_submission_marks_verified_purchase(self):
+        user = User.objects.create_user(username='reviewer', password='pass')
+        self.client.login(username='reviewer', password='pass')
+        order = Order.objects.create(user=user, status='delivered', payment_status='paid', is_paid=True)
+        OrderItem.objects.create(order=order, product=self.product, quantity=1, price=self.product.price)
+
+        response = self.client.post(reverse('products:submit-review', args=[self.product.id]), {
+            'rating': '5',
+            'review_text': 'Excellent product'
+        }, follow=True)
+
+        self.assertEqual(response.status_code, 200)
+        review = Review.objects.get(product=self.product, user=user)
+        self.assertEqual(review.rating, 5)
+        self.assertTrue(review.verified_purchase)
 
 
 class OrderModelTests(TestCase):
