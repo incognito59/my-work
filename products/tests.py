@@ -120,8 +120,8 @@ class OrderModelTests(TestCase):
         response = self.client.login(username='john', password='pass')
         self.assertTrue(response)
 
-        response = self.client.post(reverse('products:release-escrow', args=[self.order.id]), follow=True)
-        self.assertEqual(response.status_code, 200)
+        response = self.client.post(reverse('products:release-escrow', args=[self.order.id]))
+        self.assertEqual(response.status_code, 302)
         self.order.refresh_from_db()
         self.assertEqual(self.order.escrow_status, 'released')
         self.assertTrue(self.order.escrow_release_date is not None)

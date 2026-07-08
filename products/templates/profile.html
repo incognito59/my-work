@@ -77,7 +77,7 @@
                     <td>
                       <a href="{% url 'products:reorder-order' order.id %}" class="btn btn-sm btn-outline-primary">Reorder</a>
                       <a href="{% url 'products:order-invoice' order.id %}" class="btn btn-sm btn-outline-secondary ms-2">Invoice</a>
-                      {% if order.is_paid and order.escrow_status in 'held,pending' %}
+                      {% if order.escrow_is_protected %}
                         <div class="mt-2 d-flex gap-2 flex-wrap">
                           <a href="{% url 'products:release-escrow' order.id %}" class="btn btn-sm btn-outline-success">Release</a>
                           <a href="{% url 'products:dispute-escrow' order.id %}" class="btn btn-sm btn-outline-danger">Dispute</a>

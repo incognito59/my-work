@@ -347,7 +347,11 @@ class Order(models.Model):
 
     @property
     def total(self):
-        return self.subtotal + self.shipping_cost + self.tax - self.discount
+        if self.subtotal:
+            return self.subtotal + self.shipping_cost + self.tax - self.discount
+
+        item_total = sum(item.total_price for item in self.items.all())
+        return item_total + self.shipping_cost + self.tax - self.discount
 
     @property
     def estimated_delivery_date(self):

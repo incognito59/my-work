@@ -141,7 +141,8 @@ def paystack_verify(request):
                     discount=0,
                     is_paid=True,
                     payment_status='paid',
-                    status='confirmed'
+                    status='confirmed',
+                    escrow_status='held'
                 )
 
                 items_html = '<table style="width: 100%; border-collapse: collapse;"><tr style="background: #f5f5f5;"><th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">Product</th><th style="padding: 8px; text-align: center; border-bottom: 1px solid #ddd;">Qty</th><th style="padding: 8px; text-align: right; border-bottom: 1px solid #ddd;">Price</th></tr>'
