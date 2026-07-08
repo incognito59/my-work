@@ -104,14 +104,17 @@ class Product(models.Model):
 
     def save(self, *args, **kwargs):
         is_new = self.pk is None
+        previous_price = None
+        if not is_new:
+            previous_price = Product.objects.filter(pk=self.pk).values_list('price', flat=True).first()
+
         super().save(*args, **kwargs)
 
         if is_new:
             PriceHistory.objects.get_or_create(product=self, price=self.price, defaults={'recorded_at': timezone.now()})
             return
 
-        previous = Product.objects.filter(pk=self.pk).first()
-        if previous and previous.price != self.price:
+        if previous_price is not None and previous_price != self.price:
             PriceHistory.objects.create(product=self, price=self.price, recorded_at=timezone.now())
 
     def __str__(self):
