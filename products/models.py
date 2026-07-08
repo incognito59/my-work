@@ -91,6 +91,17 @@ class Product(models.Model):
     def is_low_stock(self):
         return 0 < self.available_stock <= 5
 
+    @property
+    def average_review_rating(self):
+        reviews = self.reviews.all()
+        if not reviews.exists():
+            return 0
+        return round(sum(review.rating for review in reviews) / reviews.count(), 1)
+
+    @property
+    def review_count(self):
+        return self.reviews.count()
+
     def __str__(self):
         return self.name
 

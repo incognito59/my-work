@@ -775,28 +775,36 @@ def product_detail(request, product_id):
     reviews = product.reviews.all().order_by('-created_at') if hasattr(product, 'reviews') else []
     comments = product.comments.all().order_by('-created_at') if hasattr(product, 'comments') else []
 
-    if request.method == 'POST' and request.user.is_authenticated:
-        rating = request.POST.get('rating', '').strip()
-        review_text = request.POST.get('review_text', '').strip()
-        if rating and review_text:
-            verified_purchase = False
-            if request.user.is_authenticated:
+    if request.method == 'POST':
+        if request.user.is_authenticated:
+            rating = request.POST.get('rating', '').strip()
+            review_text = request.POST.get('review_text', '').strip()
+            if rating and review_text:
+                verified_purchase = False
                 completed_orders = Order.objects.filter(user=request.user, status='delivered', payment_status='paid', is_paid=True)
                 if OrderItem.objects.filter(order__in=completed_orders, product=product).exists():
                     verified_purchase = True
-            review, created = Review.objects.update_or_create(
-                user=request.user,
-                product=product,
-                defaults={
-                    'rating': int(rating),
-                    'review_text': review_text,
-                    'verified_purchase': verified_purchase,
-                }
-            )
+                Review.objects.update_or_create(
+                    user=request.user,
+                    product=product,
+                    defaults={
+                        'rating': int(rating),
+                        'review_text': review_text,
+                        'verified_purchase': verified_purchase,
+                    }
+                )
+                messages.success(request, "💬 Thank you for your review!")
+                return redirect('products:product-detail', product_id=product.id)
+            elif request.POST.get('name') and request.POST.get('text') and request.POST.get('rating'):
+                Comment.objects.create(product=product, name=request.POST.get('name'), text=request.POST.get('text'), rating=request.POST.get('rating'))
+                messages.success(request, "💬 Thank you for your review!")
+                return redirect('products:product-detail', product_id=product.id)
+            else:
+                messages.error(request, "⚠️ Please provide both a rating and your review.")
+        elif request.POST.get('name') and request.POST.get('text') and request.POST.get('rating'):
+            Comment.objects.create(product=product, name=request.POST.get('name'), text=request.POST.get('text'), rating=request.POST.get('rating'))
             messages.success(request, "💬 Thank you for your review!")
             return redirect('products:product-detail', product_id=product.id)
-        else:
-            messages.error(request, "⚠️ Please provide both a rating and your review.")
 
     is_in_wishlist = False
     if request.user.is_authenticated:

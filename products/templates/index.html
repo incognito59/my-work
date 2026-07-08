@@ -757,6 +757,19 @@
               {% endif %}
             </div>
 
+            <div class="mt-2">
+              {% if product.review_count %}
+                <div class="d-flex align-items-center gap-1 text-warning small">
+                  {% for i in "12345" %}
+                    {% if forloop.counter <= product.average_review_rating %}★{% else %}☆{% endif %}
+                  {% endfor %}
+                  <span class="text-muted ms-1">({{ product.review_count }})</span>
+                </div>
+              {% else %}
+                <span class="text-muted small">No ratings yet</span>
+              {% endif %}
+            </div>
+
             {% if product.is_out_of_stock %}
               <span class="btn-add-cart oos">Out of Stock</span>
             {% else %}
