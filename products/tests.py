@@ -107,7 +107,7 @@ class OrderModelTests(TestCase):
         self.order = Order.objects.create(user=self.user)
 
     def test_order_total_and_orderitem_total_price(self):
-        OrderItem.objects.create(order=self.order, product=self.product, quantity=3)
+        OrderItem.objects.create(order=self.order, product=self.product, quantity=3, price=10.0)
         self.assertEqual(self.order.total, 30.0)
         item = self.order.items.first()
         self.assertEqual(item.total_price, 30.0)
