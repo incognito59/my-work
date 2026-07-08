@@ -1,6 +1,7 @@
 from django.urls import reverse
 from django.contrib.auth.models import User
 from django.test import TestCase
+from django.utils import timezone
 
 from .models import Product, Comment, Order, OrderItem, Review
 
@@ -133,4 +134,15 @@ class OrderModelTests(TestCase):
 
         self.assertTrue(self.order.escrow_is_protected)
         self.assertEqual(self.order.escrow_badge, 'Protected')
+
+    def test_delivered_orders_release_escrow_automatically(self):
+        self.order.is_paid = True
+        self.order.escrow_status = 'held'
+        self.order.status = 'delivered'
+        self.order.delivered_date = timezone.now()
+        self.order.save()
+
+        self.order.refresh_from_db()
+        self.assertEqual(self.order.escrow_status, 'released')
+        self.assertIsNotNone(self.order.escrow_release_date)
 
