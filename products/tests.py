@@ -112,3 +112,17 @@ class OrderModelTests(TestCase):
         item = self.order.items.first()
         self.assertEqual(item.total_price, 30.0)
 
+    def test_release_escrow_updates_status(self):
+        self.order.is_paid = True
+        self.order.escrow_status = 'held'
+        self.order.save()
+
+        response = self.client.login(username='john', password='pass')
+        self.assertTrue(response)
+
+        response = self.client.post(reverse('products:release-escrow', args=[self.order.id]), follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.order.refresh_from_db()
+        self.assertEqual(self.order.escrow_status, 'released')
+        self.assertTrue(self.order.escrow_release_date is not None)
+

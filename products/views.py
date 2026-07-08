@@ -683,6 +683,33 @@ def reorder_order(request, order_id):
 
 
 @login_required(login_url='products:login')
+def release_escrow(request, order_id):
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    if order.is_paid and order.escrow_status in {'held', 'pending'}:
+        order.escrow_status = 'released'
+        order.escrow_release_date = timezone.now()
+        order.escrow_notes = 'Buyer released funds after delivery confirmation.'
+        order.save(update_fields=['escrow_status', 'escrow_release_date', 'escrow_notes', 'updated_at'])
+        messages.success(request, '✅ Escrow released successfully. Funds are now available to the seller.')
+    else:
+        messages.info(request, 'ℹ️ Escrow is not available for release on this order yet.')
+    return redirect('products:profile')
+
+
+@login_required(login_url='products:login')
+def dispute_escrow(request, order_id):
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    if order.is_paid and order.escrow_status in {'held', 'pending'}:
+        order.escrow_status = 'disputed'
+        order.escrow_notes = 'Buyer opened a dispute for this order.'
+        order.save(update_fields=['escrow_status', 'escrow_notes', 'updated_at'])
+        messages.warning(request, '⚠️ Escrow dispute opened. Our support team will review it shortly.')
+    else:
+        messages.info(request, 'ℹ️ This order is not currently protected by escrow.')
+    return redirect('products:profile')
+
+
+@login_required(login_url='products:login')
 def order_invoice(request, order_id):
     order = get_object_or_404(Order, id=order_id, user=request.user)
     items = order.items.select_related('product').all()
