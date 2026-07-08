@@ -317,6 +317,20 @@ class Order(models.Model):
     tax = models.FloatField(default=0)
     discount = models.FloatField(default=0)
     is_paid = models.BooleanField(default=False)
+
+    # Escrow / Buyer Protection
+    escrow_status = models.CharField(
+        max_length=20,
+        choices=[
+            ('pending', 'Pending Escrow'),
+            ('held', 'Held in Escrow'),
+            ('released', 'Released to Seller'),
+            ('disputed', 'Disputed'),
+        ],
+        default='pending'
+    )
+    escrow_release_date = models.DateTimeField(null=True, blank=True)
+    escrow_notes = models.TextField(blank=True)
     
     # Tracking
     tracking_number = models.CharField(max_length=100, blank=True)
@@ -342,6 +356,20 @@ class Order(models.Model):
         if self.shipped_date:
             return self.shipped_date + timedelta(days=3)
         return self.created_at + timedelta(days=5)
+
+    @property
+    def escrow_is_protected(self):
+        return self.escrow_status in {'held', 'pending'} and self.is_paid
+
+    @property
+    def escrow_badge(self):
+        if self.escrow_status == 'held':
+            return 'Protected'
+        if self.escrow_status == 'released':
+            return 'Released'
+        if self.escrow_status == 'disputed':
+            return 'Disputed'
+        return 'Pending'
 
 
 class AbandonedCart(models.Model):
