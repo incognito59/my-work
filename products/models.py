@@ -103,11 +103,16 @@ class Product(models.Model):
         return self.reviews.count()
 
     def save(self, *args, **kwargs):
-        if self.pk:
-            previous = Product.objects.filter(pk=self.pk).first()
-            if previous and previous.price != self.price:
-                PriceHistory.objects.create(product=self, price=self.price, recorded_at=timezone.now())
+        is_new = self.pk is None
         super().save(*args, **kwargs)
+
+        if is_new:
+            PriceHistory.objects.get_or_create(product=self, price=self.price, defaults={'recorded_at': timezone.now()})
+            return
+
+        previous = Product.objects.filter(pk=self.pk).first()
+        if previous and previous.price != self.price:
+            PriceHistory.objects.create(product=self, price=self.price, recorded_at=timezone.now())
 
     def __str__(self):
         return self.name

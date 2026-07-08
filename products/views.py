@@ -840,6 +840,8 @@ def product_detail(request, product_id):
 
     ai_recommendations = get_product_recommendations_ai(product, limit=4)
 
+    price_history = product.price_history.all()[:8]
+
     return render(request, 'product_detail.html', {
         'product': product,
         'comments': comments,
@@ -848,6 +850,7 @@ def product_detail(request, product_id):
         'query': request.GET.get('q', ''),
         'is_in_wishlist': is_in_wishlist,
         'ai_recommendations': ai_recommendations,
+        'price_history': price_history,
     })
 
 
