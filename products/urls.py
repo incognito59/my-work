@@ -122,6 +122,7 @@ urlpatterns = [
     path('privacy-policy/', views.privacy_policy, name='privacy-policy'),
     path('terms-of-service/', views.terms_of_service, name='terms-of-service'),
     path('cookie-policy/', views.cookie_policy, name='cookie-policy'),
+    path('buyer-protection/', views.buyer_protection, name='buyer-protection'),
     
     # 🏷️ Category Pages
     path('category/<slug:category_slug>/', views.category_page, name='category-page'),

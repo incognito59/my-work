@@ -1459,6 +1459,10 @@ def cookie_policy(request):
     return render(request, 'legal/cookie_policy.html')
 
 
+def buyer_protection(request):
+    return render(request, 'legal/buyer_protection.html')
+
+
 def category_page(request, category_slug):
     category_mapping = {
         'electronics': 'Electronics',
