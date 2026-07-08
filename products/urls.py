@@ -11,6 +11,7 @@ urlpatterns = [
     # 🔍 Product pages
     path('shop/', views.index, name='product-list'),
     path('product/<int:product_id>/', views.product_detail, name='product-detail'),
+    path('product/<int:product_id>/review/', views.submit_review, name='submit-review'),
 
     # 🛒 Cart actions
     path('add-to-cart/<int:item_id>/', views.add_to_cart, name='add-to-cart'),

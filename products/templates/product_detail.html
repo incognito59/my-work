@@ -238,53 +238,60 @@
   <!-- Reviews Section -->
   <div class="mt-5 pt-4 border-top">
     <div class="d-flex justify-content-between align-items-center mb-4">
-      <h4 class="fw-bold mb-0">⭐ Customer Reviews ({{ comments|length }})</h4>
-      {% if comments %}
+      <h4 class="fw-bold mb-0">⭐ Customer Reviews ({{ reviews|length }})</h4>
+      {% if reviews %}
         <span class="badge bg-success">Highly Rated</span>
       {% endif %}
     </div>
 
-    {% for comment in comments %}
+    {% for review in reviews %}
       <div class="p-4 mb-3 border rounded-4 bg-light shadow-sm animate-card">
         <div class="d-flex justify-content-between align-items-center mb-2">
-          <strong>{{ comment.name }}</strong>
+          <div>
+            <strong>{{ review.user.get_full_name|default:review.user.username }}</strong>
+            {% if review.verified_purchase %}
+              <span class="badge bg-success ms-2">Verified Purchase ✅</span>
+            {% endif %}
+          </div>
           <span class="text-warning">
             {% for i in "12345" %}
-              {% if forloop.counter <= comment.rating %}★{% else %}☆{% endif %}
+              {% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}
             {% endfor %}
           </span>
         </div>
-        <p class="mb-2">{{ comment.text }}</p>
-        <small class="text-muted">{{ comment.created_at|date:"M d, Y" }}</small>
+        <p class="mb-2">{{ review.review_text }}</p>
+        <small class="text-muted">{{ review.created_at|date:"M d, Y" }}</small>
       </div>
     {% empty %}
       <p class="text-muted">No reviews yet. Be the first to leave one!</p>
     {% endfor %}
 
     <!-- Review Form -->
-    <form method="post" class="mt-4 p-4 border rounded-4 shadow-sm theme-card animate-card">
+    <form method="post" action="{% url 'products:submit-review' product.id %}" class="mt-4 p-4 border rounded-4 shadow-sm theme-card animate-card">
       {% csrf_token %}
       <h5 class="fw-semibold mb-3">Write a Review</h5>
-      <div class="mb-3">
-        <label class="form-label">Your Name</label>
-        <input type="text" name="name" class="form-control" required>
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Your Review</label>
-        <textarea name="text" class="form-control" rows="3" required></textarea>
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Rating</label>
-        <select name="rating" class="form-select" required>
-          <option value="">Select rating</option>
-          {% for i in "12345" %}
-            <option value="{{ i }}">{{ i }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      <button type="submit" class="btn btn-warning w-100 fw-semibold text-dark btn-legendary">
-        Submit Review
-      </button>
+      {% if user.is_authenticated %}
+        <div class="mb-3">
+          <label class="form-label">Your Review</label>
+          <textarea name="review_text" class="form-control" rows="3" required></textarea>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Rating</label>
+          <select name="rating" class="form-select" required>
+            <option value="">Select rating</option>
+            {% for i in "12345" %}
+              <option value="{{ i }}">{{ i }} star{% if i != '1' %}s{% endif %}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <button type="submit" class="btn btn-warning w-100 fw-semibold text-dark btn-legendary">
+          Submit Review
+        </button>
+      {% else %}
+        <div class="alert alert-info mb-0">
+          Please <a href="{% url 'products:login' %}?next={{ request.path }}">log in</a> to leave a review.
+        </div>
+      {% endif %}
     </form>
   </div>
 </div>

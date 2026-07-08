@@ -14,7 +14,7 @@ import urllib.error
 
 from django.urls import reverse
 from django.http import JsonResponse, HttpResponse
-from .models import Product, Comment, Order, OrderItem, Wishlist, AbandonedCart, Coupon
+from .models import Product, Comment, Order, OrderItem, Wishlist, AbandonedCart, Coupon, Review
 from .utils import get_product_recommendations_ai, get_ai_chat_response, update_stock
 from django.conf import settings
 from decouple import config
@@ -772,16 +772,31 @@ def confirm_payment(request):
 def product_detail(request, product_id):
     product = get_object_or_404(Product, id=product_id)
     additional_images = getattr(product, 'additional_images', [])
+    reviews = product.reviews.all().order_by('-created_at') if hasattr(product, 'reviews') else []
     comments = product.comments.all().order_by('-created_at') if hasattr(product, 'comments') else []
 
-    if request.method == 'POST':
-        name = request.POST.get('name')
-        text = request.POST.get('text')
-        rating = request.POST.get('rating')
-        if name and text and rating:
-            Comment.objects.create(product=product, name=name, text=text, rating=rating)
+    if request.method == 'POST' and request.user.is_authenticated:
+        rating = request.POST.get('rating', '').strip()
+        review_text = request.POST.get('review_text', '').strip()
+        if rating and review_text:
+            verified_purchase = False
+            if request.user.is_authenticated:
+                completed_orders = Order.objects.filter(user=request.user, status='delivered', payment_status='paid', is_paid=True)
+                if OrderItem.objects.filter(order__in=completed_orders, product=product).exists():
+                    verified_purchase = True
+            review, created = Review.objects.update_or_create(
+                user=request.user,
+                product=product,
+                defaults={
+                    'rating': int(rating),
+                    'review_text': review_text,
+                    'verified_purchase': verified_purchase,
+                }
+            )
             messages.success(request, "💬 Thank you for your review!")
             return redirect('products:product-detail', product_id=product.id)
+        else:
+            messages.error(request, "⚠️ Please provide both a rating and your review.")
 
     is_in_wishlist = False
     if request.user.is_authenticated:
@@ -792,11 +807,41 @@ def product_detail(request, product_id):
     return render(request, 'product_detail.html', {
         'product': product,
         'comments': comments,
+        'reviews': reviews,
         'additional_images': additional_images,
         'query': request.GET.get('q', ''),
         'is_in_wishlist': is_in_wishlist,
         'ai_recommendations': ai_recommendations,
     })
+
+
+@login_required(login_url='products:login')
+def submit_review(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+
+    if request.method == 'POST':
+        rating = request.POST.get('rating', '').strip()
+        review_text = request.POST.get('review_text', '').strip()
+
+        if not rating or not review_text:
+            messages.error(request, "⚠️ Please provide both a rating and your review.")
+            return redirect('products:product-detail', product_id=product.id)
+
+        completed_orders = Order.objects.filter(user=request.user, status='delivered', payment_status='paid', is_paid=True)
+        verified_purchase = OrderItem.objects.filter(order__in=completed_orders, product=product).exists()
+
+        Review.objects.update_or_create(
+            user=request.user,
+            product=product,
+            defaults={
+                'rating': int(rating),
+                'review_text': review_text,
+                'verified_purchase': verified_purchase,
+            }
+        )
+        messages.success(request, "💬 Your review has been saved.")
+
+    return redirect('products:product-detail', product_id=product.id)
 
 
 def buy_now(request, product_id):
