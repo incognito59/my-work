@@ -102,8 +102,28 @@ class Product(models.Model):
     def review_count(self):
         return self.reviews.count()
 
+    def save(self, *args, **kwargs):
+        if self.pk:
+            previous = Product.objects.filter(pk=self.pk).first()
+            if previous and previous.price != self.price:
+                PriceHistory.objects.create(product=self, price=self.price, recorded_at=timezone.now())
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return self.name
+
+
+class PriceHistory(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='price_history')
+    price = models.FloatField()
+    recorded_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ['-recorded_at']
+
+    def __str__(self):
+        return f"{self.product.name} - ₦{self.price} at {self.recorded_at}"
+
 
 class Offer(models.Model):
     code = models.CharField(max_length=10)

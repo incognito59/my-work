@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from django.utils import timezone
 
-from .models import Product, Comment, Order, OrderItem, Review
+from .models import Product, Comment, Order, OrderItem, Review, PriceHistory
 
 
 class ProductModelTests(TestCase):
@@ -14,6 +14,18 @@ class ProductModelTests(TestCase):
     def test_additional_images_property_honors_optional_urls(self):
         p = Product.objects.create(name='Test', price=1.0, stock=1, image_url='http://a.png', image_2='http://b.png')
         self.assertEqual(p.additional_images, ['http://b.png'])
+
+    def test_price_history_is_recorded_when_price_changes(self):
+        p = Product.objects.create(name='Pricey', price=10.0, stock=2, image_url='http://a.png')
+        self.assertTrue(PriceHistory.objects.filter(product=p, price=10.0).exists())
+
+        p.price = 12.5
+        p.save()
+
+        history = PriceHistory.objects.filter(product=p).order_by('recorded_at')
+        self.assertEqual(history.count(), 2)
+        self.assertEqual(history.first().price, 10.0)
+        self.assertEqual(history.last().price, 12.5)
 
 
 class CartViewTests(TestCase):
