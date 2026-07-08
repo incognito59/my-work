@@ -361,6 +361,22 @@ class Order(models.Model):
             return self.shipped_date + timedelta(days=3)
         return self.created_at + timedelta(days=5)
 
+    def release_escrow_if_delivered(self):
+        if self.status == 'delivered' and self.is_paid and self.escrow_status in {'held', 'pending'}:
+            self.escrow_status = 'released'
+            self.escrow_release_date = timezone.now()
+            self.escrow_notes = 'Escrow released automatically after delivery confirmation.'
+            return True
+        return False
+
+    def save(self, *args, **kwargs):
+        if self.status == 'delivered' and self.is_paid and self.escrow_status in {'held', 'pending'}:
+            self.escrow_status = 'released'
+            self.escrow_release_date = self.escrow_release_date or timezone.now()
+            if not self.escrow_notes:
+                self.escrow_notes = 'Escrow released automatically after delivery confirmation.'
+        super().save(*args, **kwargs)
+
     @property
     def escrow_is_protected(self):
         return self.escrow_status in {'held', 'pending'} and self.is_paid
