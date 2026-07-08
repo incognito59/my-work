@@ -103,8 +103,8 @@ class OrderItemInline(admin.TabularInline):
 
 
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ('order_id', 'user', 'status_badge', 'payment_status', 'total', 'created_at')
-    list_filter = ('status', 'payment_status', 'created_at')
+    list_display = ('order_id', 'user', 'status_badge', 'payment_status', 'escrow_status_badge', 'total', 'created_at')
+    list_filter = ('status', 'payment_status', 'escrow_status', 'created_at')
     readonly_fields = ('created_at', 'updated_at', 'total')
     search_fields = ('user__username', 'user__email', 'tracking_number')
     inlines = [OrderItemInline]
@@ -113,6 +113,7 @@ class OrderAdmin(admin.ModelAdmin):
         ('Shipping', {'fields': ('shipping_address', 'tracking_number', 'shipping_cost')}),
         ('Dates', {'fields': ('shipped_date', 'delivered_date')}),
         ('Payment', {'fields': ('payment_method', 'subtotal', 'tax', 'discount', 'is_paid')}),
+        ('Escrow', {'fields': ('escrow_status', 'escrow_release_date', 'escrow_notes')}),
         ('Notes', {'fields': ('notes',)}),
         ('Metadata', {'fields': ('created_at', 'updated_at')}),
     )
@@ -137,6 +138,20 @@ class OrderAdmin(admin.ModelAdmin):
             color, obj.get_status_display()
         )
     status_badge.short_description = 'Status'
+
+    def escrow_status_badge(self, obj):
+        colors = {
+            'pending': 'gray',
+            'held': 'blue',
+            'released': 'green',
+            'disputed': 'red',
+        }
+        color = colors.get(obj.escrow_status, 'gray')
+        return format_html(
+            '<span style="background-color: {}; color: white; padding: 3px 10px; border-radius: 3px;">{}</span>',
+            color, obj.get_escrow_status_display()
+        )
+    escrow_status_badge.short_description = 'Escrow'
 
 
 class ShippingMethodAdmin(admin.ModelAdmin):

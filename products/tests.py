@@ -126,3 +126,11 @@ class OrderModelTests(TestCase):
         self.assertEqual(self.order.escrow_status, 'released')
         self.assertTrue(self.order.escrow_release_date is not None)
 
+    def test_escrow_helpers_reflect_paid_protected_orders(self):
+        self.order.is_paid = True
+        self.order.escrow_status = 'held'
+        self.order.save()
+
+        self.assertTrue(self.order.escrow_is_protected)
+        self.assertEqual(self.order.escrow_badge, 'Protected')
+
