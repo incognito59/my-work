@@ -82,6 +82,11 @@
           <div id="coupon-message" class="text-success mt-2"></div>
         </div>
 
+        <div class="ssl-badge mb-4" role="status" aria-label="Secure checkout">
+          <i class="bi bi-shield-check"></i>
+          <span><strong>Secure checkout</strong> · Your payment is protected with HTTPS encryption.</span>
+        </div>
+
         <!-- Paystack Pay Button -->
         <button id="paystack-btn" class="btn btn-success w-100 py-3 fw-semibold rounded-pill shadow-sm btn-glow">
           💳 Pay ₦{{ total_after_coupon|default:total|floatformat:2|intcomma }} with Paystack
@@ -179,6 +184,23 @@
     animation: glowPulse 2s infinite alternate;
   }
 
+  .ssl-badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #f0fff4, #ecfdf3);
+    color: #0f5132;
+    border: 1px solid #b7f0c8;
+    font-size: 0.95rem;
+  }
+
+  .ssl-badge i {
+    font-size: 1.1rem;
+    color: #198754;
+  }
+
   @keyframes glowPulse {
     0% { box-shadow: 0 0 10px rgba(40, 167, 69, 0.3); }
     100% { box-shadow: 0 0 25px rgba(32, 201, 151, 0.6); }
@@ -211,6 +233,12 @@
 
   [data-theme="dark"] .form-label {
     color: #ddd;
+  }
+
+  [data-theme="dark"] .ssl-badge {
+    background: linear-gradient(135deg, #163423, #214b35);
+    color: #d8f5e2;
+    border-color: #3d6b4d;
   }
 
   [data-theme="dark"] .list-group-item {
