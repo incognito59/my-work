@@ -670,6 +670,70 @@
   [data-theme="dark"] .info-value          { color: #e0e0e0; }
 </style>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const chartCanvas = document.getElementById('priceHistoryChart');
+    if (!chartCanvas) {
+      return;
+    }
+
+    const priceHistoryEntries = [
+      {% for entry in price_history_chart %}
+      { date: "{{ entry.recorded_at|date:'M d' }}", price: {{ entry.price|floatformat:2 }} }{% if not forloop.last %},{% endif %}
+      {% endfor %}
+    ];
+
+    if (!priceHistoryEntries.length) {
+      return;
+    }
+
+    new Chart(chartCanvas, {
+      type: 'line',
+      data: {
+        labels: priceHistoryEntries.map(item => item.date),
+        datasets: [{
+          label: 'Price',
+          data: priceHistoryEntries.map(item => item.price),
+          borderColor: '#F68B1E',
+          backgroundColor: 'rgba(246,139,30,0.16)',
+          borderWidth: 2,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          tension: 0.35,
+          fill: true,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return '₦' + context.parsed.y.toFixed(2);
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+          },
+          y: {
+            beginAtZero: false,
+            ticks: {
+              callback: function(value) {
+                return '₦' + value;
+              }
+            }
+          }
+        }
+      }
+    });
+  });
+</script>
 <script src="{% static 'js/flash-sale-timer.js' %}"></script>
 
 {% endblock %}
