@@ -1,9 +1,11 @@
 import os
+import sys
 import dj_database_url
 from pathlib import Path
 from decouple import config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+IS_TESTING = 'test' in sys.argv
 
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-me-in-production')
 DEBUG = config('DEBUG', cast=bool, default=False)
@@ -38,8 +40,9 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
     'import_export',
-    'anymail',
 ]
+if not IS_TESTING:
+    INSTALLED_APPS.append('anymail')
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -132,10 +135,14 @@ SOCIALACCOUNT_PROVIDERS = {
 FIREBASE_PROJECT_ID = 'redcart-d792b'
 
 # ============ EMAIL (Resend via Anymail) ============
-EMAIL_BACKEND = 'anymail.backends.resend.EmailBackend'
-ANYMAIL = {
-    'RESEND_API_KEY': config('RESEND_API_KEY', default=''),
-}
+if IS_TESTING:
+    EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
+    ANYMAIL = {}
+else:
+    EMAIL_BACKEND = 'anymail.backends.resend.EmailBackend'
+    ANYMAIL = {
+        'RESEND_API_KEY': config('RESEND_API_KEY', default=''),
+    }
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='onboarding@resend.dev')
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
 SITE_URL = config('SITE_URL', default='http://localhost:8000')
