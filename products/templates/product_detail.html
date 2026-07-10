@@ -205,6 +205,9 @@
                 <strong>📈 Price History</strong>
                 <span class="text-muted small">Last {{ price_history|length }} updates</span>
               </div>
+              <div class="price-history-chart mb-3">
+                <canvas id="priceHistoryChart"></canvas>
+              </div>
               <div class="price-history-list">
                 {% for entry in price_history %}
                 <div class="price-history-item">
@@ -645,6 +648,14 @@
   [data-theme="dark"] .btn-outline-primary:hover { background-color: #0d6efd; color: #fff; }
   [data-theme="dark"] .btn-outline-info    { color: #0dcaf0; border-color: #0dcaf0; }
   [data-theme="dark"] .btn-outline-info:hover { background-color: #0dcaf0; color: #000; }
+
+  .price-history-chart {
+    min-height: 240px;
+  }
+  .price-history-chart canvas {
+    width: 100% !important;
+    height: 240px !important;
+  }
 
   /* dark: product info card */
   [data-theme="dark"] .price-history-card { background: linear-gradient(135deg, #2a220f, #35240d); border-color: #6e4a14; }

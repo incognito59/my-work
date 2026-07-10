@@ -841,6 +841,7 @@ def product_detail(request, product_id):
     ai_recommendations = get_product_recommendations_ai(product, limit=4)
 
     price_history = product.price_history.all()[:8]
+    price_history_chart = list(price_history)[::-1]
 
     return render(request, 'product_detail.html', {
         'product': product,
@@ -851,6 +852,7 @@ def product_detail(request, product_id):
         'is_in_wishlist': is_in_wishlist,
         'ai_recommendations': ai_recommendations,
         'price_history': price_history,
+        'price_history_chart': price_history_chart,
     })
 
 
