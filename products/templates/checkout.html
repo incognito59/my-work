@@ -388,15 +388,19 @@
       // Generate unique reference
       const reference = 'REDCART-' + Date.now() + '-' + Math.floor(Math.random() * 1000000);
 
+      const selectedChannel = document.querySelector('input[name="payment-channel"]:checked')?.value || 'card';
       const handler = PaystackPop.setup({
         key: '{{ paystack_public_key|default:"pk_test_4dc9ad4b7bac517bcfd33fb8398a1c3b865e6a2d" }}',
         email: email,
         amount: amountKobo,
         currency: 'NGN',
         ref: reference,
+        channels: ['card', 'bank', 'ussd'],
+        payment_options: selectedChannel,
         metadata: {
           custom_fields: [
             { display_name: 'Customer Name', variable_name: 'customer_name', value: name },
+            { display_name: 'Payment Channel', variable_name: 'payment_channel', value: selectedChannel },
             { display_name: 'Insurance Opted', variable_name: 'insurance_opted', value: insuranceCheckbox && insuranceCheckbox.checked ? 'true' : 'false' },
             { display_name: 'Insurance Cost', variable_name: 'insurance_cost', value: insuranceCheckbox && insuranceCheckbox.checked ? insuranceCost.toFixed(2) : '0' },
           ]
