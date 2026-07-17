@@ -349,28 +349,8 @@
         radio.addEventListener('change', updateCheckoutTotal);
       });
 
-      const email = customerEmailField ? customerEmailField.value.trim() : '';
-      const name = customerNameField ? customerNameField.value.trim() : '';
-
-      if (!email) {
-        if (window.showToast) {
-          window.showToast('Please enter your email address.', 'error');
-        } else {
-          alert('Please enter your email address.');
-        }
-        return;
-      }
-
-      if (!name) {
-        if (window.showToast) {
-          window.showToast('Please enter your full name.', 'error');
-        } else {
-          alert('Please enter your full name.');
-        }
-        return;
-      }
-
-      // Get the total amount from the context
+      const emailField = customerEmailField;
+      const nameField = customerNameField;
       const baseTotal = parseFloat('{{ total_after_coupon|default:total|floatformat:2 }}');
       const insuranceCheckbox = document.getElementById('insurance-opt-in');
       const insuranceCost = insuranceCheckbox ? parseFloat(insuranceCheckbox.dataset.insuranceCost || '0') : 0;
@@ -400,28 +380,22 @@
         insuranceCheckbox.addEventListener('change', updateCheckoutTotal);
       }
 
-      const totalAmount = updateCheckoutTotal();
-      const amountKobo = Math.round(totalAmount * 100);
+      const getFormValues = () => {
+        return {
+          email: emailField ? emailField.value.trim() : '',
+          name: nameField ? nameField.value.trim() : '',
+          selectedChannel: document.querySelector('input[name="payment-channel"]:checked')?.value || 'card',
+          amountWithInsurance: updateCheckoutTotal(),
+          amountKobo: Math.round(updateCheckoutTotal() * 100),
+        };
+      };
 
-      if (amountKobo <= 0) {
-        if (window.showToast) {
-          window.showToast('Invalid order amount.', 'error');
-        } else {
-          alert('Invalid order amount.');
-        }
-        return;
-      }
+      const handleCheckout = (event) => {
+        event.preventDefault();
+        const { email, name, selectedChannel, amountWithInsurance, amountKobo } = getFormValues();
 
-      // Generate unique reference
-      const reference = 'REDCART-' + Date.now() + '-' + Math.floor(Math.random() * 1000000);
-
-      const selectedChannel = document.querySelector('input[name="payment-channel"]:checked')?.value || 'card';
-      if (selectedChannel === 'cod' || selectedChannel === 'wallet') {
-        const csrfToken = getCookie('csrftoken');
-        if (!csrfToken) {
-          const errorText = selectedChannel === 'cod'
-            ? 'Unable to place Cash on Delivery order. Please refresh and try again.'
-            : 'Unable to place wallet order. Please refresh and try again.';
+        if (!email) {
+          const errorText = 'Please enter your email address.';
           if (window.showToast) {
             window.showToast(errorText, 'error');
           } else {
@@ -430,47 +404,117 @@
           return;
         }
 
-        fetch('{% url 'products:confirm-payment' %}', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrfToken,
-          },
-          body: JSON.stringify({
-            payment_channel: selectedChannel,
-            insurance_opted: insuranceCheckbox && insuranceCheckbox.checked ? 'true' : 'false',
-            insurance_cost: insuranceCheckbox && insuranceCheckbox.checked ? insuranceCost.toFixed(2) : '0',
-          }),
-        })
-          .then(async (response) => {
-            const data = await response.json();
-            if (response.ok && data.success) {
-              window.location.href = data.redirect || '/products/';
+        if (!name) {
+          const errorText = 'Please enter your full name.';
+          if (window.showToast) {
+            window.showToast(errorText, 'error');
+          } else {
+            alert(errorText);
+          }
+          return;
+        }
+
+        if (amountKobo <= 0) {
+          const errorText = 'Invalid order amount.';
+          if (window.showToast) {
+            window.showToast(errorText, 'error');
+          } else {
+            alert(errorText);
+          }
+          return;
+        }
+
+        const reference = 'REDCART-' + Date.now() + '-' + Math.floor(Math.random() * 1000000);
+
+        if (selectedChannel === 'cod' || selectedChannel === 'wallet') {
+          const csrfToken = getCookie('csrftoken');
+          if (!csrfToken) {
+            const errorText = selectedChannel === 'cod'
+              ? 'Unable to place Cash on Delivery order. Please refresh and try again.'
+              : 'Unable to place wallet order. Please refresh and try again.';
+            if (window.showToast) {
+              window.showToast(errorText, 'error');
             } else {
-              const message = data.error || (selectedChannel === 'cod'
+              alert(errorText);
+            }
+            return;
+          }
+
+          fetch('{% url 'products:confirm-payment' %}', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': csrfToken,
+            },
+            body: JSON.stringify({
+              payment_channel: selectedChannel,
+              insurance_opted: insuranceCheckbox && insuranceCheckbox.checked ? 'true' : 'false',
+              insurance_cost: insuranceCheckbox && insuranceCheckbox.checked ? insuranceCost.toFixed(2) : '0',
+            }),
+          })
+            .then(async (response) => {
+              const data = await response.json();
+              if (response.ok && data.success) {
+                window.location.href = data.redirect || '/products/';
+              } else {
+                const message = data.error || (selectedChannel === 'cod'
+                  ? 'Unable to place Cash on Delivery order.'
+                  : 'Unable to place wallet payment order.');
+                if (window.showToast) {
+                  window.showToast(message, 'error');
+                } else {
+                  alert(message);
+                }
+              }
+            })
+            .catch((error) => {
+              console.error(error);
+              const message = selectedChannel === 'cod'
                 ? 'Unable to place Cash on Delivery order.'
-                : 'Unable to place wallet payment order.');
+                : 'Unable to place wallet payment order.';
               if (window.showToast) {
                 window.showToast(message, 'error');
               } else {
                 alert(message);
               }
-            }
-          })
-          .catch((error) => {
-            console.error(error);
-            const message = selectedChannel === 'cod'
-              ? 'Unable to place Cash on Delivery order.'
-              : 'Unable to place wallet payment order.';
-            if (window.showToast) {
-              window.showToast(message, 'error');
-            } else {
-              alert(message);
-            }
-          });
+            });
 
-        return;
-      }
+          return;
+        }
+
+        const handler = PaystackPop.setup({
+          key: '{{ paystack_public_key|default:"pk_test_4dc9ad4b7bac517bcfd33fb8398a1c3b865e6a2d" }}',
+          email: email,
+          amount: amountKobo,
+          currency: 'NGN',
+          ref: reference,
+          channels: ['card', 'bank', 'ussd'],
+          payment_options: selectedChannel,
+          metadata: {
+            custom_fields: [
+              { display_name: 'Customer Name', variable_name: 'customer_name', value: name },
+              { display_name: 'Payment Channel', variable_name: 'payment_channel', value: selectedChannel },
+              { display_name: 'Insurance Opted', variable_name: 'insurance_opted', value: insuranceCheckbox && insuranceCheckbox.checked ? 'true' : 'false' },
+              { display_name: 'Insurance Cost', variable_name: 'insurance_cost', value: insuranceCheckbox && insuranceCheckbox.checked ? insuranceCost.toFixed(2) : '0' },
+            ]
+          },
+          callback: function(response) {
+            window.location.href = '/products/payment/verify/?reference=' + response.reference;
+          },
+          onClose: function() {
+            console.log('Payment window closed.');
+            if (window.showToast) {
+              window.showToast('Payment was cancelled. You can try again.', 'info');
+            }
+          }
+        });
+
+        handler.openIframe();
+      };
+
+      paystackBtn.addEventListener('click', handleCheckout);
+
+      updateCheckoutTotal();
 
       const handler = PaystackPop.setup({
         key: '{{ paystack_public_key|default:"pk_test_4dc9ad4b7bac517bcfd33fb8398a1c3b865e6a2d" }}',
