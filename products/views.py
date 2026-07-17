@@ -130,6 +130,117 @@ def firebase_auth_callback(request):
 
 # ============ PAYSTACK PAYMENT VERIFY ============
 
+def _get_paystack_callback_url(request):
+    configured = getattr(settings, 'PAYSTACK_CALLBACK_URL', '').strip()
+    if configured:
+        return configured.rstrip('/') + '/'
+
+    site_url = getattr(settings, 'SITE_URL', '').strip().rstrip('/')
+    if site_url:
+        return f'{site_url}/payments/callback/'
+
+    return request.build_absolute_uri('/payments/callback/')
+
+
+def _create_paid_order_from_cart(request, amount, insurance_opted=False, insurance_cost=0.0, reference=None):
+    cart = request.session.get('cart', {})
+    products, cart_total = _get_cart_products(request, cart)
+    _, coupon_discount = _get_coupon_values(request, cart_total)
+    total_after_coupon = max(cart_total - coupon_discount, 0)
+
+    if insurance_cost <= 0:
+        insurance_cost = round(max(0, amount - total_after_coupon), 2)
+
+    order = Order.objects.create(
+        user=request.user,
+        subtotal=cart_total,
+        discount=coupon_discount,
+        insurance_opted=insurance_opted,
+        insurance_cost=insurance_cost,
+        is_paid=True,
+        payment_status='paid',
+        status='confirmed',
+        escrow_status='held',
+    )
+    if reference:
+        order.notes = f'Paystack reference: {reference}'
+        order.save(update_fields=['notes'])
+
+    items_html = '<table style="width: 100%; border-collapse: collapse;"><tr style="background: #f5f5f5;"><th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">Product</th><th style="padding: 8px; text-align: center; border-bottom: 1px solid #ddd;">Qty</th><th style="padding: 8px; text-align: right; border-bottom: 1px solid #ddd;">Price</th></tr>'
+
+    for product_id, item_data in cart.items():
+        try:
+            product = Product.objects.get(id=int(product_id))
+            if isinstance(item_data, dict):
+                quantity = int(item_data.get('quantity', 1))
+                price = float(item_data.get('price', product.sale_price if product.has_active_sale else product.price))
+            else:
+                quantity = int(item_data or 1)
+                price = float(product.sale_price if product.has_active_sale else product.price)
+
+            OrderItem.objects.create(
+                order=order,
+                product=product,
+                quantity=quantity,
+                price=price
+            )
+            update_stock(product, -quantity, reason='sale')
+            items_html += f'<tr><td style="padding: 8px; border-bottom: 1px solid #eee;">{product.name}</td><td style="padding: 8px; text-align: center; border-bottom: 1px solid #eee;">{quantity}</td><td style="padding: 8px; text-align: right; border-bottom: 1px solid #eee;">₦{price:,.2f}</td></tr>'
+        except (Product.DoesNotExist, ValueError, TypeError):
+            continue
+
+    items_html += '</table>'
+
+    # Send order confirmation email to customer
+    try:
+        send_mail(
+            subject=f'📦 Order Confirmation #{order.id}',
+            message=f'Hi {request.user.first_name or request.user.username},\n\nThank you for your purchase! Your order #{order.id} has been confirmed.\n\nAmount: ₦{amount:,.2f}\n\nWe will notify you when your items ship.\n\nBest regards,\nRedCart Team',
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[request.user.email],
+            html_message=f'''
+            <h2>📦 Order Confirmation</h2>
+            <p>Hi {request.user.first_name or request.user.username},</p>
+            <p>Thank you for your purchase! Your order has been confirmed.</p>
+            <p><strong>Order ID:</strong> #{order.id}</p>
+            <h3>Order Details:</h3>
+            {items_html}
+            <p style="margin-top: 15px;"><strong>Total Amount:</strong> ₦{amount:,.2f}</p>
+            <p>We will notify you when your items ship.</p>
+            <hr>
+            <p>If you have any questions, please reply to this email or visit our support page.</p>
+            <p>Best regards,<br><strong>RedCart Team</strong></p>
+            ''',
+            fail_silently=False,
+        )
+    except Exception as e:
+        print(f'Error sending order confirmation email: {str(e)}')
+
+    # Send order notification to admin
+    try:
+        send_mail(
+            subject=f'📦 New Order #{order.id} from {request.user.first_name or request.user.username}',
+            message=f'New order received:\n\nOrder ID: {order.id}\nCustomer: {request.user.first_name or request.user.username}\nEmail: {request.user.email}\nAmount: ₦{amount:,.2f}',
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[settings.DEFAULT_FROM_EMAIL],
+            html_message=f'''
+            <h2>📦 New Order Received</h2>
+            <p><strong>Order ID:</strong> #{order.id}</p>
+            <p><strong>Customer:</strong> {request.user.first_name or request.user.username}</p>
+            <p><strong>Email:</strong> {request.user.email}</p>
+            <p><strong>Amount:</strong> ₦{amount:,.2f}</p>
+            <h3>Items:</h3>
+            {items_html}
+            <p><a href="{settings.SITE_URL}/admin/products/order/{order.id}/change/">View in Admin</a></p>
+            ''',
+            fail_silently=False,
+        )
+    except Exception as e:
+        print(f'Error sending order admin notification: {str(e)}')
+
+    return order
+
+
 def paystack_verify(request):
     reference = request.GET.get('reference')
     if not reference:
@@ -160,91 +271,7 @@ def paystack_verify(request):
                     insurance_cost = 0.0
 
             if request.user.is_authenticated:
-                cart = request.session.get('cart', {})
-                products, cart_total = _get_cart_products(request, cart)
-                _, coupon_discount = _get_coupon_values(request, cart_total)
-                total_after_coupon = max(cart_total - coupon_discount, 0)
-                if insurance_cost <= 0:
-                    insurance_cost = round(max(0, amount - total_after_coupon), 2)
-
-                order = Order.objects.create(
-                    user=request.user,
-                    subtotal=cart_total,
-                    discount=coupon_discount,
-                    insurance_opted=insurance_opted,
-                    insurance_cost=insurance_cost,
-                    is_paid=True,
-                    payment_status='paid',
-                    status='confirmed',
-                    escrow_status='held'
-                )
-
-                items_html = '<table style="width: 100%; border-collapse: collapse;"><tr style="background: #f5f5f5;"><th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">Product</th><th style="padding: 8px; text-align: center; border-bottom: 1px solid #ddd;">Qty</th><th style="padding: 8px; text-align: right; border-bottom: 1px solid #ddd;">Price</th></tr>'
-                
-                for product_id, item_data in cart.items():
-                    try:
-                        product = Product.objects.get(id=int(product_id))
-                        quantity = int(item_data.get('quantity', 1))
-                        price = item_data.get('price', product.price)
-                        order_item = OrderItem.objects.create(
-                            order=order,
-                            product=product,
-                            quantity=quantity,
-                            price=price
-                        )
-                        update_stock(product, -quantity, reason='sale')
-                        items_html += f'<tr><td style="padding: 8px; border-bottom: 1px solid #eee;">{product.name}</td><td style="padding: 8px; text-align: center; border-bottom: 1px solid #eee;">{quantity}</td><td style="padding: 8px; text-align: right; border-bottom: 1px solid #eee;">₦{price:,.2f}</td></tr>'
-                    except Product.DoesNotExist:
-                        pass
-                
-                items_html += '</table>'
-                
-                # Send order confirmation email to customer
-                try:
-                    send_mail(
-                        subject=f'📦 Order Confirmation #{order.id}',
-                        message=f'Hi {request.user.first_name or request.user.username},\n\nThank you for your purchase! Your order #{order.id} has been confirmed.\n\nAmount: ₦{amount:,.2f}\n\nWe will notify you when your items ship.\n\nBest regards,\nRedCart Team',
-                        from_email=settings.DEFAULT_FROM_EMAIL,
-                        recipient_list=[request.user.email],
-                        html_message=f'''
-                        <h2>📦 Order Confirmation</h2>
-                        <p>Hi {request.user.first_name or request.user.username},</p>
-                        <p>Thank you for your purchase! Your order has been confirmed.</p>
-                        <p><strong>Order ID:</strong> #{order.id}</p>
-                        <h3>Order Details:</h3>
-                        {items_html}
-                        <p style="margin-top: 15px;"><strong>Total Amount:</strong> ₦{amount:,.2f}</p>
-                        <p>We will notify you when your items ship.</p>
-                        <hr>
-                        <p>If you have any questions, please reply to this email or visit our support page.</p>
-                        <p>Best regards,<br><strong>RedCart Team</strong></p>
-                        ''',
-                        fail_silently=False,
-                    )
-                except Exception as e:
-                    print(f'Error sending order confirmation email: {str(e)}')
-                
-                # Send order notification to admin
-                try:
-                    send_mail(
-                        subject=f'📦 New Order #{order.id} from {request.user.first_name or request.user.username}',
-                        message=f'New order received:\n\nOrder ID: {order.id}\nCustomer: {request.user.first_name or request.user.username}\nEmail: {request.user.email}\nAmount: ₦{amount:,.2f}',
-                        from_email=settings.DEFAULT_FROM_EMAIL,
-                        recipient_list=[settings.DEFAULT_FROM_EMAIL],
-                        html_message=f'''
-                        <h2>📦 New Order Received</h2>
-                        <p><strong>Order ID:</strong> #{order.id}</p>
-                        <p><strong>Customer:</strong> {request.user.first_name or request.user.username}</p>
-                        <p><strong>Email:</strong> {request.user.email}</p>
-                        <p><strong>Amount:</strong> ₦{amount:,.2f}</p>
-                        <h3>Items:</h3>
-                        {items_html}
-                        <p><a href="{settings.SITE_URL}/admin/products/order/{order.id}/change/">View in Admin</a></p>
-                        ''',
-                        fail_silently=False,
-                    )
-                except Exception as e:
-                    print(f'Error sending order admin notification: {str(e)}')
+                _create_paid_order_from_cart(request, amount, insurance_opted=insurance_opted, insurance_cost=insurance_cost, reference=reference)
 
             request.session['cart'] = {}
             _sync_abandoned_cart(request, {})
@@ -259,6 +286,10 @@ def paystack_verify(request):
     except Exception as e:
         messages.error(request, f'❌ Payment error: {str(e)}')
         return redirect('products:checkout')
+
+
+def paystack_callback(request):
+    return paystack_verify(request)
 
 
 def index(request):
@@ -675,7 +706,8 @@ def checkout(request):
         'total': total,
         'total_kobo': int(total * 100),
         'query': request.GET.get('q', ''),
-        'paystack_public_key': getattr(settings, 'PAYSTACK_PUBLIC_KEY', ''),
+        'paystack_public_key': getattr(settings, 'PAYSTACK_PUBLIC_KEY', '') or 'pk_test_4dc9ad4b7bac517bcfd33fb8398a1c3b865e6a2d',
+        'paystack_callback_url': _get_paystack_callback_url(request),
         'coupon_code': coupon_code,
         'coupon_discount': coupon_discount,
         'total_after_coupon': total_after_coupon,

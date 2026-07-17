@@ -20,6 +20,7 @@ urlpatterns = [
     path('api/chat/', product_views.ai_chat, name='api-chat-root'),
 
     # Paystack payment verification
+    path('payments/callback/', product_views.paystack_callback, name='paystack-callback'),
     path('products/payment/verify/', product_views.paystack_verify, name='paystack-verify'),
 
     # Primary product routes

@@ -64,6 +64,20 @@ class CartViewTests(TestCase):
         self.assertEqual(response.context['total'], 60.0)
         self.assertEqual(response.context['total_kobo'], 6000)
 
+    def test_checkout_exposes_paystack_callback_context(self):
+        user = User.objects.create_user(username='checkout-user', password='pass')
+        self.client.login(username='checkout-user', password='pass')
+
+        session = self.client.session
+        session['cart'] = {str(self.product.id): 1}
+        session.save()
+
+        response = self.client.get(reverse('products:checkout'))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('paystack_public_key', response.context)
+        self.assertIn('paystack_callback_url', response.context)
+        self.assertTrue(str(response.context['paystack_callback_url']).endswith('/payments/callback/'))
+
     def test_buy_now_sets_cart_directly(self):
         response = self.client.get(reverse('products:buy-now', args=[self.product.id]), follow=True)
         self.assertEqual(self.client.session['cart'], {str(self.product.id): 1})

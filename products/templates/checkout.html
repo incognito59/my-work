@@ -120,7 +120,7 @@
                data-total-kobo="{{ total_kobo }}"></div>
 
         <!-- Paystack Pay Button -->
-          <button id="paystack-btn" class="btn btn-success w-100 py-3 fw-semibold rounded-pill shadow-sm btn-glow">
+          <button id="paystack-btn" type="button" class="btn btn-success w-100 py-3 fw-semibold rounded-pill shadow-sm btn-glow">
             💳 Pay ₦<span id="pay-btn-amount">{{ total_after_coupon|default:total|floatformat:2|intcomma }}</span>
           </button>
 
@@ -514,14 +514,25 @@
         else if (selectedChannel === 'bank') paystackChannels = ['bank'];
         else if (selectedChannel === 'ussd') paystackChannels = ['ussd'];
 
-        const handler = PaystackPop.setup({
+        if (typeof window.PaystackPop === 'undefined' || !window.PaystackPop.setup) {
+          const errorText = 'Paystack could not be loaded. Please refresh the page and try again.';
+          if (window.showToast) {
+            window.showToast(errorText, 'error');
+          } else {
+            alert(errorText);
+          }
+          return;
+        }
+
+        const callbackUrl = '{{ paystack_callback_url|escapejs }}';
+        const handler = window.PaystackPop.setup({
           key: '{{ paystack_public_key|default:"pk_test_4dc9ad4b7bac517bcfd33fb8398a1c3b865e6a2d"|escapejs }}',
           email: email,
           amount: amountKobo,
           currency: 'NGN',
           ref: reference,
           channels: paystackChannels,
-          payment_options: selectedChannel,
+          payment_options: paystackChannels,
           metadata: {
             custom_fields: [
               { display_name: 'Customer Name', variable_name: 'customer_name', value: name },
@@ -531,7 +542,8 @@
             ]
           },
           callback: function(response) {
-            window.location.href = '/products/payment/verify/?reference=' + response.reference;
+            const redirectUrl = callbackUrl + (callbackUrl.includes('?') ? '&' : '?') + 'reference=' + encodeURIComponent(response.reference);
+            window.location.href = redirectUrl;
           },
           onClose: function() {
             console.log('Payment window closed.');
