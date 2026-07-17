@@ -25,6 +25,7 @@ urlpatterns = [
 
     # Primary product routes
     path('products/', include(('products.urls', 'products'), namespace='products')),
+    path('account/', product_views.account_dashboard, name='account-dashboard'),
 
     # Root redirect
     path('', RedirectView.as_view(pattern_name='products:product-list', permanent=False)),
