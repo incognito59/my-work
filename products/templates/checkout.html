@@ -338,7 +338,23 @@
       const paymentRadios = document.querySelectorAll('input[name="payment-channel"]');
       const customerEmailField = document.getElementById('customer-email');
       const customerNameField = document.getElementById('customer-name');
-      const formatAmount = (amount) => amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      const payBtnAmountEl = document.getElementById('pay-btn-amount');
+      const checkoutDataEl = document.getElementById('checkout-data');
+
+      const parseNumber = (v) => {
+        if (v === undefined || v === null) return 0;
+        try {
+          return parseFloat(String(v).replace(/,/g, '')) || 0;
+        } catch (e) {
+          return 0;
+        }
+      };
+
+      const formatAmount = (amount) => {
+        const num = Number.isFinite(amount) ? amount : 0;
+        return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      };
+
       const updatePaymentButtonText = (amount) => {
         const selectedMethod = document.querySelector('input[name="payment-channel"]:checked')?.value || 'card';
         if (selectedMethod === 'cod') {
@@ -346,15 +362,19 @@
         } else if (selectedMethod === 'wallet') {
           paystackBtn.textContent = '💸 Pay with RedCart Wallet';
         } else {
-          paystackBtn.textContent = `💳 Pay ₦${formatAmount(amount)} with Paystack`;
+          // keep icon and amount in a span for accessibility
+          if (payBtnAmountEl) payBtnAmountEl.textContent = formatAmount(amount);
+          paystackBtn.innerHTML = `💳 Pay ₦<span id="pay-btn-amount">${formatAmount(amount)}</span> with Paystack`;
         }
       };
 
       const emailField = customerEmailField;
       const nameField = customerNameField;
-      const baseTotal = parseFloat('{{ total_after_coupon|default:total|floatformat:2 }}');
+      // Prefer raw data attribute (unformatted) for JS calculations
+      const rawTotal = checkoutDataEl ? parseNumber(checkoutDataEl.dataset.total) : parseNumber('{{ total_after_coupon|default:total|floatformat:2|escapejs }}');
+      const baseTotal = rawTotal || 0;
       const insuranceCheckbox = document.getElementById('insurance-opt-in');
-      const insuranceCost = insuranceCheckbox ? parseFloat(insuranceCheckbox.dataset.insuranceCost || '0') : 0;
+      const insuranceCost = insuranceCheckbox ? parseNumber(insuranceCheckbox.dataset.insuranceCost || '0') : 0;
       const summaryInsuranceRow = document.getElementById('summary-insurance-row');
       const summaryInsurance = document.getElementById('summary-insurance');
       const summaryTotal = document.getElementById('summary-total');
@@ -369,7 +389,7 @@
           summaryInsurance.textContent = selectedInsurance.toFixed(2);
         }
         if (summaryTotal) {
-          summaryTotal.textContent = amountWithInsurance.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+          summaryTotal.textContent = formatAmount(amountWithInsurance);
         }
         if (paystackBtn) {
           updatePaymentButtonText(amountWithInsurance);
@@ -386,12 +406,13 @@
       });
 
       const getFormValues = () => {
+        const amount = updateCheckoutTotal();
         return {
           email: emailField ? emailField.value.trim() : '',
           name: nameField ? nameField.value.trim() : '',
           selectedChannel: document.querySelector('input[name="payment-channel"]:checked')?.value || 'card',
-          amountWithInsurance: updateCheckoutTotal(),
-          amountKobo: Math.round(updateCheckoutTotal() * 100),
+          amountWithInsurance: amount,
+          amountKobo: Math.round(amount * 100),
         };
       };
 
@@ -487,13 +508,19 @@
           return;
         }
 
+        // Select channels based on chosen method to limit Paystack options
+        let paystackChannels = ['card', 'bank', 'ussd'];
+        if (selectedChannel === 'card') paystackChannels = ['card'];
+        else if (selectedChannel === 'bank') paystackChannels = ['bank'];
+        else if (selectedChannel === 'ussd') paystackChannels = ['ussd'];
+
         const handler = PaystackPop.setup({
-          key: '{{ paystack_public_key|default:"pk_test_4dc9ad4b7bac517bcfd33fb8398a1c3b865e6a2d" }}',
+          key: '{{ paystack_public_key|default:"pk_test_4dc9ad4b7bac517bcfd33fb8398a1c3b865e6a2d"|escapejs }}',
           email: email,
           amount: amountKobo,
           currency: 'NGN',
           ref: reference,
-          channels: ['card', 'bank', 'ussd'],
+          channels: paystackChannels,
           payment_options: selectedChannel,
           metadata: {
             custom_fields: [
