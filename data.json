@@ -61300,24 +61300,6 @@
   },
   {
     "model": "admin.logentry",
-    "pk": 3273,
-    "fields": {
-      "action_time": "2026-05-19T20:09:57.363Z",
-      "user": [
-        "admin"
-      ],
-      "content_type": [
-        "products",
-        "product"
-      ],
-      "object_id": "2549",
-      "object_repr": "Apple AirPods Pro 2",
-      "action_flag": 1,
-      "change_message": "new through import_export"
-    }
-  },
-  {
-    "model": "admin.logentry",
     "pk": 3274,
     "fields": {
       "action_time": "2026-05-19T20:09:57.364Z",
@@ -64624,24 +64606,6 @@
       ],
       "object_id": "2548",
       "object_repr": "Sony WH-1000XM5",
-      "action_flag": 2,
-      "change_message": "[{\"changed\": {\"fields\": [\"Main Image\", \"Image 2\", \"Image 3\"]}}]"
-    }
-  },
-  {
-    "model": "admin.logentry",
-    "pk": 3458,
-    "fields": {
-      "action_time": "2026-05-19T20:58:57.530Z",
-      "user": [
-        "admin"
-      ],
-      "content_type": [
-        "products",
-        "product"
-      ],
-      "object_id": "2549",
-      "object_repr": "Apple AirPods Pro 2",
       "action_flag": 2,
       "change_message": "[{\"changed\": {\"fields\": [\"Main Image\", \"Image 2\", \"Image 3\"]}}]"
     }
@@ -68872,24 +68836,6 @@
       ],
       "object_id": "2550",
       "object_repr": "Samsung Galaxy S24 Ultra",
-      "action_flag": 3,
-      "change_message": ""
-    }
-  },
-  {
-    "model": "admin.logentry",
-    "pk": 3694,
-    "fields": {
-      "action_time": "2026-05-26T13:44:08.216Z",
-      "user": [
-        "admin"
-      ],
-      "content_type": [
-        "products",
-        "product"
-      ],
-      "object_id": "2549",
-      "object_repr": "Apple AirPods Pro 2",
       "action_flag": 3,
       "change_message": ""
     }
