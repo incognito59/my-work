@@ -521,14 +521,12 @@ def add_to_cart(request, item_id):
         price = float(product.price)
 
     if product_id in cart:
-        cart[product_id]['quantity'] = cart[product_id]['quantity'] + 1
+        if isinstance(cart[product_id], dict):
+            cart[product_id]['quantity'] = cart[product_id].get('quantity', 0) + 1
+        else:
+            cart[product_id] = cart[product_id] + 1
     else:
-        cart[product_id] = {
-            'quantity': 1,
-            'price': price,
-            'name': product.name,
-            'image': product.image_src
-        }
+        cart[product_id] = 1
 
     request.session['cart'] = cart
     _sync_abandoned_cart(request, cart)
@@ -549,8 +547,13 @@ def _get_cart_products(request, cart):
             invalid_item_ids.append(product_id)
             continue
 
-        quantity = item_data.get('quantity', 1)
-        price = item_data.get('price', product.sale_price if product.has_active_sale else product.price)
+        if isinstance(item_data, dict):
+            quantity = item_data.get('quantity', 1)
+            price = item_data.get('price', product.sale_price if product.has_active_sale else product.price)
+        else:
+            quantity = int(item_data or 1)
+            price = product.sale_price if product.has_active_sale else product.price
+
         product.quantity = quantity
         product.cart_price = price
         product.total_price = price * quantity
@@ -620,6 +623,7 @@ def checkout(request):
     context = {
         'products': products,
         'total': total,
+        'total_kobo': int(total * 100),
         'query': request.GET.get('q', ''),
         'paystack_public_key': getattr(settings, 'PAYSTACK_PUBLIC_KEY', ''),
         'coupon_code': coupon_code,
@@ -891,19 +895,7 @@ def buy_now(request, product_id):
         messages.error(request, f"⚠️ {product.name} is out of stock.")
         return redirect('products:product-detail', product_id=product.id)
 
-    if product.has_active_sale:
-        price = float(product.sale_price)
-    else:
-        price = float(product.price)
-
-    cart = {
-        str(product.id): {
-            'quantity': 1,
-            'price': price,
-            'name': product.name,
-            'image': product.image_src
-        }
-    }
+    cart = {str(product.id): 1}
     request.session['cart'] = cart
     _sync_abandoned_cart(request, cart)
     messages.success(request, f"🛍️ {product.name} added for checkout!")
