@@ -571,6 +571,24 @@ def user_profile(request):
     })
 
 
+@login_required(login_url='products:login')
+def account_dashboard(request):
+    user = request.user
+    wallet, _ = Wallet.objects.get_or_create(user=user)
+    orders = Order.objects.filter(user=user).order_by('-created_at')
+    addresses = UserAddress.objects.filter(user=user).order_by('-is_default', '-created_at')[:5]
+    wishlist_items = Wishlist.objects.filter(user=user).select_related('product').order_by('-id')[:4]
+
+    return render(request, 'account/dashboard.html', {
+        'user': user,
+        'wallet': wallet,
+        'orders': orders,
+        'addresses': addresses,
+        'wishlist_items': wishlist_items,
+        'order_count': orders.count(),
+    })
+
+
 @require_login_with_message
 @login_required(login_url='products:login')
 def add_to_cart(request, item_id):

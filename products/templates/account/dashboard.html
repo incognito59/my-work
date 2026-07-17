@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}My Account - RedCart{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row g-4">
+    <div class="col-lg-4">
+      <div class="card border-0 shadow rounded-4 p-4 theme-card sticky-top" style="top: 90px;">
+        <div class="text-center mb-4">
+          <div class="avatar-circle mx-auto mb-3" style="width: 110px; height: 110px; border-radius: 50%; background: linear-gradient(135deg, #ff4747, #ff8a00); display: flex; align-items: center; justify-content: center; font-size: 2.8rem; color: white;">
+            {{ user.first_name|default:user.username|slice:':1'|upper }}
+          </div>
+          <h3 class="fw-bold mb-1">{{ user.get_full_name|default:user.username }}</h3>
+          <p class="text-muted mb-1">@{{ user.username }}</p>
+          <p class="text-muted small mb-0">{{ user.email }}</p>
+        </div>
+
+        <div class="d-grid gap-2">
+          <a href="{% url 'products:wallet' %}" class="btn btn-danger rounded-pill fw-semibold">💰 Add Money to Wallet</a>
+          <a href="{% url 'products:addresses' %}" class="btn btn-outline-danger rounded-pill fw-semibold">📍 Manage Addresses</a>
+          <a href="{% url 'products:password-reset' %}" class="btn btn-outline-secondary rounded-pill fw-semibold">🔒 Change Password</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-8">
+      <div class="row g-4 mb-4">
+        <div class="col-md-6">
+          <div class="card border-0 shadow-sm rounded-4 p-4 theme-card h-100">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div>
+                <p class="text-muted mb-1">Wallet Balance</p>
+                <h2 class="fw-bold mb-0">₦{{ wallet.balance|floatformat:2|intcomma }}</h2>
+              </div>
+              <span class="badge bg-danger-subtle text-danger">Active</span>
+            </div>
+            <a href="{% url 'products:wallet' %}" class="btn btn-danger rounded-pill">Top Up Wallet</a>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="card border-0 shadow-sm rounded-4 p-4 theme-card h-100">
+            <p class="text-muted mb-1">Orders</p>
+            <h2 class="fw-bold mb-2">{{ order_count }}</h2>
+            <p class="text-muted mb-0">Your recent purchases and delivery progress.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card border-0 shadow-sm rounded-4 p-4 theme-card mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="fw-bold mb-0">📦 Order History</h5>
+          <a href="{% url 'products:profile' %}" class="btn btn-sm btn-outline-danger rounded-pill">View All</a>
+        </div>
+
+        {% if orders %}
+          <div class="table-responsive">
+            <table class="table align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>Order</th>
+                  <th>Date</th>
+                  <th>Total</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for order in orders|slice:':5' %}
+                  <tr>
+                    <td>#{{ order.id }}</td>
+                    <td>{{ order.created_at|date:"M d, Y" }}</td>
+                    <td>₦{{ order.total|floatformat:2|intcomma }}</td>
+                    <td>
+                      {% if order.status == 'delivered' %}
+                        <span class="badge bg-success">Delivered</span>
+                      {% elif order.status == 'cancelled' %}
+                        <span class="badge bg-secondary">Cancelled</span>
+                      {% elif order.is_paid %}
+                        <span class="badge bg-warning text-dark">Paid</span>
+                      {% else %}
+                        <span class="badge bg-info text-dark">Pending</span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="text-center py-4 text-muted">You have no orders yet.</div>
+        {% endif %}
+      </div>
+
+      <div class="row g-4">
+        <div class="col-md-6">
+          <div class="card border-0 shadow-sm rounded-4 p-4 theme-card h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5 class="fw-bold mb-0">📍 Saved Addresses</h5>
+              <a href="{% url 'products:addresses' %}" class="btn btn-sm btn-outline-danger rounded-pill">Manage</a>
+            </div>
+            {% if addresses %}
+              <ul class="list-unstyled mb-0">
+                {% for address in addresses %}
+                  <li class="mb-3 pb-3 border-bottom">
+                    <div class="fw-semibold">{{ address.full_name }}</div>
+                    <div class="small text-muted">{{ address.street_address }}, {{ address.city }}, {{ address.state }}</div>
+                    <div class="small text-muted">{{ address.phone }}</div>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <p class="text-muted mb-0">No saved addresses yet.</p>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="card border-0 shadow-sm rounded-4 p-4 theme-card h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5 class="fw-bold mb-0">💖 Wishlist</h5>
+              <a href="{% url 'products:wishlist' %}" class="btn btn-sm btn-outline-danger rounded-pill">View All</a>
+            </div>
+            {% if wishlist_items %}
+              <ul class="list-unstyled mb-0">
+                {% for item in wishlist_items %}
+                  <li class="mb-3 pb-3 border-bottom">
+                    <div class="fw-semibold">{{ item.product.name }}</div>
+                    <div class="small text-muted">₦{{ item.product.sale_price|default:item.product.price|floatformat:2|intcomma }}</div>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <p class="text-muted mb-0">Your wishlist is empty.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .theme-card {
+    background: #fff;
+    border-radius: 20px;
+  }
+  [data-theme="dark"] .theme-card {
+    background: #1e1e1e;
+    color: #f2f2f2;
+  }
+  [data-theme="dark"] .text-muted {
+    color: #b7b7b7 !important;
+  }
+  [data-theme="dark"] .table {
+    color: #f2f2f2;
+  }
+  [data-theme="dark"] .table th,
+  [data-theme="dark"] .table td {
+    border-color: #333;
+  }
+</style>
+{% endblock %}

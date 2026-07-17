@@ -38,6 +38,7 @@ urlpatterns = [
     path('password-reset-confirm/<uidb64>/<token>/', views.CustomPasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     path('logout/', views.logout_page, name='logout'),
     path('profile/', views.user_profile, name='profile'),
+    path('account/', views.account_dashboard, name='account-dashboard'),
     
     # 🏠 Account Management
     path('addresses/', views.addresses, name='addresses'),
