@@ -817,12 +817,70 @@ def product_autocomplete(request):
     })
 
 
+@login_required(login_url='products:login')
 def confirm_payment(request):
     if request.method == 'POST':
+        if request.content_type == 'application/json':
+            try:
+                payload = json.loads(request.body.decode('utf-8') or '{}')
+            except ValueError:
+                payload = {}
+
+            payment_channel = payload.get('payment_channel', 'card')
+            if payment_channel == 'cod':
+                insurance_opted = str(payload.get('insurance_opted', 'false')).lower() in {'true', '1', 'yes'}
+                try:
+                    insurance_cost = float(payload.get('insurance_cost', 0) or 0)
+                except (TypeError, ValueError):
+                    insurance_cost = 0.0
+
+                cart = request.session.get('cart', {})
+                products, cart_total = _get_cart_products(request, cart)
+                _, coupon_discount = _get_coupon_values(request, cart_total)
+
+                order = Order.objects.create(
+                    user=request.user,
+                    subtotal=cart_total,
+                    discount=coupon_discount,
+                    insurance_opted=insurance_opted,
+                    insurance_cost=insurance_cost,
+                    is_paid=False,
+                    payment_status='unpaid',
+                    status='pending',
+                    escrow_status='pending'
+                )
+
+                for product_id, item_data in cart.items():
+                    try:
+                        product = Product.objects.get(id=int(product_id))
+                        if isinstance(item_data, dict):
+                            quantity = int(item_data.get('quantity', 1))
+                            price = float(item_data.get('price', product.sale_price if product.has_active_sale else product.price))
+                        else:
+                            quantity = int(item_data or 1)
+                            price = product.sale_price if product.has_active_sale else product.price
+
+                        OrderItem.objects.create(
+                            order=order,
+                            product=product,
+                            quantity=quantity,
+                            price=price
+                        )
+                        update_stock(product, -quantity, reason='sale')
+                    except (Product.DoesNotExist, ValueError, TypeError):
+                        continue
+
+                request.session['cart'] = {}
+                _sync_abandoned_cart(request, {})
+                return JsonResponse({'success': True, 'redirect': reverse('products:product-list')})
+
+            return JsonResponse({'success': False, 'error': 'Invalid payment channel for Cash on Delivery.'}, status=400)
+
         messages.success(request, "✅ Payment confirmed! Thank you for shopping with RedCart.")
         request.session['cart'] = {}
         _sync_abandoned_cart(request, {})
         return redirect('products:product-list')
+
     return redirect('products:checkout')
 
 
