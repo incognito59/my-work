@@ -103,6 +103,10 @@
               USSD
             </label>
             <label class="btn btn-outline-secondary rounded-pill d-flex align-items-center gap-2">
+              <input type="radio" name="payment-channel" value="wallet" class="form-check-input">
+              RedCart Wallet (Balance: ₦{{ wallet_balance|floatformat:2|intcomma }})
+            </label>
+            <label class="btn btn-outline-secondary rounded-pill d-flex align-items-center gap-2">
               <input type="radio" name="payment-channel" value="cod" class="form-check-input">
               Cash on Delivery
             </label>
@@ -327,11 +331,15 @@
     if (!paystackBtn) return;
 
       const paymentRadios = document.querySelectorAll('input[name="payment-channel"]');
+      const customerEmailField = document.getElementById('customer-email');
+      const customerNameField = document.getElementById('customer-name');
       const formatAmount = (amount) => amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
       const updatePaymentButtonText = (amount) => {
         const selectedMethod = document.querySelector('input[name="payment-channel"]:checked')?.value || 'card';
         if (selectedMethod === 'cod') {
           paystackBtn.textContent = '🚚 Place order with Cash on Delivery';
+        } else if (selectedMethod === 'wallet') {
+          paystackBtn.textContent = '💸 Pay with RedCart Wallet';
         } else {
           paystackBtn.textContent = `💳 Pay ₦${formatAmount(amount)} with Paystack`;
         }
@@ -341,6 +349,8 @@
         radio.addEventListener('change', updateCheckoutTotal);
       });
 
+      const email = customerEmailField ? customerEmailField.value.trim() : '';
+      const name = customerNameField ? customerNameField.value.trim() : '';
 
       if (!email) {
         if (window.showToast) {
@@ -406,10 +416,12 @@
       const reference = 'REDCART-' + Date.now() + '-' + Math.floor(Math.random() * 1000000);
 
       const selectedChannel = document.querySelector('input[name="payment-channel"]:checked')?.value || 'card';
-      if (selectedChannel === 'cod') {
+      if (selectedChannel === 'cod' || selectedChannel === 'wallet') {
         const csrfToken = getCookie('csrftoken');
         if (!csrfToken) {
-          const errorText = 'Unable to place Cash on Delivery order. Please refresh and try again.';
+          const errorText = selectedChannel === 'cod'
+            ? 'Unable to place Cash on Delivery order. Please refresh and try again.'
+            : 'Unable to place wallet order. Please refresh and try again.';
           if (window.showToast) {
             window.showToast(errorText, 'error');
           } else {
@@ -435,7 +447,9 @@
             if (response.ok && data.success) {
               window.location.href = data.redirect || '/products/';
             } else {
-              const message = data.error || 'Unable to place Cash on Delivery order.';
+              const message = data.error || (selectedChannel === 'cod'
+                ? 'Unable to place Cash on Delivery order.'
+                : 'Unable to place wallet payment order.');
               if (window.showToast) {
                 window.showToast(message, 'error');
               } else {
@@ -445,7 +459,9 @@
           })
           .catch((error) => {
             console.error(error);
-            const message = 'Unable to place Cash on Delivery order.';
+            const message = selectedChannel === 'cod'
+              ? 'Unable to place Cash on Delivery order.'
+              : 'Unable to place wallet payment order.';
             if (window.showToast) {
               window.showToast(message, 'error');
             } else {

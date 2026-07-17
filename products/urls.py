@@ -43,6 +43,8 @@ urlpatterns = [
     path('addresses/', views.addresses, name='addresses'),
     path('add-address/', views.add_address, name='add-address'),
     path('payment-methods/', views.payment_methods, name='payment-methods'),
+    path('wallet/', views.wallet, name='wallet'),
+    path('wallet/topup/verify/', views.wallet_topup_verify, name='wallet-topup-verify'),
     
     # 📧 Support & Communication
     path('contact/', views.contact_us, name='contact'),
