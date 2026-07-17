@@ -24,6 +24,7 @@ from django.core.paginator import Paginator
 from django.db.models import Count
 from .models import Notification, UserNotificationSettings, PushNotificationSubscription, SystemAlert, NotificationLog
 from django.core.cache import cache
+from functools import wraps
 
 
 def _sync_abandoned_cart(request, cart):
@@ -40,6 +41,22 @@ def _sync_abandoned_cart(request, cart):
         )
     else:
         AbandonedCart.objects.filter(user=request.user, active=True).update(active=False)
+
+
+def require_login_with_message(view_func):
+    """Decorator that ensures the user is authenticated, adds a friendly
+    message, and redirects to the login page with `next` set to the original path.
+    Use this as the outer decorator above `@login_required`.
+    """
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            messages.info(request, 'Please log in to continue')
+            login_url = reverse('products:login')
+            next_url = request.get_full_path()
+            return redirect(f"{login_url}?next={next_url}")
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
 
 
 try:
@@ -523,6 +540,8 @@ def user_profile(request):
     })
 
 
+@require_login_with_message
+@login_required(login_url='products:login')
 def add_to_cart(request, item_id):
     product = get_object_or_404(Product, id=item_id)
     if product.is_out_of_stock:
@@ -631,6 +650,8 @@ def delete_from_cart(request, product_id):
     return redirect('products:view-cart')
 
 
+@require_login_with_message
+@login_required(login_url='products:login')
 def checkout(request):
     cart = request.session.get('cart', {})
     products, total = _get_cart_products(request, cart)
@@ -826,6 +847,8 @@ def product_autocomplete(request):
     })
 
 
+@login_required(login_url='products:login')
+@require_login_with_message
 @login_required(login_url='products:login')
 def confirm_payment(request):
     if request.method == 'POST':
@@ -1644,18 +1667,16 @@ def recently_viewed(request):
     return JsonResponse({'success': True, 'recently_viewed': products})
 
 
+@require_login_with_message
+@login_required(login_url='products:login')
 def wishlist_page(request):
-    wishlist_items = []
+    wishlist_items = Wishlist.objects.filter(user=request.user).select_related('product')
     message = None
-    if request.user.is_authenticated:
-        wishlist_items = Wishlist.objects.filter(user=request.user).select_related('product')
-        if not wishlist_items:
-            message = 'Your wishlist is empty. Start adding products!'
-    else:
-        message = 'Log in to view and save your wishlist items.'
+    if not wishlist_items:
+        message = 'Your wishlist is empty. Start adding products!'
     return render(request, 'wishlist.html', {
         'wishlist_items': wishlist_items,
-        'total_wishlist': wishlist_items.count() if request.user.is_authenticated else 0,
+        'total_wishlist': wishlist_items.count(),
         'message': message,
     })
 
