@@ -10,8 +10,17 @@
     <!-- LEFT: Checkout -->
     <div class="col-lg-8">
       <div class="card border-0 shadow-sm p-4 rounded-4 theme-card">
-        <h3 class="fw-bold mb-3">🛍️ Checkout</h3>
-        <p class="mb-4">Review your order and complete payment securely.</p>
+        <div class="d-flex align-items-center justify-content-between mb-3 checkout-header">
+          <div class="d-flex align-items-center gap-3">
+            <div class="checkout-logo d-flex align-items-center justify-content-center">
+              <span>RC</span>
+            </div>
+            <div>
+              <h3 class="fw-bold mb-1">RedCart Checkout</h3>
+              <p class="mb-0 text-muted">Secure checkout for your order with trusted payment options.</p>
+            </div>
+          </div>
+        </div>
 
         <!-- Customer Email (for Paystack) -->
         <div class="mb-3">
@@ -217,6 +226,36 @@
   }
   .payment-badge svg {
     display: block;
+  }
+
+  .checkout-logo {
+    width: 50px;
+    height: 50px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, #ff4747, #ff7a6b);
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 800;
+    font-family: 'Poppins', sans-serif;
+    box-shadow: 0 12px 30px rgba(255, 71, 71, 0.22);
+  }
+
+  .checkout-logo span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+  }
+
+  .checkout-header h3 {
+    letter-spacing: -0.04em;
+  }
+
+  .checkout-header p {
+    color: #6c757d;
+    margin-bottom: 0;
+    font-size: 0.95rem;
   }
 
   .btn-success {
