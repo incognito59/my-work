@@ -14,7 +14,7 @@ import urllib.error
 
 from django.urls import reverse
 from django.http import JsonResponse, HttpResponse
-from .models import Product, Comment, Order, OrderItem, Wishlist, AbandonedCart, Coupon, Review, Wallet, WalletTransaction
+from .models import Product, Comment, Order, OrderItem, Wishlist, AbandonedCart, Coupon, Review, Wallet, WalletTransaction, UserAddress
 from .utils import get_product_recommendations_ai, get_ai_chat_response, update_stock
 from django.conf import settings
 from decouple import config
