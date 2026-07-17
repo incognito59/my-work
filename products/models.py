@@ -344,6 +344,8 @@ class Order(models.Model):
     shipping_cost = models.FloatField(default=0)
     tax = models.FloatField(default=0)
     discount = models.FloatField(default=0)
+    insurance_opted = models.BooleanField(default=False)
+    insurance_cost = models.FloatField(default=0)
     is_paid = models.BooleanField(default=False)
 
     # Escrow / Buyer Protection
@@ -376,10 +378,10 @@ class Order(models.Model):
     @property
     def total(self):
         if self.subtotal:
-            return self.subtotal + self.shipping_cost + self.tax - self.discount
+            return self.subtotal + self.shipping_cost + self.tax + self.insurance_cost - self.discount
 
         item_total = sum(item.total_price for item in self.items.all())
-        return item_total + self.shipping_cost + self.tax - self.discount
+        return item_total + self.shipping_cost + self.tax + self.insurance_cost - self.discount
 
     @property
     def estimated_delivery_date(self):
