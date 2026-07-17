@@ -358,9 +358,13 @@
       const updatePaymentButtonText = (amount) => {
         const selectedMethod = document.querySelector('input[name="payment-channel"]:checked')?.value || 'card';
         if (selectedMethod === 'cod') {
-          paystackBtn.textContent = '🚚 Place order with Cash on Delivery';
+          paystackBtn.textContent = '🚚 Place Order - Pay on Delivery';
         } else if (selectedMethod === 'wallet') {
-          paystackBtn.textContent = '💸 Pay with RedCart Wallet';
+          paystackBtn.textContent = '💸 Pay with Wallet';
+        } else if (selectedMethod === 'bank') {
+          paystackBtn.textContent = '🏦 Pay via Bank Transfer';
+        } else if (selectedMethod === 'ussd') {
+          paystackBtn.textContent = '📲 Pay via USSD';
         } else {
           // keep icon and amount in a span for accessibility
           if (payBtnAmountEl) payBtnAmountEl.textContent = formatAmount(amount);
