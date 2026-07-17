@@ -131,14 +131,31 @@ def paystack_verify(request):
 
         if result.get('status') and result.get('data', {}).get('status') == 'success':
             amount = result['data']['amount'] / 100
+            metadata = result['data'].get('metadata', {}) or {}
+            insurance_opted = False
+            insurance_cost = 0.0
+
+            if isinstance(metadata, dict):
+                insurance_opted = str(metadata.get('insurance_opted', False)).lower() in {'true', '1', 'yes'}
+                try:
+                    insurance_cost = float(metadata.get('insurance_cost', 0) or 0)
+                except (TypeError, ValueError):
+                    insurance_cost = 0.0
 
             if request.user.is_authenticated:
                 cart = request.session.get('cart', {})
+                products, cart_total = _get_cart_products(request, cart)
+                _, coupon_discount = _get_coupon_values(request, cart_total)
+                total_after_coupon = max(cart_total - coupon_discount, 0)
+                if insurance_cost <= 0:
+                    insurance_cost = round(max(0, amount - total_after_coupon), 2)
 
                 order = Order.objects.create(
                     user=request.user,
-                    subtotal=amount,
-                    discount=0,
+                    subtotal=cart_total,
+                    discount=coupon_discount,
+                    insurance_opted=insurance_opted,
+                    insurance_cost=insurance_cost,
                     is_paid=True,
                     payment_status='paid',
                     status='confirmed',
@@ -620,6 +637,11 @@ def checkout(request):
     coupon_code, coupon_discount = _get_coupon_values(request, total)
     total_after_coupon = max(total - coupon_discount, 0)
 
+    insurance_threshold = 200000
+    insurance_rate = 0.005
+    insurance_available = total_after_coupon >= insurance_threshold
+    insurance_cost = round(total_after_coupon * insurance_rate, 2) if insurance_available else 0
+
     context = {
         'products': products,
         'total': total,
@@ -629,6 +651,9 @@ def checkout(request):
         'coupon_code': coupon_code,
         'coupon_discount': coupon_discount,
         'total_after_coupon': total_after_coupon,
+        'insurance_available': insurance_available,
+        'insurance_cost': insurance_cost,
+        'insurance_threshold': insurance_threshold,
     }
 
     return render(request, 'checkout.html', context)

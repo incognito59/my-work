@@ -131,11 +131,27 @@
           <span class="text-success">Free</span>
         </div>
 
+        {% if insurance_available %}
+        <div class="form-check mb-3">
+          <input class="form-check-input" type="checkbox" value="1" id="insurance-opt-in" data-insurance-cost="{{ insurance_cost|floatformat:2 }}">
+          <label class="form-check-label" for="insurance-opt-in">
+            Add insurance for orders above ₦{{ insurance_threshold|floatformat:0|intcomma }}:
+            <strong>₦{{ insurance_cost|floatformat:2|intcomma }}</strong>
+          </label>
+          <div class="form-text text-muted">Protect your order from loss or damage during transit.</div>
+        </div>
+        {% endif %}
+
+        <div class="d-flex justify-content-between mb-2" id="summary-insurance-row" style="display: none;">
+          <span>Insurance:</span>
+          <span class="fw-semibold">₦<span id="summary-insurance">0.00</span></span>
+        </div>
+
         <hr>
 
         <div class="d-flex justify-content-between fw-bold fs-5">
           <span>Total:</span>
-          <span class="text-danger fw-bold">₦{{ total_after_coupon|default:total|floatformat:2|intcomma }}</span>
+          <span class="text-danger fw-bold">₦<span id="summary-total">{{ total_after_coupon|default:total|floatformat:2|intcomma }}</span></span>
         </div>
         {% else %}
         <p class="text-muted text-center mt-3">No items in your order.</p>
@@ -309,7 +325,36 @@
       }
 
       // Get the total amount from the context
-      const totalAmount = parseFloat('{{ total_after_coupon|default:total|floatformat:2 }}');
+      const baseTotal = parseFloat('{{ total_after_coupon|default:total|floatformat:2 }}');
+      const insuranceCheckbox = document.getElementById('insurance-opt-in');
+      const insuranceCost = insuranceCheckbox ? parseFloat(insuranceCheckbox.dataset.insuranceCost || '0') : 0;
+      const summaryInsuranceRow = document.getElementById('summary-insurance-row');
+      const summaryInsurance = document.getElementById('summary-insurance');
+      const summaryTotal = document.getElementById('summary-total');
+
+      const updateCheckoutTotal = () => {
+        const selectedInsurance = insuranceCheckbox && insuranceCheckbox.checked ? insuranceCost : 0;
+        const amountWithInsurance = baseTotal + selectedInsurance;
+        if (summaryInsuranceRow) {
+          summaryInsuranceRow.style.display = selectedInsurance > 0 ? 'flex' : 'none';
+        }
+        if (summaryInsurance) {
+          summaryInsurance.textContent = selectedInsurance.toFixed(2);
+        }
+        if (summaryTotal) {
+          summaryTotal.textContent = amountWithInsurance.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+        if (paystackBtn) {
+          paystackBtn.textContent = `💳 Pay ₦${amountWithInsurance.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')} with Paystack`;
+        }
+        return amountWithInsurance;
+      };
+
+      if (insuranceCheckbox) {
+        insuranceCheckbox.addEventListener('change', updateCheckoutTotal);
+      }
+
+      const totalAmount = updateCheckoutTotal();
       const amountKobo = Math.round(totalAmount * 100);
 
       if (amountKobo <= 0) {
@@ -332,7 +377,9 @@
         ref: reference,
         metadata: {
           custom_fields: [
-            { display_name: 'Customer Name', variable_name: 'customer_name', value: name }
+            { display_name: 'Customer Name', variable_name: 'customer_name', value: name },
+            { display_name: 'Insurance Opted', variable_name: 'insurance_opted', value: insuranceCheckbox && insuranceCheckbox.checked ? 'true' : 'false' },
+            { display_name: 'Insurance Cost', variable_name: 'insurance_cost', value: insuranceCheckbox && insuranceCheckbox.checked ? insuranceCost.toFixed(2) : '0' },
           ]
         },
         callback: function(response) {
