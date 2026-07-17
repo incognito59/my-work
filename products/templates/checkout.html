@@ -114,10 +114,15 @@
           <div class="form-text">Choose Card, Bank Transfer, USSD, or Cash on Delivery. COD orders are payable when the package arrives.</div>
         </div>
 
+             <!-- Raw checkout data for JS (unformatted) -->
+             <div id="checkout-data" style="display:none;"
+               data-total="{{ total_after_coupon|default:total }}"
+               data-total-kobo="{{ total_kobo }}"></div>
+
         <!-- Paystack Pay Button -->
-        <button id="paystack-btn" class="btn btn-success w-100 py-3 fw-semibold rounded-pill shadow-sm btn-glow">
-          💳 Pay ₦{{ total_after_coupon|default:total|floatformat:2|intcomma }} with Paystack
-        </button>
+          <button id="paystack-btn" class="btn btn-success w-100 py-3 fw-semibold rounded-pill shadow-sm btn-glow">
+            💳 Pay ₦<span id="pay-btn-amount">{{ total_after_coupon|default:total|floatformat:2|intcomma }}</span>
+          </button>
 
       </div>
     </div>
