@@ -14,7 +14,7 @@ import urllib.error
 
 from django.urls import reverse
 from django.http import JsonResponse, HttpResponse
-from .models import Product, Comment, Order, OrderItem, Wishlist, AbandonedCart, Coupon, Review
+from .models import Product, Comment, Order, OrderItem, Wishlist, AbandonedCart, Coupon, Review, Wallet, WalletTransaction
 from .utils import get_product_recommendations_ai, get_ai_chat_response, update_stock
 from django.conf import settings
 from decouple import config
@@ -642,6 +642,13 @@ def checkout(request):
     insurance_available = total_after_coupon >= insurance_threshold
     insurance_cost = round(total_after_coupon * insurance_rate, 2) if insurance_available else 0
 
+    wallet_balance = 0.0
+    wallet_available = False
+    if request.user.is_authenticated:
+        wallet, _ = Wallet.objects.get_or_create(user=request.user)
+        wallet_balance = wallet.balance
+        wallet_available = wallet_balance > 0
+
     context = {
         'products': products,
         'total': total,
@@ -654,6 +661,8 @@ def checkout(request):
         'insurance_available': insurance_available,
         'insurance_cost': insurance_cost,
         'insurance_threshold': insurance_threshold,
+        'wallet_balance': wallet_balance,
+        'wallet_available': wallet_available,
     }
 
     return render(request, 'checkout.html', context)
@@ -827,6 +836,71 @@ def confirm_payment(request):
                 payload = {}
 
             payment_channel = payload.get('payment_channel', 'card')
+            if payment_channel == 'wallet':
+                insurance_opted = str(payload.get('insurance_opted', 'false')).lower() in {'true', '1', 'yes'}
+                try:
+                    insurance_cost = float(payload.get('insurance_cost', 0) or 0)
+                except (TypeError, ValueError):
+                    insurance_cost = 0.0
+
+                cart = request.session.get('cart', {})
+                products, cart_total = _get_cart_products(request, cart)
+                _, coupon_discount = _get_coupon_values(request, cart_total)
+                total_after_coupon = max(cart_total - coupon_discount, 0)
+                total_amount = round(total_after_coupon + insurance_cost, 2)
+
+                wallet, _ = Wallet.objects.get_or_create(user=request.user)
+                if wallet.balance < total_amount:
+                    return JsonResponse({'success': False, 'error': 'Insufficient wallet balance. Please top up or choose another payment method.'}, status=400)
+
+                try:
+                    wallet.withdraw(total_amount)
+                    WalletTransaction.objects.create(
+                        wallet=wallet,
+                        transaction_type='spend',
+                        amount=total_amount,
+                        reference=f'WALLET-SPEND-{int(timezone.now().timestamp())}',
+                        description='Wallet payment for order'
+                    )
+                except Exception as e:
+                    return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+                order = Order.objects.create(
+                    user=request.user,
+                    subtotal=cart_total,
+                    discount=coupon_discount,
+                    insurance_opted=insurance_opted,
+                    insurance_cost=insurance_cost,
+                    is_paid=True,
+                    payment_status='paid',
+                    status='confirmed',
+                    escrow_status='held'
+                )
+
+                for product_id, item_data in cart.items():
+                    try:
+                        product = Product.objects.get(id=int(product_id))
+                        if isinstance(item_data, dict):
+                            quantity = int(item_data.get('quantity', 1))
+                            price = float(item_data.get('price', product.sale_price if product.has_active_sale else product.price))
+                        else:
+                            quantity = int(item_data or 1)
+                            price = product.sale_price if product.has_active_sale else product.price
+
+                        OrderItem.objects.create(
+                            order=order,
+                            product=product,
+                            quantity=quantity,
+                            price=price
+                        )
+                        update_stock(product, -quantity, reason='sale')
+                    except (Product.DoesNotExist, ValueError, TypeError):
+                        continue
+
+                request.session['cart'] = {}
+                _sync_abandoned_cart(request, {})
+                return JsonResponse({'success': True, 'redirect': reverse('products:product-list')})
+
             if payment_channel == 'cod':
                 insurance_opted = str(payload.get('insurance_opted', 'false')).lower() in {'true', '1', 'yes'}
                 try:
@@ -1163,7 +1237,66 @@ def add_address(request):
 def payment_methods(request):
     from .models import PaymentMethod
     methods = PaymentMethod.objects.filter(user=request.user)
-    return render(request, 'account/payment_methods.html', {'methods': methods})
+    wallet, _ = Wallet.objects.get_or_create(user=request.user)
+    return render(request, 'account/payment_methods.html', {'methods': methods, 'wallet': wallet})
+
+
+@login_required(login_url='products:login')
+def wallet(request):
+    wallet, _ = Wallet.objects.get_or_create(user=request.user)
+    return render(request, 'account/wallet.html', {
+        'wallet': wallet,
+        'paystack_public_key': getattr(settings, 'PAYSTACK_PUBLIC_KEY', ''),
+        'user_email': request.user.email,
+    })
+
+
+@login_required(login_url='products:login')
+def wallet_topup_verify(request):
+    reference = request.GET.get('reference')
+    if not reference:
+        messages.error(request, '❌ No payment reference found.')
+        return redirect('products:wallet')
+
+    try:
+        import requests
+        headers = {
+            'Authorization': f'Bearer {settings.PAYSTACK_SECRET_KEY}',
+            'Content-Type': 'application/json',
+        }
+
+        response = requests.get(f'https://api.paystack.co/transaction/verify/{reference}', headers=headers)
+        result = response.json()
+
+        if result.get('status') and result.get('data', {}).get('status') == 'success':
+            amount = result['data']['amount'] / 100
+            metadata = result['data'].get('metadata', {}) or {}
+            wallet_top_up = False
+            if isinstance(metadata, dict):
+                wallet_top_up = str(metadata.get('wallet_top_up', 'false')).lower() in {'true', '1', 'yes'}
+
+            if wallet_top_up:
+                wallet, _ = Wallet.objects.get_or_create(user=request.user)
+                wallet.deposit(amount)
+                WalletTransaction.objects.create(
+                    wallet=wallet,
+                    transaction_type='top_up',
+                    amount=amount,
+                    reference=reference,
+                    description='Wallet top-up via Paystack'
+                )
+                messages.success(request, f'✅ Wallet topped up with ₦{amount:,.2f}')
+                return redirect('products:wallet')
+
+            messages.error(request, '❌ Invalid wallet top-up transaction.')
+            return redirect('products:wallet')
+        else:
+            error_msg = result.get('data', {}).get('gateway_response', 'Payment verification failed')
+            messages.error(request, f'❌ Wallet top-up failed: {error_msg}')
+            return redirect('products:wallet')
+    except Exception as e:
+        messages.error(request, f'❌ Wallet top-up error: {str(e)}')
+        return redirect('products:wallet')
 
 
 def analytics_dashboard(request):
