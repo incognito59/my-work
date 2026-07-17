@@ -532,8 +532,7 @@
           amount: amountKobo,
           currency: 'NGN',
           ref: reference,
-          channels: paystackChannels,
-          payment_options: selectedChannel,
+          payment_options: paystackChannels.join(','),
           metadata: {
             custom_fields: [
               { display_name: 'Customer Name', variable_name: 'customer_name', value: name },
