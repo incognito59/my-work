@@ -103,7 +103,7 @@
               USSD
             </label>
           </div>
-          <div class="form-text">Select USSD to pay with your mobile banking app directly through Paystack.</div>
+          <div class="form-text">Choose Card, Bank Transfer, USSD, or Cash on Delivery. COD orders are payable when the package arrives.</div>
         </div>
 
         <!-- Paystack Pay Button -->
@@ -322,9 +322,21 @@
     const paystackBtn = document.getElementById('paystack-btn');
     if (!paystackBtn) return;
 
-    paystackBtn.addEventListener('click', () => {
-      const email = document.getElementById('customer-email').value.trim();
-      const name  = document.getElementById('customer-name').value.trim();
+      const paymentRadios = document.querySelectorAll('input[name="payment-channel"]');
+      const formatAmount = (amount) => amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      const updatePaymentButtonText = (amount) => {
+        const selectedMethod = document.querySelector('input[name="payment-channel"]:checked')?.value || 'card';
+        if (selectedMethod === 'cod') {
+          paystackBtn.textContent = '🚚 Place order with Cash on Delivery';
+        } else {
+          paystackBtn.textContent = `💳 Pay ₦${formatAmount(amount)} with Paystack`;
+        }
+      };
+
+      paymentRadios.forEach((radio) => {
+        radio.addEventListener('change', updateCheckoutTotal);
+      });
+
 
       if (!email) {
         if (window.showToast) {
@@ -365,7 +377,7 @@
           summaryTotal.textContent = amountWithInsurance.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
         }
         if (paystackBtn) {
-          paystackBtn.textContent = `💳 Pay ₦${amountWithInsurance.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')} with Paystack`;
+          updatePaymentButtonText(amountWithInsurance);
         }
         return amountWithInsurance;
       };
@@ -390,6 +402,56 @@
       const reference = 'REDCART-' + Date.now() + '-' + Math.floor(Math.random() * 1000000);
 
       const selectedChannel = document.querySelector('input[name="payment-channel"]:checked')?.value || 'card';
+      if (selectedChannel === 'cod') {
+        const csrfToken = getCookie('csrftoken');
+        if (!csrfToken) {
+          const errorText = 'Unable to place Cash on Delivery order. Please refresh and try again.';
+          if (window.showToast) {
+            window.showToast(errorText, 'error');
+          } else {
+            alert(errorText);
+          }
+          return;
+        }
+
+        fetch('{% url 'products:confirm-payment' %}', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken,
+          },
+          body: JSON.stringify({
+            payment_channel: selectedChannel,
+            insurance_opted: insuranceCheckbox && insuranceCheckbox.checked ? 'true' : 'false',
+            insurance_cost: insuranceCheckbox && insuranceCheckbox.checked ? insuranceCost.toFixed(2) : '0',
+          }),
+        })
+          .then(async (response) => {
+            const data = await response.json();
+            if (response.ok && data.success) {
+              window.location.href = data.redirect || '/products/';
+            } else {
+              const message = data.error || 'Unable to place Cash on Delivery order.';
+              if (window.showToast) {
+                window.showToast(message, 'error');
+              } else {
+                alert(message);
+              }
+            }
+          })
+          .catch((error) => {
+            console.error(error);
+            const message = 'Unable to place Cash on Delivery order.';
+            if (window.showToast) {
+              window.showToast(message, 'error');
+            } else {
+              alert(message);
+            }
+          });
+
+        return;
+      }
+
       const handler = PaystackPop.setup({
         key: '{{ paystack_public_key|default:"pk_test_4dc9ad4b7bac517bcfd33fb8398a1c3b865e6a2d" }}',
         email: email,
