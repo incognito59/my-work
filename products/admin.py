@@ -112,7 +112,7 @@ class OrderAdmin(admin.ModelAdmin):
         ('Order Info', {'fields': ('user', 'status', 'payment_status')}),
         ('Shipping', {'fields': ('shipping_address', 'tracking_number', 'shipping_cost')}),
         ('Dates', {'fields': ('shipped_date', 'delivered_date')}),
-        ('Payment', {'fields': ('payment_method', 'subtotal', 'tax', 'discount', 'is_paid')}),
+        ('Payment', {'fields': ('payment_method', 'subtotal', 'tax', 'discount', 'insurance_opted', 'insurance_cost', 'is_paid')}),
         ('Escrow', {'fields': ('escrow_status', 'escrow_release_date', 'escrow_notes')}),
         ('Notes', {'fields': ('notes',)}),
         ('Metadata', {'fields': ('created_at', 'updated_at')}),

@@ -214,6 +214,9 @@
 
             <div class="total-section">
                 <h3>Order Total</h3>
+                {% if order.insurance_opted and order.insurance_cost > 0 %}
+                <p style="margin-bottom: 6px;"><strong>Insurance:</strong> ₦{{ order.insurance_cost|floatformat:2|intcomma }}</p>
+                {% endif %}
                 <div class="total-amount">₦{{ total|floatformat:2|intcomma }}</div>
             </div>
 

@@ -78,6 +78,12 @@
         <span>Tax</span>
         <span>₦{{ order.tax|floatformat:2|intcomma }}</span>
       </div>
+      {% if order.insurance_opted and order.insurance_cost > 0 %}
+      <div class="invoice-total">
+        <span>Insurance</span>
+        <span>₦{{ order.insurance_cost|floatformat:2|intcomma }}</span>
+      </div>
+      {% endif %}
       <div class="invoice-total" style="font-size:1.1rem;">
         <span>Total</span>
         <span>₦{{ order.total|floatformat:2|intcomma }}</span>
