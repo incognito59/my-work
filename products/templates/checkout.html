@@ -87,6 +87,25 @@
           <span><strong>Secure checkout</strong> · Your payment is protected with HTTPS encryption.</span>
         </div>
 
+        <div class="mb-4">
+          <label class="form-label fw-semibold">Payment Method</label>
+          <div class="d-flex gap-3 flex-wrap">
+            <label class="btn btn-outline-secondary rounded-pill d-flex align-items-center gap-2">
+              <input type="radio" name="payment-channel" value="card" class="form-check-input" checked>
+              Card
+            </label>
+            <label class="btn btn-outline-secondary rounded-pill d-flex align-items-center gap-2">
+              <input type="radio" name="payment-channel" value="bank" class="form-check-input">
+              Bank Transfer
+            </label>
+            <label class="btn btn-outline-secondary rounded-pill d-flex align-items-center gap-2">
+              <input type="radio" name="payment-channel" value="ussd" class="form-check-input">
+              USSD
+            </label>
+          </div>
+          <div class="form-text">Select USSD to pay with your mobile banking app directly through Paystack.</div>
+        </div>
+
         <!-- Paystack Pay Button -->
         <button id="paystack-btn" class="btn btn-success w-100 py-3 fw-semibold rounded-pill shadow-sm btn-glow">
           💳 Pay ₦{{ total_after_coupon|default:total|floatformat:2|intcomma }} with Paystack
