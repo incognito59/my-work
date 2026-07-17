@@ -847,7 +847,6 @@ def product_autocomplete(request):
     })
 
 
-@login_required(login_url='products:login')
 @require_login_with_message
 @login_required(login_url='products:login')
 def confirm_payment(request):
