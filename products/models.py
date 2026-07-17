@@ -309,6 +309,47 @@ class PaymentMethod(models.Model):
         return f"{self.user.username} - {self.payment_type}"
 
 
+class Wallet(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='wallet')
+    balance = models.FloatField(default=0.0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user.username} Wallet - ₦{self.balance:.2f}"
+
+    def deposit(self, amount):
+        self.balance = round(self.balance + float(amount), 2)
+        self.save()
+        return self.balance
+
+    def withdraw(self, amount):
+        amount = float(amount)
+        if self.balance < amount:
+            raise ValueError('Insufficient wallet balance.')
+        self.balance = round(self.balance - amount, 2)
+        self.save()
+        return self.balance
+
+
+class WalletTransaction(models.Model):
+    TRANSACTION_TYPES = [
+        ('top_up', 'Top Up'),
+        ('spend', 'Spend'),
+        ('refund', 'Refund'),
+    ]
+
+    wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE, related_name='transactions')
+    transaction_type = models.CharField(max_length=20, choices=TRANSACTION_TYPES)
+    amount = models.FloatField()
+    reference = models.CharField(max_length=255, blank=True)
+    description = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.wallet.user.username} {self.transaction_type} ₦{self.amount:.2f}"
+
+
 # 📦 Enhanced Order Model
 class Order(models.Model):
     ORDER_STATUS_CHOICES = [
