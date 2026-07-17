@@ -78,6 +78,16 @@ class CartViewTests(TestCase):
         self.assertIn('paystack_callback_url', response.context)
         self.assertTrue(str(response.context['paystack_callback_url']).endswith('/payments/callback/'))
 
+    def test_account_dashboard_is_available_for_authenticated_user(self):
+        user = User.objects.create_user(username='account-user', password='pass', email='account@example.com')
+        self.client.login(username='account-user', password='pass')
+
+        response = self.client.get(reverse('account-dashboard'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'My Account')
+        self.assertContains(response, 'Wallet')
+        self.assertContains(response, 'Order History')
+
     def test_buy_now_sets_cart_directly(self):
         response = self.client.get(reverse('products:buy-now', args=[self.product.id]), follow=True)
         self.assertEqual(self.client.session['cart'], {str(self.product.id): 1})
