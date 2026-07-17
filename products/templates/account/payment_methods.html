@@ -48,6 +48,19 @@
           <p class="text-muted small">You can add a payment method during checkout.</p>
         </div>
       {% endif %}
+
+      {% if wallet %}
+        <div class="card border-0 shadow-lg rounded-4 p-4 mt-4 theme-card">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <h5 class="fw-bold">💰 RedCart Wallet</h5>
+              <p class="mb-0 text-muted">Balance: ₦{{ wallet.balance|floatformat:2|intcomma }}</p>
+            </div>
+            <a href="{% url 'products:wallet' %}" class="btn btn-sm btn-primary rounded-pill">Top Up Wallet</a>
+          </div>
+          <p class="small text-muted">Use your wallet balance at checkout for instant payments.</p>
+        </div>
+      {% endif %}
     </div>
   </div>
 </div>
