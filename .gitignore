@@ -23,4 +23,7 @@ staticfiles/
 # Python egg
 *.egg-info/
 dist/
-build/
+build/private_key.pem
+public_key.pem
+public_key.pem
+*.pyc
