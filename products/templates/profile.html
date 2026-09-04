@@ -79,7 +79,10 @@
                       <span class="badge bg-info mt-1">Escrow: {{ order.escrow_badge }}</span>
                       {% if order.escrow_status == 'held' %}
                         <div class="small text-muted mt-2">Your payment is held safely — will be released after delivery confirmation.</div>
-                        <a href="{% url 'products:release-escrow' order.id %}" class="btn btn-sm btn-outline-success mt-2">Confirm Delivery</a>
+                        <form method="post" action="{% url 'products:release-escrow' order.id %}" class="d-inline">
+                          {% csrf_token %}
+                          <button type="submit" class="btn btn-sm btn-outline-success mt-2">Confirm Delivery</button>
+                        </form>
                       {% endif %}
                     </td>
                     <td>{{ order.estimated_delivery_date|date:"M d, Y" }}</td>
@@ -88,8 +91,14 @@
                       <a href="{% url 'products:order-invoice' order.id %}" class="btn btn-sm btn-outline-secondary ms-2">Invoice</a>
                       {% if order.escrow_is_protected %}
                         <div class="mt-2 d-flex gap-2 flex-wrap">
-                          <a href="{% url 'products:release-escrow' order.id %}" class="btn btn-sm btn-outline-success">Release</a>
-                          <a href="{% url 'products:dispute-escrow' order.id %}" class="btn btn-sm btn-outline-danger">Dispute</a>
+                          <form method="post" action="{% url 'products:release-escrow' order.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-success">Release</button>
+                          </form>
+                          <form method="post" action="{% url 'products:dispute-escrow' order.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Dispute</button>
+                          </form>
                         </div>
                       {% endif %}
                     </td>

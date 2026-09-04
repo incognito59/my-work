@@ -98,6 +98,22 @@
 
         <div class="mb-4">
           <label class="form-label fw-semibold">Payment Method</label>
+          {% if request.user.is_authenticated %}
+          <div class="mb-3">
+            <label class="form-label" for="shipping-address">Delivery Address</label>
+            <select id="shipping-address" class="form-select rounded-pill" required>
+              <option value="">Choose a saved address</option>
+              {% for address in addresses %}
+                <option value="{{ address.id }}" {% if address.is_default %}selected{% endif %}>
+                  {{ address.full_name }} · {{ address.street_address }}, {{ address.city }}
+                </option>
+              {% endfor %}
+            </select>
+            {% if not addresses %}
+              <div class="form-text">Add a delivery address from your account before paying.</div>
+            {% endif %}
+          </div>
+          {% endif %}
           <div class="d-flex gap-3 flex-wrap">
             <label class="btn btn-outline-secondary rounded-pill d-flex align-items-center gap-2">
               <input type="radio" name="payment-channel" value="card" class="form-check-input" checked>
@@ -111,8 +127,8 @@
               <input type="radio" name="payment-channel" value="ussd" class="form-check-input">
               USSD
             </label>
-            <label class="btn btn-outline-secondary rounded-pill d-flex align-items-center gap-2">
-              <input type="radio" name="payment-channel" value="wallet" class="form-check-input">
+            <label class="btn btn-outline-secondary rounded-pill d-flex align-items-center gap-2 {% if not wallet_available %}opacity-50{% endif %}">
+              <input type="radio" name="payment-channel" value="wallet" class="form-check-input" {% if not wallet_available %}disabled{% endif %}>
               RedCart Wallet (Balance: ₦{{ wallet_balance|floatformat:2|intcomma }})
             </label>
             <label class="btn btn-outline-secondary rounded-pill d-flex align-items-center gap-2">
@@ -483,6 +499,17 @@
           return;
         }
 
+        const shippingAddress = document.getElementById('shipping-address');
+        if (shippingAddress && !shippingAddress.value) {
+          const errorText = 'Please choose a delivery address.';
+          if (window.showToast) {
+            window.showToast(errorText, 'error');
+          } else {
+            alert(errorText);
+          }
+          return;
+        }
+
         if (amountKobo <= 0) {
           const errorText = 'Invalid order amount.';
           if (window.showToast) {
@@ -517,6 +544,7 @@
             },
             body: JSON.stringify({
               payment_channel: selectedChannel,
+                shipping_address_id: document.getElementById('shipping-address')?.value || '',
               insurance_opted: insuranceCheckbox && insuranceCheckbox.checked ? 'true' : 'false',
               insurance_cost: insuranceCheckbox && insuranceCheckbox.checked ? insuranceCost.toFixed(2) : '0',
             }),
@@ -591,6 +619,7 @@
               { display_name: 'Payment Channel', variable_name: 'payment_channel', value: selectedChannel },
               { display_name: 'Insurance Opted', variable_name: 'insurance_opted', value: insuranceCheckbox && insuranceCheckbox.checked ? 'true' : 'false' },
               { display_name: 'Insurance Cost', variable_name: 'insurance_cost', value: insuranceCheckbox && insuranceCheckbox.checked ? insuranceCost.toFixed(2) : '0' },
+              { display_name: 'Shipping Address', variable_name: 'shipping_address_id', value: document.getElementById('shipping-address')?.value || '' },
             ]
           },
           callback: function(response) {

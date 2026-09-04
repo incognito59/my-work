@@ -135,17 +135,28 @@ def _get_paystack_callback_url(request):
     return request.build_absolute_uri('/payments/callback/')
 
 
-def _create_paid_order_from_cart(request, amount, insurance_opted=False, insurance_cost=0.0, reference=None):
+def _calculate_insurance_cost(total_after_coupon, insurance_opted):
+    if insurance_opted and total_after_coupon >= 200000:
+        return round(total_after_coupon * 0.005, 2)
+    return 0.0
+
+
+def _create_paid_order_from_cart(request, amount, insurance_opted=False, insurance_cost=0.0, reference=None, shipping_address_id=None):
     cart = request.session.get('cart', {})
     products, cart_total = _get_cart_products(request, cart)
     _, coupon_discount = _get_coupon_values(request, cart_total)
     total_after_coupon = max(cart_total - coupon_discount, 0)
 
-    if insurance_cost <= 0:
-        insurance_cost = round(max(0, amount - total_after_coupon), 2)
+    insurance_cost = _calculate_insurance_cost(total_after_coupon, insurance_opted)
+
+    shipping_address = UserAddress.objects.filter(
+        id=shipping_address_id,
+        user=request.user,
+    ).first() if shipping_address_id else None
 
     order = Order.objects.create(
         user=request.user,
+        shipping_address=shipping_address,
         subtotal=cart_total,
         discount=coupon_discount,
         insurance_opted=insurance_opted,
@@ -272,16 +283,31 @@ def paystack_verify(request):
             insurance_cost = 0.0
 
             if isinstance(metadata, dict):
+                custom_fields = metadata.get('custom_fields', [])
+                if isinstance(custom_fields, list):
+                    custom_field_values = {
+                        field.get('variable_name'): field.get('value')
+                        for field in custom_fields
+                        if isinstance(field, dict) and field.get('variable_name')
+                    }
+                    metadata = {**custom_field_values, **metadata}
                 insurance_opted = str(metadata.get('insurance_opted', False)).lower() in {'true', '1', 'yes'}
-                try:
-                    insurance_cost = float(metadata.get('insurance_cost', 0) or 0)
-                except (TypeError, ValueError):
-                    insurance_cost = 0.0
+
+            shipping_address_id = metadata.get('shipping_address_id') if isinstance(metadata, dict) else None
+            shipping_address = UserAddress.objects.filter(
+                id=shipping_address_id,
+                user=request.user,
+            ).first()
+            if not shipping_address:
+                messages.error(request, '❌ Please choose a valid delivery address before payment.')
+                return redirect('products:checkout')
 
             cart = request.session.get('cart', {})
             _, cart_total = _get_cart_products(request, cart)
             _, coupon_discount = _get_coupon_values(request, cart_total)
-            expected_amount = round(max(cart_total - coupon_discount, 0) + insurance_cost, 2)
+            total_after_coupon = max(cart_total - coupon_discount, 0)
+            insurance_cost = _calculate_insurance_cost(total_after_coupon, insurance_opted)
+            expected_amount = round(total_after_coupon + insurance_cost, 2)
             if round(amount, 2) != expected_amount:
                 messages.error(request, '❌ Payment amount does not match the order total.')
                 return redirect('products:checkout')
@@ -292,6 +318,7 @@ def paystack_verify(request):
                 insurance_opted=insurance_opted,
                 insurance_cost=insurance_cost,
                 reference=reference,
+                shipping_address_id=shipping_address_id,
             )
 
             request.session['cart'] = {}
@@ -733,10 +760,12 @@ def checkout(request):
 
     wallet_balance = 0.0
     wallet_available = False
+    addresses = UserAddress.objects.none()
     if request.user.is_authenticated:
         wallet, _ = Wallet.objects.get_or_create(user=request.user)
         wallet_balance = wallet.balance
         wallet_available = wallet_balance > 0
+        addresses = UserAddress.objects.filter(user=request.user).order_by('-is_default', '-created_at')
 
     context = {
         'products': products,
@@ -753,6 +782,7 @@ def checkout(request):
         'insurance_threshold': insurance_threshold,
         'wallet_balance': wallet_balance,
         'wallet_available': wallet_available,
+        'addresses': addresses,
     }
 
     return render(request, 'checkout.html', context)
@@ -811,6 +841,7 @@ def reorder_order(request, order_id):
     return redirect('products:view-cart')
 
 
+@require_http_methods(['POST'])
 @login_required(login_url='products:login')
 def release_escrow(request, order_id):
     order = get_object_or_404(Order, id=order_id, user=request.user)
@@ -825,6 +856,7 @@ def release_escrow(request, order_id):
     return redirect('products:profile')
 
 
+@require_http_methods(['POST'])
 @login_required(login_url='products:login')
 def dispute_escrow(request, order_id):
     order = get_object_or_404(Order, id=order_id, user=request.user)
@@ -939,12 +971,20 @@ def confirm_payment(request):
                     insurance_cost = float(payload.get('insurance_cost', 0) or 0)
                 except (TypeError, ValueError):
                     insurance_cost = 0.0
+                shipping_address = UserAddress.objects.filter(
+                    id=payload.get('shipping_address_id'),
+                    user=request.user,
+                ).first()
 
                 cart = request.session.get('cart', {})
                 products, cart_total = _get_cart_products(request, cart)
                 _, coupon_discount = _get_coupon_values(request, cart_total)
                 total_after_coupon = max(cart_total - coupon_discount, 0)
+                insurance_cost = _calculate_insurance_cost(total_after_coupon, insurance_opted)
                 total_amount = round(total_after_coupon + insurance_cost, 2)
+
+                if not shipping_address:
+                    return JsonResponse({'success': False, 'error': 'Please choose a valid delivery address.'}, status=400)
 
                 wallet, _ = Wallet.objects.get_or_create(user=request.user)
                 if wallet.balance < total_amount:
@@ -964,6 +1004,7 @@ def confirm_payment(request):
 
                 order = Order.objects.create(
                     user=request.user,
+                    shipping_address=shipping_address,
                     subtotal=cart_total,
                     discount=coupon_discount,
                     insurance_opted=insurance_opted,
@@ -1004,13 +1045,23 @@ def confirm_payment(request):
                     insurance_cost = float(payload.get('insurance_cost', 0) or 0)
                 except (TypeError, ValueError):
                     insurance_cost = 0.0
+                shipping_address = UserAddress.objects.filter(
+                    id=payload.get('shipping_address_id'),
+                    user=request.user,
+                ).first()
 
                 cart = request.session.get('cart', {})
                 products, cart_total = _get_cart_products(request, cart)
                 _, coupon_discount = _get_coupon_values(request, cart_total)
+                total_after_coupon = max(cart_total - coupon_discount, 0)
+                insurance_cost = _calculate_insurance_cost(total_after_coupon, insurance_opted)
+
+                if not shipping_address:
+                    return JsonResponse({'success': False, 'error': 'Please choose a valid delivery address.'}, status=400)
 
                 order = Order.objects.create(
                     user=request.user,
+                    shipping_address=shipping_address,
                     subtotal=cart_total,
                     discount=coupon_discount,
                     insurance_opted=insurance_opted,
@@ -1103,6 +1154,7 @@ def product_detail(request, product_id):
 
     return render(request, 'product_detail.html', {
         'product': product,
+        'share_url': request.build_absolute_uri(reverse('products:product-detail', args=[product.id])),
         'comments': comments,
         'reviews': reviews,
         'additional_images': additional_images,
@@ -1331,6 +1383,34 @@ def add_address(request):
 
 
 @login_required(login_url='products:login')
+def edit_address(request, address_id):
+    address = get_object_or_404(UserAddress, id=address_id, user=request.user)
+    if request.method == 'POST':
+        fields = ['full_name', 'phone', 'street_address', 'city', 'state', 'postal_code', 'address_type']
+        values = {field: request.POST.get(field, '').strip() for field in fields}
+        address_type = values['address_type'] if values['address_type'] in {'home', 'work', 'other'} else 'home'
+        if all(values[field] for field in fields[:-1]):
+            for field in fields[:-1]:
+                setattr(address, field, values[field])
+            address.address_type = address_type
+            address.is_default = request.POST.get('is_default') == 'on'
+            address.save()
+            messages.success(request, '✅ Address updated successfully!')
+            return redirect('products:addresses')
+        messages.error(request, '❌ Please fill in all required fields.')
+    return render(request, 'account/add_address.html', {'address': address})
+
+
+@require_http_methods(['POST'])
+@login_required(login_url='products:login')
+def delete_address(request, address_id):
+    address = get_object_or_404(UserAddress, id=address_id, user=request.user)
+    address.delete()
+    messages.success(request, '✅ Address deleted successfully!')
+    return redirect('products:addresses')
+
+
+@login_required(login_url='products:login')
 def payment_methods(request):
     from .models import PaymentMethod
     methods = PaymentMethod.objects.filter(user=request.user)
@@ -1382,7 +1462,17 @@ def wallet_topup_verify(request):
             metadata = result['data'].get('metadata', {}) or {}
             wallet_top_up = False
             if isinstance(metadata, dict):
-                wallet_top_up = str(metadata.get('wallet_top_up', 'false')).lower() in {'true', '1', 'yes'}
+                custom_fields = metadata.get('custom_fields', [])
+                custom_field_values = {}
+                if isinstance(custom_fields, list):
+                    custom_field_values = {
+                        field.get('variable_name'): field.get('value')
+                        for field in custom_fields
+                        if isinstance(field, dict) and field.get('variable_name')
+                    }
+                wallet_top_up = str(
+                    metadata.get('wallet_top_up', custom_field_values.get('wallet_top_up', 'false'))
+                ).lower() in {'true', '1', 'yes'}
 
             if wallet_top_up:
                 wallet, _ = Wallet.objects.get_or_create(user=request.user)

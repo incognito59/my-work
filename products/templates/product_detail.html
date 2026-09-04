@@ -53,10 +53,10 @@
                 <h3 class="fw-bold mb-1 fs-5 fs-md-6">{{ product.name }}</h3>
                 <small class="text-muted">SKU: #{{ product.id }}</small>
               </div>
-              {% if comments %}
+              {% if product.review_count %}
                 <div class="rating-badge">
-                  <span class="stars">★ {{ comments|length|add:"0"|default:"0" }}/5</span>
-                  <small class="text-muted d-block">{{ comments|length }} reviews</small>
+                  <span class="stars">★ {{ product.average_review_rating|floatformat:1 }}/5</span>
+                  <small class="text-muted d-block">{{ product.review_count }} reviews</small>
                 </div>
               {% endif %}
             </div>
@@ -98,15 +98,15 @@
             <div class="social-share-section mb-3 pb-3 border-bottom">
               <small class="text-muted d-block mb-2">Share Product:</small>
               <div class="d-flex gap-2 flex-wrap">
-                <a href="https://wa.me/?text=Check%20out%20this%20product:%20{{ product.name }}%20₦{{ product.price|floatformat:2|intcomma }}%20https://retail-logistics-core-t0xz.onrender.com/products/{{ product.id }}/" 
+                <a href="https://wa.me/?text=Check%20out%20this%20product:%20{{ product.name|urlencode }}%20{{ share_url|urlencode }}" 
                    target="_blank" class="btn btn-sm btn-outline-success" title="Share on WhatsApp">
                   <i class="bi bi-whatsapp"></i> WhatsApp
                 </a>
-                <a href="https://www.facebook.com/sharer/sharer.php?u=https://retail-logistics-core-t0xz.onrender.com/products/{{ product.id }}/" 
+                <a href="https://www.facebook.com/sharer/sharer.php?u={{ share_url|urlencode }}" 
                    target="_blank" class="btn btn-sm btn-outline-primary" title="Share on Facebook">
                   <i class="bi bi-facebook"></i> Facebook
                 </a>
-                <a href="https://twitter.com/intent/tweet?text=Check%20out%20{{ product.name }}%20https://retail-logistics-core-t0xz.onrender.com/products/{{ product.id }}/" 
+                <a href="https://twitter.com/intent/tweet?text=Check%20out%20{{ product.name|urlencode }}%20{{ share_url|urlencode }}" 
                    target="_blank" class="btn btn-sm btn-outline-info" title="Share on Twitter">
                   <i class="bi bi-twitter"></i> Twitter
                 </a>
@@ -167,7 +167,7 @@
                     </svg>
                   </span>
                   <span class="info-label">Price</span>
-                  <span class="info-value fw-bold" style="color:#F68B1E;">₦{{ product.price|floatformat:2|intcomma }}</span>
+                  <span class="info-value fw-bold" style="color:#F68B1E;">₦{% if product.has_active_sale %}{{ product.sale_price|floatformat:2|intcomma }}{% else %}{{ product.price|floatformat:2|intcomma }}{% endif %}</span>
                 </div>
 
                 <div class="product-info-row">

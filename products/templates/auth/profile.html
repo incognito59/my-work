@@ -27,7 +27,7 @@
           </div>
           <div class="list-group-item bg-transparent border-0 px-0 py-3">
             <small class="text-muted d-block">Total Orders</small>
-            <strong class="animated-price">{{ total_orders }} orders</strong>
+            <strong class="animated-price">{{ order_count }} orders</strong>
           </div>
           <div class="list-group-item bg-transparent border-0 px-0 py-3">
             <small class="text-muted d-block">Account Status</small>
@@ -36,8 +36,8 @@
         </div>
 
         <div class="mt-4 d-flex gap-2">
-          <a href="{% url 'products:update-profile' %}" class="btn btn-warning btn-sm rounded-pill fw-semibold flex-grow-1">
-            ✏️ Edit Profile
+          <a href="{% url 'products:profile' %}" class="btn btn-warning btn-sm rounded-pill fw-semibold flex-grow-1">
+            👤 View Profile
           </a>
           <form method="post" action="{% url 'products:logout' %}" style="flex-grow: 1;">
             {% csrf_token %}
@@ -90,7 +90,7 @@
                       {% endif %}
                     </td>
                     <td>
-                      <a href="#" class="btn btn-sm btn-outline-primary rounded-pill">View</a>
+                      <a href="{% url 'products:order-invoice' order.id %}" class="btn btn-sm btn-outline-primary rounded-pill">Invoice</a>
                     </td>
                   </tr>
                 {% endfor %}
@@ -98,7 +98,7 @@
             </table>
           </div>
           {% if orders.count > 5 %}
-            <a href="#" class="btn btn-outline-dark btn-sm w-100 rounded-pill mt-3">View All Orders</a>
+            <a href="{% url 'products:profile' %}" class="btn btn-outline-dark btn-sm w-100 rounded-pill mt-3">View All Orders</a>
           {% endif %}
         {% else %}
           <div class="text-center py-5">
