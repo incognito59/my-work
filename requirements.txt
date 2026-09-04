@@ -3,7 +3,6 @@ django-allauth==0.61.1
 python-decouple==3.8
 django-import-export==3.3.7
 requests==2.31.0
-stripe==9.4.0
 reportlab==4.0.9
 psycopg2-binary==2.9.10
 gunicorn==21.2.0

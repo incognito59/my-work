@@ -38,7 +38,7 @@
   </div>
 </div>
 
-<script src="https://js.paystack.co/v1/inline.js"></script>
+<script src="https://js.paystack.co/v1/inline.js" defer></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     const button = document.getElementById('wallet-topup-btn');
@@ -49,14 +49,24 @@
       if (!amount) return;
       const amountNumber = parseFloat(amount.replace(/,/g, ''));
       if (isNaN(amountNumber) || amountNumber <= 0) {
-        alert('Please enter a valid amount.');
+        window.showToast ? window.showToast('Please enter a valid amount.', 'error') : alert('Please enter a valid amount.');
+        return;
+      }
+
+      if (!window.PaystackPop || !window.PaystackPop.setup) {
+        window.showToast ? window.showToast('Paystack is still loading. Please try again in a moment.', 'error') : alert('Paystack is still loading. Please try again in a moment.');
         return;
       }
 
       const email = '{{ user_email|default:"" }}';
+      if (!email) {
+        window.showToast ? window.showToast('Your account email is missing. Please update your profile.', 'error') : alert('Your account email is missing. Please update your profile.');
+        return;
+      }
+
       const reference = 'WALLET-' + Date.now() + '-' + Math.floor(Math.random() * 1000000);
-      const handler = PaystackPop.setup({
-        key: '{{ paystack_public_key|default:"pk_test_4dc9ad4b7bac517bcfd33fb8398a1c3b865e6a2d" }}',
+      const handler = window.PaystackPop.setup({
+        key: '{{ paystack_public_key|default:"" }}',
         email: email,
         amount: Math.round(amountNumber * 100),
         currency: 'NGN',
@@ -70,7 +80,7 @@
           window.location.href = '{% url "products:wallet-topup-verify" %}?reference=' + response.reference;
         },
         onClose: function() {
-          alert('Wallet top-up cancelled.');
+          window.showToast ? window.showToast('Wallet top-up cancelled.', 'info') : alert('Wallet top-up cancelled.');
         }
       });
       handler.openIframe();

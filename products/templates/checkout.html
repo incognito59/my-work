@@ -359,7 +359,7 @@
 </style>
 
 <!-- Paystack Script -->
-<script src="https://js.paystack.co/v1/inline.js"></script>
+<script src="https://js.paystack.co/v1/inline.js" defer></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     // Card fade in animation
@@ -567,7 +567,16 @@
           return;
         }
 
-        const paystackKey = '{{ paystack_public_key|default:"pk_test_4dc9ad4b7bac517bcfd33fb8398a1c3b865e6a2d"|escapejs }}';
+        const paystackKey = '{{ paystack_public_key|default:""|escapejs }}';
+        if (!paystackKey) {
+          const errorText = 'Online payments are temporarily unavailable. Please choose Cash on Delivery or try again later.';
+          if (window.showToast) {
+            window.showToast(errorText, 'error');
+          } else {
+            alert(errorText);
+          }
+          return;
+        }
         const callbackUrl = '{{ paystack_callback_url|escapejs }}';
         const handler = window.PaystackPop.setup({
           key: paystackKey,
@@ -575,7 +584,7 @@
           amount: amountKobo,
           currency: 'NGN',
           ref: reference,
-          payment_options: paystackChannels.join(','),
+          channels: paystackChannels,
           metadata: {
             custom_fields: [
               { display_name: 'Customer Name', variable_name: 'customer_name', value: name },

@@ -14,12 +14,12 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='retail-logistics-core.onrender.
 
 CSRF_TRUSTED_ORIGINS = config(
     'CSRF_TRUSTED_ORIGINS',
-    default='http://localhost:3000,http://localhost:8000'
+    default='https://retail-logistics-core.onrender.com,http://localhost:3000,http://localhost:8000'
 ).split(',')
 
-SECURE_SSL_REDIRECT = not DEBUG
-SESSION_COOKIE_SECURE = not DEBUG
-CSRF_COOKIE_SECURE = not DEBUG
+SECURE_SSL_REDIRECT = not DEBUG and not IS_TESTING
+SESSION_COOKIE_SECURE = not DEBUG and not IS_TESTING
+CSRF_COOKIE_SECURE = not DEBUG and not IS_TESTING
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_SECURITY_POLICY = {
     'default-src': ("'self'",),
@@ -121,8 +121,8 @@ SOCIALACCOUNT_ADAPTER = 'products.adapters.NoSignupFormAdapter'
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
         'APP': {
-            'client_id': config('GOOGLE_CLIENT_ID'),
-            'secret': config('GOOGLE_CLIENT_SECRET'),
+            'client_id': config('GOOGLE_CLIENT_ID', default=''),
+            'secret': config('GOOGLE_CLIENT_SECRET', default=''),
         },
         'SCOPE': ['profile', 'email'],
         'AUTH_PARAMS': {
@@ -145,15 +145,12 @@ else:
     }
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='onboarding@resend.dev')
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
-SITE_URL = config('SITE_URL', default='http://localhost:8000')
+SITE_URL = config('SITE_URL', default='https://retail-logistics-core.onrender.com')
 
-STRIPE_PUBLISHABLE_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY', '')
-STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY', '')
+PAYSTACK_PUBLIC_KEY = config('PAYSTACK_PUBLIC_KEY', default='')
+PAYSTACK_SECRET_KEY = config('PAYSTACK_SECRET_KEY', default='')
 
-PAYSTACK_PUBLIC_KEY = config('PAYSTACK_PUBLIC_KEY')
-PAYSTACK_SECRET_KEY = config('PAYSTACK_SECRET_KEY')
-
-GROQ_API_KEY = config('GROQ_API_KEY')
+GROQ_API_KEY = config('GROQ_API_KEY', default='')
 
 CHANNEL_LAYERS = {
     'default': {
@@ -161,9 +158,9 @@ CHANNEL_LAYERS = {
     }
 }
 
-VAPID_PUBLIC_KEY = 'your-vapid-public-key-here'
-VAPID_PRIVATE_KEY = 'your-vapid-private-key-here'
-VAPID_EMAIL = config('DEFAULT_FROM_EMAIL', default=DEFAULT_FROM_EMAIL)
+VAPID_PUBLIC_KEY = config('VAPID_PUBLIC_KEY', default='')
+VAPID_PRIVATE_KEY = config('VAPID_PRIVATE_KEY', default='')
+VAPID_EMAIL = config('VAPID_EMAIL', default=DEFAULT_FROM_EMAIL)
 
 NOTIFICATION_DEFAULT_DURATION = 5000
 NOTIFICATION_MAX_PER_USER = 100

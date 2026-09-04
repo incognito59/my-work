@@ -18,11 +18,16 @@
         <div class="mb-3">
           <p><strong>Email:</strong> {{ user.email }}</p>
           <p><strong>Member Since:</strong> {{ user.date_joined|date:"M d, Y" }}</p>
+          <p><strong>Wallet Balance:</strong> <span class="badge bg-success">₦{{ wallet.balance|floatformat:2|intcomma }}</span></p>
           <p><strong>Total Orders:</strong> <span class="badge bg-danger">{{ order_count }}</span></p>
           <p><strong>Loyalty Points:</strong> <span class="badge bg-success">{{ loyalty_points|default:0 }}</span></p>
           <p><strong>Referral Link:</strong><br>
             <a href="{{ referral_link }}" class="text-decoration-none">{{ referral_link }}</a>
           </p>
+        </div>
+
+        <div class="d-grid gap-2 mb-3">
+          <a href="{% url 'products:wallet' %}" class="btn btn-success rounded-pill fw-semibold">💰 Top Up Wallet</a>
         </div>
 
         <div class="d-flex gap-2">
@@ -72,6 +77,10 @@
                       {% endif %}
                       <br>
                       <span class="badge bg-info mt-1">Escrow: {{ order.escrow_badge }}</span>
+                      {% if order.escrow_status == 'held' %}
+                        <div class="small text-muted mt-2">Your payment is held safely — will be released after delivery confirmation.</div>
+                        <a href="{% url 'products:release-escrow' order.id %}" class="btn btn-sm btn-outline-success mt-2">Confirm Delivery</a>
+                      {% endif %}
                     </td>
                     <td>{{ order.estimated_delivery_date|date:"M d, Y" }}</td>
                     <td>

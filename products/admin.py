@@ -3,7 +3,7 @@ from import_export.admin import ImportExportModelAdmin
 from import_export import resources
 from django.utils.html import format_html
 from .models import (
-    Product, Offer, Comment, Wishlist, Compare, Order, OrderItem,
+    Product, Comment, Wishlist, Compare, Order, OrderItem,
     InventoryLog, ProductVariant, UserAddress, PaymentMethod,
     ShippingMethod, EmailTemplate, EmailLog, SupportTicket, TicketReply,
     FAQ, ProductView, ProductRecommendation, ContactFormSubmission,
@@ -286,10 +286,6 @@ class CompareAdmin(admin.ModelAdmin):
     search_fields = ('user__username', 'product__name')
 
 
-class OfferAdmin(admin.ModelAdmin):
-    list_display = ('code', 'description', 'discount')
-
-
 # ============ REGISTER ALL MODELS ============
 
 # Products
@@ -297,7 +293,6 @@ admin.site.register(Product, ProductAdmin)
 admin.site.register(ProductVariant, ProductVariantAdmin)
 admin.site.register(InventoryLog, InventoryLogAdmin)
 admin.site.register(Comment, CommentAdmin)
-admin.site.register(Offer, OfferAdmin)
 
 # Orders
 admin.site.register(Order, OrderAdmin)

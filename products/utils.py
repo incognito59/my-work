@@ -217,8 +217,8 @@ def update_stock(product, quantity, reason='adjustment'):
 
     logger.info(f"Stock updated for {product.name}: {quantity} ({reason})")
 
-    if product.stock < 5:
-        logger.warning(f"Low stock alert for {product.name}: {product.stock} remaining")
+    if product.available_stock < 5:
+        logger.warning(f"Low stock alert for {product.name}: {product.available_stock} remaining")
 
     return product
 

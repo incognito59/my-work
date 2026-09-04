@@ -59,13 +59,6 @@ def require_login_with_message(view_func):
     return _wrapped_view
 
 
-try:
-    import stripe
-    stripe_api_available = True
-except Exception:
-    stripe_api_available = False
-
-
 # ============ FIREBASE AUTH ============
 
 @csrf_exempt
@@ -241,10 +234,21 @@ def _create_paid_order_from_cart(request, amount, insurance_opted=False, insuran
     return order
 
 
+@login_required(login_url='products:login')
 def paystack_verify(request):
     reference = request.GET.get('reference')
     if not reference:
         messages.error(request, '❌ No payment reference found.')
+        return redirect('products:checkout')
+
+    if Order.objects.filter(user=request.user, notes__contains=f'Paystack reference: {reference}').exists():
+        request.session['cart'] = {}
+        _sync_abandoned_cart(request, {})
+        messages.info(request, 'This payment has already been processed.')
+        return redirect('products:product-list')
+
+    if not settings.PAYSTACK_SECRET_KEY:
+        messages.error(request, '❌ Online payment verification is not configured.')
         return redirect('products:checkout')
 
     try:
@@ -254,7 +258,11 @@ def paystack_verify(request):
             'Content-Type': 'application/json',
         }
 
-        response = requests.get(f'https://api.paystack.co/transaction/verify/{reference}', headers=headers)
+        response = requests.get(
+            f'https://api.paystack.co/transaction/verify/{reference}',
+            headers=headers,
+            timeout=15,
+        )
         result = response.json()
 
         if result.get('status') and result.get('data', {}).get('status') == 'success':
@@ -270,8 +278,21 @@ def paystack_verify(request):
                 except (TypeError, ValueError):
                     insurance_cost = 0.0
 
-            if request.user.is_authenticated:
-                _create_paid_order_from_cart(request, amount, insurance_opted=insurance_opted, insurance_cost=insurance_cost, reference=reference)
+            cart = request.session.get('cart', {})
+            _, cart_total = _get_cart_products(request, cart)
+            _, coupon_discount = _get_coupon_values(request, cart_total)
+            expected_amount = round(max(cart_total - coupon_discount, 0) + insurance_cost, 2)
+            if round(amount, 2) != expected_amount:
+                messages.error(request, '❌ Payment amount does not match the order total.')
+                return redirect('products:checkout')
+
+            _create_paid_order_from_cart(
+                request,
+                amount,
+                insurance_opted=insurance_opted,
+                insurance_cost=insurance_cost,
+                reference=reference,
+            )
 
             request.session['cart'] = {}
             _sync_abandoned_cart(request, {})
@@ -555,6 +576,7 @@ def logout_page(request):
 @login_required(login_url='products:login')
 def user_profile(request):
     user = request.user
+    wallet, _ = Wallet.objects.get_or_create(user=user)
     orders = Order.objects.filter(user=user).order_by('-created_at')
     loyalty_points = sum(int(order.total // 500) for order in orders if order.is_paid)
     referral_link = request.build_absolute_uri(reverse('products:landing'))
@@ -564,6 +586,7 @@ def user_profile(request):
     messages.info(request, f"Welcome to your profile! You have {orders.count()} orders.")
     return render(request, 'profile.html', {
         'user': user,
+        'wallet': wallet,
         'orders': orders,
         'order_count': orders.count(),
         'loyalty_points': loyalty_points,
@@ -589,8 +612,6 @@ def account_dashboard(request):
     })
 
 
-@require_login_with_message
-@login_required(login_url='products:login')
 def add_to_cart(request, item_id):
     product = get_object_or_404(Product, id=item_id)
     if product.is_out_of_stock:
@@ -699,8 +720,6 @@ def delete_from_cart(request, product_id):
     return redirect('products:view-cart')
 
 
-@require_login_with_message
-@login_required(login_url='products:login')
 def checkout(request):
     cart = request.session.get('cart', {})
     products, total = _get_cart_products(request, cart)
@@ -722,9 +741,9 @@ def checkout(request):
     context = {
         'products': products,
         'total': total,
-        'total_kobo': int(total * 100),
+        'total_kobo': int(total_after_coupon * 100),
         'query': request.GET.get('q', ''),
-        'paystack_public_key': getattr(settings, 'PAYSTACK_PUBLIC_KEY', '') or 'pk_test_4dc9ad4b7bac517bcfd33fb8398a1c3b865e6a2d',
+        'paystack_public_key': getattr(settings, 'PAYSTACK_PUBLIC_KEY', ''),
         'paystack_callback_url': _get_paystack_callback_url(request),
         'coupon_code': coupon_code,
         'coupon_discount': coupon_discount,
@@ -897,10 +916,16 @@ def product_autocomplete(request):
     })
 
 
-@require_login_with_message
-@login_required(login_url='products:login')
 def confirm_payment(request):
     if request.method == 'POST':
+        if not request.user.is_authenticated:
+            if request.content_type != 'application/json':
+                request.session['cart'] = {}
+                _sync_abandoned_cart(request, {})
+                return redirect('products:product-list')
+            messages.info(request, 'Please log in to complete payment.')
+            return redirect(f"{reverse('products:login')}?next={request.get_full_path()}")
+
         if request.content_type == 'application/json':
             try:
                 payload = json.loads(request.body.decode('utf-8') or '{}')
@@ -1330,6 +1355,14 @@ def wallet_topup_verify(request):
         messages.error(request, '❌ No payment reference found.')
         return redirect('products:wallet')
 
+    if WalletTransaction.objects.filter(wallet__user=request.user, reference=reference).exists():
+        messages.info(request, 'This wallet top-up has already been processed.')
+        return redirect('products:wallet')
+
+    if not settings.PAYSTACK_SECRET_KEY:
+        messages.error(request, '❌ Online payment verification is not configured.')
+        return redirect('products:wallet')
+
     try:
         import requests
         headers = {
@@ -1337,7 +1370,11 @@ def wallet_topup_verify(request):
             'Content-Type': 'application/json',
         }
 
-        response = requests.get(f'https://api.paystack.co/transaction/verify/{reference}', headers=headers)
+        response = requests.get(
+            f'https://api.paystack.co/transaction/verify/{reference}',
+            headers=headers,
+            timeout=15,
+        )
         result = response.json()
 
         if result.get('status') and result.get('data', {}).get('status') == 'success':
@@ -1470,107 +1507,6 @@ def newsletter_unsubscribe(request):
             return redirect('products:newsletter-unsubscribe')
 
     return render(request, 'newsletter_unsubscribe.html', {'email': email})
-
-
-# ============ EMAIL DELIVERY TEST ============
-
-def test_email(request):
-    """Test email delivery with user-provided recipient."""
-    if request.method == 'POST':
-        recipient_email = request.POST.get('email', '').strip()
-        if not recipient_email:
-            return HttpResponse(
-                '<h2>❌ Error: No email provided</h2>'
-                '<p>Please provide a recipient email address.</p>'
-                '<a href="/products/test-email/">Go back</a>',
-                status=400
-            )
-        
-        # Check if Resend API key is configured
-        resend_api_key = config('RESEND_API_KEY', default='')
-        if not resend_api_key:
-            return HttpResponse(
-                f'<h2>⚠️ Email Provider Not Configured</h2>'
-                f'<p>RESEND_API_KEY is not set in environment variables.</p>'
-                f'<hr>'
-                f'<h3>Setup Instructions:</h3>'
-                f'<ol>'
-                f'<li>Sign up at <a href="https://resend.com" target="_blank">resend.com</a></li>'
-                f'<li>Create a new API key in the Resend dashboard</li>'
-                f'<li><strong>On Render Dashboard:</strong> Add to Environment Variables:<br><code>RESEND_API_KEY=your-api-key</code></li>'
-                f'<li>Redeploy your app</li>'
-                f'<li>Then test again</li>'
-                f'</ol>'
-                f'<hr>'
-                f'<h3>Current Configuration:</h3>'
-                f'<pre>'
-                f'EMAIL_BACKEND: {settings.EMAIL_BACKEND}\n'
-                f'RESEND_API_KEY: {"SET ✓" if resend_api_key else "NOT SET ✗"}\n'
-                f'DEFAULT_FROM_EMAIL: {settings.DEFAULT_FROM_EMAIL}'
-                f'</pre>'
-                f'<a href="/products/test-email/">Go back</a>',
-                status=400
-            )
-        
-        try:
-            send_mail(
-                subject='🧪 RedCart Test Email',
-                message='This is a test email from RedCart to verify email delivery is working correctly.',
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[recipient_email],
-                html_message=(
-                    f'<h2>🧪 RedCart Email Test</h2>'
-                    f'<p>This is a test email from <strong>RedCart</strong>.</p>'
-                    f'<p><strong>From:</strong> {settings.DEFAULT_FROM_EMAIL}</p>'
-                    f'<p><strong>To:</strong> {recipient_email}</p>'
-                    f'<p>✅ If you received this email, your email configuration is working correctly!</p>'
-                ),
-                fail_silently=False,
-            )
-            return HttpResponse(
-                f'<h2>✅ Success!</h2>'
-                f'<p>Test email sent to: <strong>{recipient_email}</strong></p>'
-                f'<p><strong>From:</strong> {settings.DEFAULT_FROM_EMAIL}</p>'
-                f'<p>Check your inbox (including spam folder) for the email.</p>'
-                f'<hr>'
-                f'<h3>Email Configuration:</h3>'
-                f'<pre>'
-                f'EMAIL_BACKEND: {settings.EMAIL_BACKEND}\n'
-                f'RESEND_API_KEY: SET ✓\n'
-                f'DEFAULT_FROM_EMAIL: {settings.DEFAULT_FROM_EMAIL}'
-                f'</pre>'
-                f'<a href="/products/test-email/">Send another test</a>'
-            )
-        except Exception as e:
-            return HttpResponse(
-                f'<h2>❌ Error Sending Email</h2>'
-                f'<p><strong>Error:</strong> {str(e)}</p>'
-                f'<hr>'
-                f'<h3>Email Configuration:</h3>'
-                f'<pre>'
-                f'EMAIL_BACKEND: {settings.EMAIL_BACKEND}\n'
-                f'RESEND_API_KEY: {"SET ✓" if resend_api_key else "NOT SET ✗"}\n'
-                f'DEFAULT_FROM_EMAIL: {settings.DEFAULT_FROM_EMAIL}'
-                f'</pre>'
-                f'<h3>Troubleshooting:</h3>'
-                f'<ul>'
-                f'<li>Verify RESEND_API_KEY is set in environment variables on Render</li>'
-                f'<li>Check that your Resend API key is valid and not expired</li>'
-                f'<li>Ensure the sender email is verified in your Resend account</li>'
-                f'<li>Check Render logs for detailed error messages</li>'
-                f'</ul>'
-                f'<a href="/products/test-email/">Try again</a>',
-                status=500
-            )
-    
-    # GET: Show test form
-    resend_api_key = config('RESEND_API_KEY', default='')
-    context = {
-        'email_backend': settings.EMAIL_BACKEND,
-        'resend_configured': bool(resend_api_key),
-        'default_from_email': settings.DEFAULT_FROM_EMAIL,
-    }
-    return render(request, 'test_email_form.html', context)
 
 
 # ============ EMAIL PREVIEWS ============
