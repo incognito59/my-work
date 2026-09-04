@@ -207,7 +207,7 @@
   <!-- Articles Grid -->
   <div class="articles-grid">
     {% for article in articles %}
-      <a href="#" class="article-card">
+      <div class="article-card">
         <div class="article-image">{{ article.image_emoji }}</div>
         <div class="article-content">
           <span class="article-category">{{ article.category }}</span>
@@ -222,7 +222,7 @@
             <span class="read-more">Read →</span>
           </div>
         </div>
-      </a>
+      </div>
     {% endfor %}
   </div>
 

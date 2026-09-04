@@ -508,51 +508,6 @@ class CustomPasswordResetConfirmView(PasswordResetConfirmView):
     post_reset_login = True
 
 
-def register_page(request):
-    if request.user.is_authenticated:
-        return redirect('products:product-list')
-
-    if request.method == 'POST':
-        first_name = request.POST.get('first_name', '').strip()
-        last_name = request.POST.get('last_name', '').strip()
-        email = request.POST.get('email')
-        password1 = request.POST.get('password') or request.POST.get('password1')
-        password2 = request.POST.get('password_confirm')
-        username = request.POST.get('username', '').strip()
-
-        if not username:
-            messages.error(request, "Username is required.")
-            return render(request, 'register.html')
-
-        base_username = username
-        counter = 1
-        while User.objects.filter(username=username).exists():
-            username = f"{base_username}{counter}"
-            counter += 1
-
-        if not all([username, email, password1, password2]):
-            messages.error(request, "All required fields must be filled.")
-            return render(request, 'register.html')
-        if password1 != password2:
-            messages.error(request, "Passwords do not match.")
-            return render(request, 'register.html')
-        if len(password1) < 6:
-            messages.error(request, "Password must be at least 6 characters.")
-            return render(request, 'register.html')
-        if User.objects.filter(email__iexact=email).exists():
-            messages.error(request, "Email already registered.")
-            return render(request, 'register.html')
-
-        user = User.objects.create_user(username=username, email=email, password=password1)
-        user.first_name = first_name
-        user.last_name = last_name
-        user.save()
-        messages.success(request, "✅ Account created! Please log in.")
-        return redirect('products:login')
-
-    return render(request, 'register.html')
-
-
 def register_enhanced(request):
     if request.user.is_authenticated:
         return redirect('products:product-list')
