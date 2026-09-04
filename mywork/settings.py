@@ -39,10 +39,10 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
+    'allauth.socialaccount.providers.github',
     'import_export',
 ]
-if not IS_TESTING:
-    INSTALLED_APPS.append('anymail')
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -130,20 +130,29 @@ SOCIALACCOUNT_PROVIDERS = {
             'prompt': 'consent select_account',
         },
     },
+    'github': {
+        'APP': {
+            'client_id': config('GITHUB_CLIENT_ID', default=''),
+            'secret': config('GITHUB_CLIENT_SECRET', default=''),
+        },
+        'SCOPE': ['user:email'],
+    },
 }
 
 FIREBASE_PROJECT_ID = 'redcart-d792b'
 
-# ============ EMAIL (Resend via Anymail) ============
+# ============ EMAIL (Gmail SMTP) ============
 if IS_TESTING:
     EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
-    ANYMAIL = {}
 else:
-    EMAIL_BACKEND = 'anymail.backends.resend.EmailBackend'
-    ANYMAIL = {
-        'RESEND_API_KEY': config('RESEND_API_KEY', default=''),
-    }
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='onboarding@resend.dev')
+    EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.smtp.EmailBackend')
+    EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
+    EMAIL_PORT = config('EMAIL_PORT', cast=int, default=587)
+    EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+    EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+    EMAIL_USE_TLS = config('EMAIL_USE_TLS', cast=bool, default=True)
+    EMAIL_USE_SSL = config('EMAIL_USE_SSL', cast=bool, default=False)
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='')
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
 SITE_URL = config('SITE_URL', default='https://retail-logistics-core.onrender.com')
 
