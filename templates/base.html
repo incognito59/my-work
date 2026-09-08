@@ -468,7 +468,7 @@
     <link href="{% static 'css/tailwind.output.css' %}" rel="stylesheet">
   </head>
 
-  <body>
+  <body class="rc-page-loading">
     <!-- Loader -->
     <div id="loader">
       <div class="spinner-border" role="status"></div>
@@ -711,6 +711,46 @@
         }
       }
       document.addEventListener('DOMContentLoaded', processDjangoMessages);
+
+      document.addEventListener('DOMContentLoaded', () => {
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const revealTargets = Array.from(document.querySelectorAll('.reveal-on-scroll'));
+
+        if (reduceMotion) {
+          revealTargets.forEach(element => element.classList.add('revealed'));
+          window.addEventListener('load', () => document.body.classList.add('rc-page-ready'));
+          return;
+        }
+
+        revealTargets.forEach((element, index) => {
+          element.style.setProperty('--reveal-delay', `${index * 60}ms`);
+          const rect = element.getBoundingClientRect();
+          if (rect.top < window.innerHeight * 0.95) {
+            element.classList.add('revealed');
+          }
+        });
+
+        if ('IntersectionObserver' in window) {
+          const observer = new IntersectionObserver((entries, obs) => {
+            entries.forEach(entry => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('revealed');
+                obs.unobserve(entry.target);
+              }
+            });
+          }, { threshold: 0.15 });
+
+          revealTargets.forEach(element => {
+            if (!element.classList.contains('revealed')) {
+              observer.observe(element);
+            }
+          });
+        } else {
+          revealTargets.forEach(element => element.classList.add('revealed'));
+        }
+
+        window.addEventListener('load', () => document.body.classList.add('rc-page-ready'));
+      });
 
       // ============ CYBER NAVIGATION ============
       const navDrawer = document.getElementById('mobile-nav-drawer');

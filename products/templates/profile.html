@@ -87,8 +87,9 @@
                     </td>
                     <td>{{ order.estimated_delivery_date|date:"M d, Y" }}</td>
                     <td>
-                      <a href="{% url 'products:reorder-order' order.id %}" class="btn btn-sm btn-outline-primary">Reorder</a>
-                      <a href="{% url 'products:order-invoice' order.id %}" class="btn btn-sm btn-outline-secondary ms-2">Invoice</a>
+                      <a href="{% url 'products:order-track' order.id %}" class="rc-btn rc-btn-secondary rc-btn-sm">Track</a>
+                      <a href="{% url 'products:reorder-order' order.id %}" class="rc-btn rc-btn-secondary rc-btn-sm">Reorder</a>
+                      <a href="{% url 'products:order-invoice' order.id %}" class="rc-btn rc-btn-secondary rc-btn-sm">Invoice</a>
                       {% if order.escrow_is_protected %}
                         <div class="mt-2 d-flex gap-2 flex-wrap">
                           <form method="post" action="{% url 'products:release-escrow' order.id %}">

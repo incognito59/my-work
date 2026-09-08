@@ -673,6 +673,43 @@ def user_profile(request):
 
 
 @login_required(login_url='products:login')
+def order_track(request, order_id):
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+
+    status_steps = [
+        {'label': 'Placed', 'key': 'placed'},
+        {'label': 'Processing', 'key': 'processing'},
+        {'label': 'Shipped', 'key': 'shipped'},
+        {'label': 'Delivered', 'key': 'delivered'},
+    ]
+
+    current_key = 'placed'
+    if order.status in {'pending', 'confirmed'}:
+        current_key = 'placed'
+    elif order.status == 'processing':
+        current_key = 'processing'
+    elif order.status == 'shipped':
+        current_key = 'shipped'
+    elif order.status == 'delivered':
+        current_key = 'delivered'
+
+    step_index = status_steps.index(next(step for step in status_steps if step['key'] == current_key))
+
+    for index, step in enumerate(status_steps):
+        step['complete'] = index < step_index
+        step['active'] = index == step_index
+
+    context = {
+        'order': order,
+        'steps': status_steps,
+        'current_step': next(step for step in status_steps if step['key'] == current_key),
+        'items': order.items.select_related('product').all(),
+    }
+
+    return render(request, 'order_tracking.html', context)
+
+
+@login_required(login_url='products:login')
 def account_dashboard(request):
     user = request.user
     wallet, _ = Wallet.objects.get_or_create(user=user)

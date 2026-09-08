@@ -28,6 +28,7 @@ urlpatterns = [
     path('api/autocomplete/', views.product_autocomplete, name='api-autocomplete'),
     path('order/<int:order_id>/reorder/', views.reorder_order, name='reorder-order'),
     path('order/<int:order_id>/invoice/', views.order_invoice, name='order-invoice'),
+    path('orders/<int:order_id>/track/', views.order_track, name='order-track'),
     path('order/<int:order_id>/escrow/release/', views.release_escrow, name='release-escrow'),
     path('order/<int:order_id>/escrow/dispute/', views.dispute_escrow, name='dispute-escrow'),
     path('buy-now/<int:product_id>/', views.buy_now, name='buy-now'),
