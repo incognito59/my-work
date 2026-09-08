@@ -46,8 +46,8 @@ export default function Navbar() {
 
           <Link href="/wishlist" className="hidden items-center gap-1.5 rounded-md px-2 py-2 font-mono text-[11px] text-slate-400 transition hover:bg-white/5 hover:text-white sm:flex"><Heart className="h-4 w-4 text-cyan-300/80" /> Wishlist</Link>
           <Link href="/cart" className="relative flex items-center gap-1.5 rounded-md px-2 py-2 font-mono text-[11px] text-slate-400 transition hover:bg-white/5 hover:text-white"><ShoppingBag className="h-4 w-4 text-cyan-300/80" /><span className="hidden sm:inline">Cart</span><b className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-cyan-300 px-1 text-[9px] text-black">0</b></Link>
-          <Link href="/login" className="hidden px-2 py-2 font-mono text-[11px] text-slate-400 hover:text-white sm:block">Login</Link>
-          <Link href="/register" className="hidden rounded-md border border-cyan-300/50 bg-cyan-300/10 px-3 py-2 font-mono text-[11px] text-cyan-200 transition hover:bg-cyan-300/20 sm:block">Register</Link>
+          <Link href="/auth" className="hidden px-2 py-2 font-mono text-[11px] text-slate-400 hover:text-white sm:block">Login</Link>
+          <Link href="/auth" className="hidden rounded-md border border-cyan-300/50 bg-cyan-300/10 px-3 py-2 font-mono text-[11px] text-cyan-200 transition hover:bg-cyan-300/20 sm:block">Register</Link>
           <button type="button" onClick={() => setOpen(true)} className="grid h-9 w-9 place-items-center rounded-md border border-white/10 bg-white/5 text-slate-300 hover:text-cyan-200 md:hidden" aria-label="Open navigation"><Menu className="h-4 w-4" /></button>
         </div>
       </div>
@@ -65,7 +65,7 @@ export default function Navbar() {
           <motion.aside initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "spring", stiffness: 300, damping: 30 }} className="fixed right-0 top-0 h-screen w-[min(88vw,360px)] border-l border-cyan-300/20 bg-black p-6 shadow-[-20px_0_80px_rgba(0,0,0,.7)] md:hidden">
             <div className="flex items-center justify-between border-b border-white/10 pb-5 font-mono text-xs tracking-[.2em] text-cyan-300"><span>RED/CART_OS</span><button onClick={() => setOpen(false)} aria-label="Close navigation"><X className="h-4 w-4" /></button></div>
             <div className="mt-6 flex items-center gap-2 font-mono text-[9px] tracking-widest text-emerald-300"><Activity className="h-3 w-3" /> SHODAN_NODE: CONNECTED</div>
-            <nav className="mt-8 flex flex-col gap-2">{[...links, "Wishlist", "Cart", "Login", "Register"].map((link, index) => <Link key={link} href={link === "Home" ? "/" : `/${link.toLowerCase()}`} onClick={() => setOpen(false)} className="border-b border-white/5 py-3 font-mono text-sm text-slate-400 hover:border-cyan-300/40 hover:text-cyan-200">0{index + 1} / {link}</Link>)}</nav>
+            <nav className="mt-8 flex flex-col gap-2">{[...links, "Wishlist", "Cart", "Login", "Register"].map((link, index) => <Link key={link} href={link === "Home" ? "/" : ["Login", "Register"].includes(link) ? "/auth" : `/${link.toLowerCase()}`} onClick={() => setOpen(false)} className="border-b border-white/5 py-3 font-mono text-sm text-slate-400 hover:border-cyan-300/40 hover:text-cyan-200">0{index + 1} / {link}</Link>)}</nav>
           </motion.aside>
         )}
       </AnimatePresence>
