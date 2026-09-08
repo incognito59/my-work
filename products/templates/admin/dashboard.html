@@ -13,7 +13,7 @@
   <!-- Key Metrics -->
   <div class="row mb-4">
     <div class="col-md-3 mb-3">
-      <div class="card border-0 shadow-lg rounded-4 p-4 bg-primary text-white">
+      <div class="card border-0 shadow-lg rounded-4 p-4 text-white" style="background: linear-gradient(135deg, #d94848, #a92d2d);">
         <h6 class="mb-2">Total Orders</h6>
         <h2 class="fw-bold">{{ total_orders }}</h2>
         <small>All time</small>
@@ -21,7 +21,7 @@
     </div>
 
     <div class="col-md-3 mb-3">
-      <div class="card border-0 shadow-lg rounded-4 p-4 bg-success text-white">
+      <div class="card border-0 shadow-lg rounded-4 p-4 text-white" style="background: linear-gradient(135deg, #c55b55, #8f2e2e);">
         <h6 class="mb-2">Total Revenue</h6>
         <h2 class="fw-bold">₦{{ total_revenue|floatformat:0|intcomma }}</h2>
         <small>From paid orders</small>
@@ -29,7 +29,7 @@
     </div>
 
     <div class="col-md-3 mb-3">
-      <div class="card border-0 shadow-lg rounded-4 p-4 bg-warning text-white">
+      <div class="card border-0 shadow-lg rounded-4 p-4 text-white" style="background: linear-gradient(135deg, #d67c5c, #aa4a3d);">
         <h6 class="mb-2">Total Products</h6>
         <h2 class="fw-bold">{{ total_products }}</h2>
         <small>In catalog</small>
@@ -37,7 +37,7 @@
     </div>
 
     <div class="col-md-3 mb-3">
-      <div class="card border-0 shadow-lg rounded-4 p-4 bg-info text-white">
+      <div class="card border-0 shadow-lg rounded-4 p-4 text-white" style="background: linear-gradient(135deg, #b9595b, #7d3344);">
         <h6 class="mb-2">Product Views</h6>
         <h2 class="fw-bold">{{ total_views }}</h2>
         <small>All time</small>
@@ -97,7 +97,7 @@
 
 <style>
   .text-gradient {
-    background: linear-gradient(45deg, #ff6b6b, #ff9900);
+    background: linear-gradient(45deg, #c73f3f, #d87d5b);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
