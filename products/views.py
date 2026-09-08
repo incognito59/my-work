@@ -21,7 +21,7 @@ from decouple import config
 
 from django.views.decorators.http import require_http_methods
 from django.core.paginator import Paginator
-from django.db.models import Count
+from django.db.models import Count, Avg
 from django.core.cache import cache
 from .models import Notification, UserNotificationSettings, PushNotificationSubscription, SystemAlert, NotificationLog
 from functools import wraps
@@ -548,9 +548,47 @@ def login_page(request):
     return login_enhanced(request)
 
 
+def _get_auth_ticker_items():
+    user_count = User.objects.count()
+    completed_orders = Order.objects.filter(status='delivered').count()
+    reviews_count = Review.objects.count()
+
+    if user_count < 50:
+        return []
+
+    ticker_items = []
+
+    if user_count > 0:
+        ticker_items.append({
+            'icon': 'bi bi-people-fill',
+            'strong': f'{user_count:,}',
+            'label': 'Registered users',
+        })
+
+    if completed_orders > 0:
+        ticker_items.append({
+            'icon': 'bi bi-cart4',
+            'strong': f'{completed_orders:,}',
+            'label': 'Orders completed',
+        })
+
+    if reviews_count >= 5:
+        avg_rating = Review.objects.aggregate(avg_rating=Avg('rating'))['avg_rating']
+        if avg_rating is not None:
+            ticker_items.append({
+                'icon': 'bi bi-star-fill',
+                'strong': f'{avg_rating:.1f}/5',
+                'label': 'Average rating',
+            })
+
+    return ticker_items
+
+
 def login_enhanced(request):
     if request.user.is_authenticated:
         return redirect('products:product-list')
+
+    ticker_items = _get_auth_ticker_items()
 
     if request.method == 'POST':
         username_or_email = request.POST.get('username_or_email', '').strip()
@@ -559,7 +597,7 @@ def login_enhanced(request):
 
         if not username_or_email or not password:
             messages.error(request, "Both email/username and password are required.")
-            return render(request, 'auth/login_enhanced.html')
+            return render(request, 'auth/login_enhanced.html', {'auth_ticker_items': ticker_items})
 
         try:
             user_obj = User.objects.filter(email__iexact=username_or_email).first()
@@ -569,7 +607,7 @@ def login_enhanced(request):
                 user = authenticate(request, username=username_or_email, password=password)
         except Exception as e:
             messages.error(request, f"Login error: {str(e)}")
-            return render(request, 'auth/login_enhanced.html')
+            return render(request, 'auth/login_enhanced.html', {'auth_ticker_items': ticker_items})
 
         if user is not None:
             login(request, user)
@@ -579,7 +617,7 @@ def login_enhanced(request):
         else:
             messages.error(request, "Invalid email/username or password.")
 
-    return render(request, 'auth/login_enhanced.html')
+    return render(request, 'auth/login_enhanced.html', {'auth_ticker_items': ticker_items})
 
 
 from django.contrib.auth.views import PasswordResetView, PasswordResetConfirmView, PasswordResetDoneView
@@ -608,6 +646,8 @@ def register_enhanced(request):
     if request.user.is_authenticated:
         return redirect('products:product-list')
 
+    ticker_items = _get_auth_ticker_items()
+
     if request.method == 'POST':
         first_name = request.POST.get('first_name', '').strip()
         last_name = request.POST.get('last_name', '').strip()
@@ -618,22 +658,22 @@ def register_enhanced(request):
 
         if not username or len(username) < 3:
             messages.error(request, "❌ Username must be at least 3 characters.")
-            return render(request, 'auth/register_enhanced.html')
+            return render(request, 'auth/register_enhanced.html', {'auth_ticker_items': ticker_items})
         if not email:
             messages.error(request, "❌ Email is required.")
-            return render(request, 'auth/register_enhanced.html')
+            return render(request, 'auth/register_enhanced.html', {'auth_ticker_items': ticker_items})
         if User.objects.filter(email__iexact=email).exists():
             messages.error(request, "❌ Email already registered.")
-            return render(request, 'auth/register_enhanced.html')
+            return render(request, 'auth/register_enhanced.html', {'auth_ticker_items': ticker_items})
         if User.objects.filter(username=username).exists():
             messages.error(request, "❌ Username already taken.")
-            return render(request, 'auth/register_enhanced.html')
+            return render(request, 'auth/register_enhanced.html', {'auth_ticker_items': ticker_items})
         if len(password) < 8:
             messages.error(request, "❌ Password must be at least 8 characters.")
-            return render(request, 'auth/register_enhanced.html')
+            return render(request, 'auth/register_enhanced.html', {'auth_ticker_items': ticker_items})
         if password != password_confirm:
             messages.error(request, "❌ Passwords do not match.")
-            return render(request, 'auth/register_enhanced.html')
+            return render(request, 'auth/register_enhanced.html', {'auth_ticker_items': ticker_items})
 
         user = User.objects.create_user(username=username, email=email, password=password)
         user.first_name = first_name
@@ -642,7 +682,7 @@ def register_enhanced(request):
         messages.success(request, f"✅ Account created! Welcome, {username}. Please log in.")
         return redirect('products:login')
 
-    return render(request, 'auth/register_enhanced.html')
+    return render(request, 'auth/register_enhanced.html', {'auth_ticker_items': ticker_items})
 
 
 def logout_page(request):

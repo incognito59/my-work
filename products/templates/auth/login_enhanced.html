@@ -103,24 +103,22 @@
     </div>
   </div>
 
+  {% if auth_ticker_items %}
   <div class="auth-ticker" aria-label="Live status ticker">
     <div class="auth-ticker-track">
       <div class="auth-ticker-content">
-        <span class="auth-ticker-item"><i class="bi bi-people-fill"></i><strong>97,832</strong> Active users</span>
-        <span class="auth-ticker-item"><i class="bi bi-lock-fill"></i><strong>100%</strong> secure login</span>
-        <span class="auth-ticker-item"><i class="bi bi-lightning-charge-fill"></i><strong>0.9s</strong> response time</span>
-        <span class="auth-ticker-item"><i class="bi bi-cart4"></i><strong>23K</strong> orders processed</span>
-        <span class="auth-ticker-item"><i class="bi bi-star-fill"></i><strong>4.9/5</strong> average rating</span>
+        {% for item in auth_ticker_items %}
+          <span class="auth-ticker-item"><i class="{{ item.icon }}"></i><strong>{{ item.strong }}</strong> {{ item.label }}</span>
+        {% endfor %}
       </div>
       <div class="auth-ticker-content">
-        <span class="auth-ticker-item"><i class="bi bi-people-fill"></i><strong>97,832</strong> Active users</span>
-        <span class="auth-ticker-item"><i class="bi bi-lock-fill"></i><strong>100%</strong> secure login</span>
-        <span class="auth-ticker-item"><i class="bi bi-lightning-charge-fill"></i><strong>0.9s</strong> response time</span>
-        <span class="auth-ticker-item"><i class="bi bi-cart4"></i><strong>23K</strong> orders processed</span>
-        <span class="auth-ticker-item"><i class="bi bi-star-fill"></i><strong>4.9/5</strong> average rating</span>
+        {% for item in auth_ticker_items %}
+          <span class="auth-ticker-item"><i class="{{ item.icon }}"></i><strong>{{ item.strong }}</strong> {{ item.label }}</span>
+        {% endfor %}
       </div>
     </div>
   </div>
+  {% endif %}
 </div>
 
 <style>
