@@ -485,88 +485,62 @@
     </script>
     {% endif %}
 
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark sticky-top shadow-sm rc-navbar">
-      <div class="container">
-        <a class="navbar-brand" href="{% url 'products:landing' %}">Red<span>Cart</span></a>
+    <!-- Global cyber navigation -->
+    <header class="rc-global-nav" id="global-navigation">
+      <div class="rc-nav-inner">
+        <a class="rc-brand-mark" href="{% url 'products:landing' %}" aria-label="RedCart home">
+          <span class="rc-brand-orbit"><i></i></span>
+          <span class="rc-brand-word">RED<span>CART</span></span>
+        </a>
 
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-          <span class="navbar-toggler-icon"></span>
-        </button>
+        <nav class="rc-nav-capsule" aria-label="Primary navigation">
+          <a class="rc-nav-link" href="{% url 'products:landing' %}">Home</a>
+          <a class="rc-nav-link" href="{% url 'products:product-list' %}">Shop</a>
+          <a class="rc-nav-link" href="{% url 'products:blog' %}">Blog</a>
+          <a class="rc-nav-link" href="{% url 'products:about' %}">About</a>
+          {% if user.is_authenticated %}<a class="rc-nav-link" href="{% url 'products:security-intelligence' %}">Intel</a>{% endif %}
+        </nav>
 
-        <div class="collapse navbar-collapse" id="navbarNav">
+        <div class="rc-nav-telemetry" aria-label="System telemetry status">
+          <span class="rc-telemetry-dot"></span>
+          <span><b>SHODAN_NODE</b>: ACTIVE // <strong id="nav-ping">24ms</strong></span>
+        </div>
 
-          <!-- Search with Recent Searches -->
-          <div class="search-wrapper mx-auto">
-            <form class="d-flex" method="get" action="{% url 'products:product-list' %}" id="navbar-search-form">
-              <input
-                class="form-control me-2 shadow-sm"
-                type="search"
-                name="search"
-                id="navbar-search-input"
-                placeholder="Search for products..."
-                value="{{ request.GET.search }}"
-                autocomplete="off"
-              >
-              <button class="btn btn-light" type="submit">Search</button>
-            </form>
-            <!-- Recent Searches Dropdown -->
-            <div class="recent-searches-dropdown" id="recent-searches-dropdown">
-              <div class="recent-searches-header">
-                <span>Recent Searches</span>
-                <button onclick="clearAllSearches()">Clear All</button>
-              </div>
-              <div id="recent-searches-list"></div>
-            </div>
-          </div>
-
-          <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-            <li class="nav-item"><a class="nav-link" href="{% url 'products:landing' %}">Home</a></li>
-            <li class="nav-item"><a class="nav-link" href="{% url 'products:product-list' %}">Shop</a></li>
-            <li class="nav-item"><a class="nav-link" href="{% url 'products:blog' %}">Blog</a></li>
-            <li class="nav-item"><a class="nav-link" href="{% url 'products:about' %}">About</a></li>
-            {% if user.is_authenticated %}<li class="nav-item"><a class="nav-link" href="{% url 'products:security-intelligence' %}"><i class="bi bi-radar"></i> Intelligence</a></li>{% endif %}
-            <li class="nav-item"><a class="nav-link" href="{% url 'products:wishlist' %}"><i class="bi bi-heart"></i> Wishlist</a></li>
-            <li class="nav-item"><a class="nav-link" href="{% url 'products:view-cart' %}"><i class="bi bi-cart3"></i> Cart</a></li>
-
-            <!-- Notification Bell -->
-            <li class="nav-item">
-              <a class="nav-link notification-bell" href="{% url 'products:notification-center' %}">
-                <i class="bi bi-bell-fill"></i>
-                <span class="notification-badge" id="notification-badge" style="display: none;">0</span>
-              </a>
-            </li>
-
-            {% if user.is_authenticated %}
-              <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                  <i class="bi bi-person-circle"></i> {{ user.first_name|default:user.username }}
-                </a>
-                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                  <li><a class="dropdown-item" href="{% url 'products:profile' %}"><i class="bi bi-person"></i> My Profile</a></li>
-                  <li><a class="dropdown-item" href="{% url 'products:notification-center' %}"><i class="bi bi-bell"></i> Notifications <span class="badge bg-danger" id="dropdown-badge" style="display: none;">0</span></a></li>
-                  <li><hr class="dropdown-divider"></li>
-                  <li>
-                    <a class="dropdown-item" href="{% url 'products:logout' %}" style="color: #dc3545;">
-                      <i class="bi bi-box-arrow-right"></i> Logout
-                    </a>
-                  </li>
-                </ul>
-              </li>
-            {% else %}
-              <li class="nav-item"><a class="nav-link" href="{% url 'products:login' %}"><i class="bi bi-lock"></i> Login</a></li>
-              <li class="nav-item"><a class="nav-link" href="{% url 'products:register' %}"><i class="bi bi-person-plus"></i> Register</a></li>
-            {% endif %}
-
-            <li class="nav-item">
-              <button class="theme-toggle" id="theme-toggle" title="Toggle theme">
-                <i class="bi bi-brightness-high-fill" id="theme-icon"></i>
-              </button>
-            </li>
-          </ul>
+        <div class="rc-nav-actions">
+          <a class="rc-nav-action" href="{% url 'products:wishlist' %}" title="Wishlist"><i class="bi bi-heart"></i><span>Wishlist</span></a>
+          <a class="rc-nav-action rc-cart-action" href="{% url 'products:view-cart' %}" title="Cart"><i class="bi bi-cart3"></i><span>Cart</span><em id="nav-cart-badge">0</em></a>
+          <a class="rc-nav-action rc-nav-login" href="{% url 'products:login' %}">Login</a>
+          <a class="rc-nav-register" href="{% url 'products:register' %}">Register</a>
+          <button class="rc-nav-icon" id="theme-toggle" title="Toggle theme" aria-label="Toggle theme"><i class="bi bi-brightness-high-fill" id="theme-icon"></i></button>
+          <button class="rc-nav-menu" id="nav-menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false"><i class="bi bi-list"></i></button>
         </div>
       </div>
-    </nav>
+
+      <div class="rc-nav-search">
+        <form method="get" action="{% url 'products:product-list' %}" id="navbar-search-form">
+          <i class="bi bi-terminal"></i>
+          <input type="search" name="search" id="navbar-search-input" placeholder="Search the RedCart index..." value="{{ request.GET.search }}" autocomplete="off">
+          <button type="submit">EXECUTE</button>
+        </form>
+        <div class="recent-searches-dropdown" id="recent-searches-dropdown"><div class="recent-searches-header"><span>Recent Searches</span><button onclick="clearAllSearches()">Clear All</button></div><div id="recent-searches-list"></div></div>
+      </div>
+
+      <aside class="rc-mobile-drawer" id="mobile-nav-drawer" aria-hidden="true">
+        <div class="rc-drawer-top"><span>RED/CART_OS</span><button id="nav-menu-close" type="button" aria-label="Close navigation"><i class="bi bi-x-lg"></i></button></div>
+        <div class="rc-drawer-status"><span class="rc-telemetry-dot"></span> SYSTEM TELEMETRY // ACTIVE</div>
+        <div class="rc-drawer-links">
+          <a href="{% url 'products:landing' %}">01 / Home</a>
+          <a href="{% url 'products:product-list' %}">02 / Shop</a>
+          <a href="{% url 'products:blog' %}">03 / Blog</a>
+          <a href="{% url 'products:about' %}">04 / About</a>
+          {% if user.is_authenticated %}<a href="{% url 'products:security-intelligence' %}">05 / Intelligence</a>{% endif %}
+          <a href="{% url 'products:wishlist' %}">06 / Wishlist</a>
+          <a href="{% url 'products:view-cart' %}">07 / Cart <em>0</em></a>
+          {% if user.is_authenticated %}<a href="{% url 'products:profile' %}">08 / Profile</a><a href="{% url 'products:logout' %}" class="rc-drawer-danger">Terminate session</a>{% else %}<a href="{% url 'products:login' %}">08 / Login</a><a href="{% url 'products:register' %}">09 / Register</a>{% endif %}
+        </div>
+      </aside>
+    </header>
+    <div class="rc-nav-offset" aria-hidden="true"></div>
 
     <!-- AI Chat Widget -->
     <div class="ai-chat-widget">
