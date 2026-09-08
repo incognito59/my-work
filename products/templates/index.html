@@ -642,8 +642,51 @@
 
   <!-- FILTER BAR -->
   <div class="filter-bar">
-    <div class="filter-summary">Filter by category to find your perfect product.</div>
+    <div class="filter-summary">
+      {% if query or selected_category or min_price or max_price or selected_sort != 'newest' %}
+        Showing filtered results{% if query %} for "{{ query }}"{% endif %}.
+      {% else %}
+        Filter by category, price, or sort to find your perfect product.
+      {% endif %}
+    </div>
   </div>
+
+  <form method="get" action="{% url 'products:product-list' %}" class="shop-filter-form" aria-label="Filter and sort products">
+    <label class="shop-filter-field shop-filter-search">
+      <span>Search</span>
+      <input type="search" name="search" value="{{ query }}" placeholder="Search products...">
+    </label>
+    <label class="shop-filter-field">
+      <span>Category</span>
+      <select name="category">
+        <option value="">All categories</option>
+        {% for category_code, category_name in available_categories %}
+          <option value="{{ category_code }}"{% if selected_category == category_code %} selected{% endif %}>{{ category_name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label class="shop-filter-field shop-filter-price">
+      <span>Min price</span>
+      <input type="number" name="min_price" value="{{ min_price }}" min="0" step="0.01" placeholder="0">
+    </label>
+    <label class="shop-filter-field shop-filter-price">
+      <span>Max price</span>
+      <input type="number" name="max_price" value="{{ max_price }}" min="0" step="0.01" placeholder="Any">
+    </label>
+    <label class="shop-filter-field">
+      <span>Sort</span>
+      <select name="sort">
+        <option value="newest"{% if selected_sort == 'newest' %} selected{% endif %}>Newest</option>
+        <option value="low-high"{% if selected_sort == 'low-high' %} selected{% endif %}>Price: low to high</option>
+        <option value="high-low"{% if selected_sort == 'high-low' %} selected{% endif %}>Price: high to low</option>
+        <option value="name"{% if selected_sort == 'name' %} selected{% endif %}>Name</option>
+      </select>
+    </label>
+    <button type="submit" class="shop-filter-submit">Apply filters</button>
+    {% if query or selected_category or min_price or max_price or selected_sort != 'newest' %}
+      <a href="{% url 'products:product-list' %}" class="shop-filter-clear">Clear</a>
+    {% endif %}
+  </form>
 
   <!-- CATEGORY CHIPS -->
   <div class="category-nav rc-category-nav !justify-start !gap-2">
