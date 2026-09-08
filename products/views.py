@@ -23,7 +23,6 @@ from django.views.decorators.http import require_http_methods
 from django.core.paginator import Paginator
 from django.db.models import Count
 from .models import Notification, UserNotificationSettings, PushNotificationSubscription, SystemAlert, NotificationLog
-from django.core.cache import cache
 from functools import wraps
 
 
@@ -343,11 +342,6 @@ def paystack_callback(request):
 def index(request):
     query = request.GET.get('q') or request.GET.get('search')
 
-    if not query:
-        cached = cache.get('shop_page_data')
-        if cached:
-            return render(request, 'index.html', cached)
-
     all_products = Product.objects.all().order_by('category', '-id')
 
     if query:
@@ -391,9 +385,6 @@ def index(request):
         'wishlisted_ids': wishlisted_ids,
         'total_products': Product.objects.count(),
     }
-
-    if not query:
-        cache.set('shop_page_data', context, 300)
 
     return render(request, 'index.html', context)
 
