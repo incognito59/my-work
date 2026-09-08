@@ -1,6 +1,5 @@
 // Paystack inline integration helper
-// DEMO KEY - Replace with your test key from: https://dashboard.paystack.com
-const PAYSTACK_PUBLIC_KEY = 'pk_test_51a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p';
+const PAYSTACK_PUBLIC_KEY = window.PAYSTACK_PUBLIC_KEY || '';
 
 function $(s){return document.querySelector(s)}
 function show(el, cls, text){
@@ -26,6 +25,11 @@ export function initPayment(){
     const amount = parseFloat(amountInput.value) || 0;
     if(!email || amount<=0){
       show(msg,'error','Please provide a valid email and amount');
+      return;
+    }
+
+    if (!PAYSTACK_PUBLIC_KEY || !window.PaystackPop || !window.PaystackPop.setup) {
+      show(msg,'error','Online payments are temporarily unavailable');
       return;
     }
 
