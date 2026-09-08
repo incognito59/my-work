@@ -365,15 +365,53 @@ def paystack_callback(request):
 
 
 def index(request):
-    query = request.GET.get('q') or request.GET.get('search')
+    query = (request.GET.get('q') or request.GET.get('search') or '').strip()
+    category = request.GET.get('category', '').strip()
+    min_price = request.GET.get('min_price', '').strip()
+    max_price = request.GET.get('max_price', '').strip()
+    sort = request.GET.get('sort', 'newest').strip()
 
-    all_products = Product.objects.all().order_by('category', '-id')
+    all_products = Product.objects.all()
+
+    category_values = {value for value, _ in Product.CATEGORY_CHOICES}
+    category_values.update(
+        Product.objects.exclude(category='').values_list('category', flat=True).distinct()
+    )
+    category_labels = dict(Product.CATEGORY_CHOICES)
+    available_categories = sorted(
+        ((value, category_labels.get(value, value)) for value in category_values),
+        key=lambda item: item[1].lower(),
+    )
 
     if query:
         all_products = all_products.filter(name__icontains=query)
 
+    if category and category in category_values:
+        all_products = all_products.filter(category=category)
+
+    try:
+        if min_price:
+            all_products = all_products.filter(price__gte=float(min_price))
+    except (TypeError, ValueError):
+        min_price = ''
+
+    try:
+        if max_price:
+            all_products = all_products.filter(price__lte=float(max_price))
+    except (TypeError, ValueError):
+        max_price = ''
+
+    sort_options = {
+        'low-high': 'price',
+        'high-low': '-price',
+        'newest': '-id',
+        'name': 'name',
+    }
+    if sort not in sort_options:
+        sort = 'newest'
+    all_products = all_products.order_by(sort_options[sort], '-id')
+
     products_by_category = {}
-    available_categories = []
 
     HOMEPAGE_LIMIT = 10
 
@@ -385,14 +423,10 @@ def index(request):
 
         if code not in products_by_category:
             products_by_category[code] = {'label': code, 'products': [], 'total': 0}
-            available_categories.append((code, code))
-
         products_by_category[code]['total'] += 1
 
         if len(products_by_category[code]['products']) < HOMEPAGE_LIMIT:
             products_by_category[code]['products'].append(product)
-
-    available_categories.sort(key=lambda x: x[1])
 
     latest_products = list(Product.objects.order_by('-id')[:8])
 
@@ -405,6 +439,10 @@ def index(request):
     context = {
         'products_by_category': products_by_category,
         'query': query,
+        'selected_category': category,
+        'min_price': min_price,
+        'max_price': max_price,
+        'selected_sort': sort,
         'available_categories': available_categories,
         'latest_products': latest_products,
         'wishlisted_ids': wishlisted_ids,
