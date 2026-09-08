@@ -115,8 +115,8 @@
 
       /* ============ THEME TOGGLE FIX ============ */
       .theme-toggle {
-        border: none;
-        background: rgba(255,255,255,0.15);
+        border: 1px solid rgba(255,255,255,0.2);
+        background: rgba(255,255,255,0.12);
         color: #fff;
         font-size: 1.3rem;
         margin-left: 10px;
@@ -127,13 +127,22 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        transition: background 0.2s ease, transform 0.2s ease;
+        transition: background 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
       }
       .theme-toggle:hover {
-        background: rgba(255,255,255,0.3);
+        background: rgba(255,255,255,0.2);
+        border-color: rgba(255,255,255,0.35);
         transform: rotate(20deg);
       }
-      [data-theme="light"] .theme-toggle #theme-icon { color: #fff; }
+      [data-theme="light"] .theme-toggle {
+        background: rgba(17, 24, 39, 0.06);
+        border-color: rgba(17, 24, 39, 0.12);
+      }
+      [data-theme="light"] .theme-toggle #theme-icon { color: #111827; }
+      [data-theme="dark"] .theme-toggle {
+        background: rgba(255,255,255,0.12);
+        border-color: rgba(255,255,255,0.2);
+      }
       [data-theme="dark"] .theme-toggle #theme-icon { color: #ffd700; }
 
       /* Notification Bell Badge */
