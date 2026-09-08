@@ -17,8 +17,8 @@ export default function Navbar() {
   }, []);
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-black/80 backdrop-blur-md">
-      <div className="mx-auto flex min-w-0 flex-wrap items-center gap-4 px-5 py-3 md:h-[72px] md:flex-nowrap md:px-8 md:py-0">
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-black/75 px-6 py-4 backdrop-blur-xl">
+      <div className="mx-auto flex min-w-0 flex-wrap items-center justify-between gap-4 md:flex-nowrap">
         <Link href="/" className="flex shrink-0 items-center gap-3" aria-label="RedCart home">
           <span className="relative grid h-9 w-9 place-items-center rounded-full border border-cyan-300/80 shadow-[0_0_22px_rgba(34,211,238,.3)]">
             <span className="h-2 w-2 rounded-full bg-cyan-200 shadow-[0_0_14px_#22d3ee]" />
@@ -27,10 +27,10 @@ export default function Navbar() {
           <span className="font-mono text-sm font-bold tracking-[.24em] text-white">RED<span className="text-cyan-300">CART</span></span>
         </Link>
 
-        <div className="hidden min-w-0 flex-1 items-center justify-center md:flex">
-          <nav className="flex max-w-full items-center gap-1 overflow-x-auto rounded-full border border-white/10 bg-white/[.045] p-1" aria-label="Primary navigation">
+        <div className="hidden min-w-0 flex-1 items-center justify-center px-4 md:flex">
+          <nav className="flex w-auto max-w-full items-center gap-8 overflow-x-auto rounded-full border border-white/10 bg-white/[.045] px-5 py-1" aria-label="Primary navigation">
             {links.map((link) => (
-              <Link key={link} href={link === "Home" ? "/" : `/${link.toLowerCase()}`} className="group relative shrink-0 rounded-full px-4 py-2 font-mono text-xs text-slate-400 transition hover:text-white lg:px-5">
+              <Link key={link} href={link === "Home" ? "/" : `/${link.toLowerCase()}`} className="group relative shrink-0 rounded-full px-1 py-2 font-mono text-xs text-slate-400 transition hover:text-white">
                 <span className="absolute inset-x-3 bottom-0 h-px origin-left scale-x-0 bg-cyan-300 shadow-[0_0_12px_#22d3ee] transition-transform duration-200 group-hover:scale-x-100" />
                 {link}
               </Link>
@@ -38,8 +38,8 @@ export default function Navbar() {
           </nav>
         </div>
 
-        <div className="ml-auto flex min-w-0 shrink-0 items-center gap-2">
-          <div className="hidden max-w-[230px] items-center gap-2 rounded-md border border-emerald-400/20 bg-emerald-400/5 px-3 py-2 font-mono text-[9px] text-emerald-300 lg:flex">
+        <div className="ml-6 flex w-auto min-w-0 shrink-0 items-center gap-2">
+          <div className="hidden w-auto max-w-[230px] flex-shrink-0 items-center gap-2 rounded border border-emerald-500/30 bg-emerald-950/30 px-3 py-1 font-mono text-xs text-emerald-400 lg:flex">
             <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-emerald-400 shadow-[0_0_10px_#34d399]" />
             <span className="truncate">SHODAN_NODE: CONNECTED // <strong className="text-emerald-200 [text-shadow:0_0_8px_rgba(74,222,128,.85)]">{ping}ms</strong></span>
           </div>
