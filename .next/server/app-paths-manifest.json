@@ -1,5 +1,10 @@
 {
+  "/api/shodan/route": "app/api/shodan/route.js",
   "/_not-found/page": "app/_not-found/page.js",
+  "/auth/page": "app/auth/page.js",
+  "/cart/page": "app/cart/page.js",
   "/page": "app/page.js",
-  "/api/shodan/route": "app/api/shodan/route.js"
+  "/shop/page": "app/shop/page.js",
+  "/wishlist/page": "app/wishlist/page.js",
+  "/shop/[id]/page": "app/shop/[id]/page.js"
 }
