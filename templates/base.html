@@ -719,6 +719,30 @@
       }
       document.addEventListener('DOMContentLoaded', processDjangoMessages);
 
+      // ============ CYBER NAVIGATION ============
+      const navDrawer = document.getElementById('mobile-nav-drawer');
+      const navMenuToggle = document.getElementById('nav-menu-toggle');
+      const navMenuClose = document.getElementById('nav-menu-close');
+      const navPing = document.getElementById('nav-ping');
+
+      function setNavDrawer(open) {
+        if (!navDrawer) return;
+        navDrawer.classList.toggle('is-open', open);
+        navDrawer.setAttribute('aria-hidden', String(!open));
+        if (navMenuToggle) navMenuToggle.setAttribute('aria-expanded', String(open));
+      }
+
+      navMenuToggle?.addEventListener('click', () => setNavDrawer(true));
+      navMenuClose?.addEventListener('click', () => setNavDrawer(false));
+      navDrawer?.querySelectorAll('a').forEach(link => link.addEventListener('click', () => setNavDrawer(false)));
+
+      function updateNavTelemetry() {
+        if (navPing) navPing.textContent = `${Math.floor(18 + Math.random() * 18)}ms`;
+      }
+
+      updateNavTelemetry();
+      setInterval(updateNavTelemetry, 3200);
+
       // ============ THEME TOGGLE ============
       const themeToggle = document.getElementById('theme-toggle');
       const themeIcon   = document.getElementById('theme-icon');
