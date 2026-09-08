@@ -141,6 +141,47 @@ class ProductDetailTests(TestCase):
         self.assertTrue(review.verified_purchase)
 
 
+class ShopFilterTests(TestCase):
+    def setUp(self):
+        self.alpha = Product.objects.create(name='Alpha Phone', price=100.0, stock=5, category='Electronics', image_url='http://a.png')
+        self.beta = Product.objects.create(name='Beta Phone', price=300.0, stock=5, category='Electronics', image_url='http://b.png')
+        self.camera = Product.objects.create(name='Alpha Camera', price=200.0, stock=5, category='Accessories', image_url='http://c.png')
+
+    def test_filters_combine_with_search_and_preserve_query_values(self):
+        response = self.client.get(reverse('products:product-list'), {
+            'search': 'Alpha',
+            'category': 'Electronics',
+            'min_price': '50',
+            'max_price': '150',
+            'sort': 'low-high',
+        })
+
+        products = response.context['products_by_category']['Electronics']['products']
+        self.assertEqual([product.id for product in products], [self.alpha.id])
+        self.assertEqual(response.context['query'], 'Alpha')
+        self.assertEqual(response.context['selected_category'], 'Electronics')
+        self.assertEqual(response.context['min_price'], '50')
+        self.assertEqual(response.context['max_price'], '150')
+        self.assertEqual(response.context['selected_sort'], 'low-high')
+
+    def test_supported_sort_modes_order_results(self):
+        expected_orders = {
+            'low-high': {'Electronics': [self.alpha.id, self.beta.id], 'Accessories': [self.camera.id]},
+            'high-low': {'Electronics': [self.beta.id, self.alpha.id], 'Accessories': [self.camera.id]},
+            'newest': {'Accessories': [self.camera.id], 'Electronics': [self.beta.id, self.alpha.id]},
+            'name': {'Accessories': [self.camera.id], 'Electronics': [self.alpha.id, self.beta.id]},
+        }
+
+        for sort, expected_ids in expected_orders.items():
+            with self.subTest(sort=sort):
+                response = self.client.get(reverse('products:product-list'), {'sort': sort})
+                actual_ids = {
+                    category: [product.id for product in data['products']]
+                    for category, data in response.context['products_by_category'].items()
+                }
+                self.assertEqual(actual_ids, expected_ids)
+
+
 class OrderModelTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username='john', password='pass')
