@@ -999,8 +999,9 @@
           return;
         }
         const liked = data.action === 'added';
-        button.classList.toggle('btn-danger', liked);
-        button.classList.toggle('btn-outline-danger', !liked);
+        const isProductAction = button.classList.contains('product-action-save');
+        button.classList.toggle(isProductAction ? 'is-saved' : 'btn-danger', liked);
+        button.classList.toggle(isProductAction ? 'is-unsaved' : 'btn-outline-danger', !liked);
         const icon = button.querySelector('i');
         if (icon) {
           icon.classList.toggle('bi-heart-fill', liked);
