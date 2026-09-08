@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { color-scheme: dark; }
+* { box-sizing: border-box; }
+html { background: #000; }
+body { margin: 0; background: #000; color: #f8fafc; }
+button, a { -webkit-tap-highlight-color: transparent; }
+
+@layer utilities {
+  .text-glow { text-shadow: 0 0 18px rgba(34, 211, 238, .42); }
+  .glass-edge { box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 24px 70px rgba(0,0,0,.45); }
+}
