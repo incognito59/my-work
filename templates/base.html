@@ -1,4 +1,5 @@
 <!doctype html>
+{% load static %}
 <html lang="en" data-theme="light">
   <head>
     <meta charset="utf-8">
@@ -465,6 +466,7 @@
       [data-theme="dark"] .cart-total-cell { color: #ffffff !important; }
       [data-theme="dark"] .original-price-text { color: #aaaaaa !important; }
     </style>
+    <link href="{% static 'css/tailwind.output.css' %}" rel="stylesheet">
   </head>
 
   <body>
@@ -484,7 +486,7 @@
     {% endif %}
 
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark sticky-top shadow-sm">
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top shadow-sm rc-navbar">
       <div class="container">
         <a class="navbar-brand" href="{% url 'products:landing' %}">Red<span>Cart</span></a>
 
@@ -596,7 +598,7 @@
     <button id="scrollTopBtn" title="Go to top"><i class="bi bi-arrow-up"></i></button>
 
     <!-- Footer -->
-    <footer class="footer">
+    <footer class="footer rc-page-footer">
       <div class="container">
         <div class="row">
 

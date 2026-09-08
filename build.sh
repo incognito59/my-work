@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -e
 
+if command -v npm >/dev/null 2>&1; then
+    npm ci
+    npm run build:css
+fi
+
 pip install -r requirements.txt
 python manage.py collectstatic --no-input
 python manage.py migrate

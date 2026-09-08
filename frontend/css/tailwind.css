@@ -1,0 +1,102 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 40 20% 97%;
+    --foreground: 24 10% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 24 10% 10%;
+    --primary: 18 82% 48%;
+    --primary-foreground: 0 0% 100%;
+    --muted: 36 17% 92%;
+    --muted-foreground: 24 7% 42%;
+    --border: 30 12% 86%;
+    --radius: 0.75rem;
+  }
+
+  [data-theme='dark'] {
+    --background: 24 12% 8%;
+    --foreground: 36 20% 96%;
+    --card: 24 10% 12%;
+    --card-foreground: 36 20% 96%;
+    --primary: 18 88% 58%;
+    --primary-foreground: 24 12% 8%;
+    --muted: 24 8% 18%;
+    --muted-foreground: 30 8% 68%;
+    --border: 24 8% 23%;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+}
+
+@layer components {
+  .rc-navbar {
+    @apply border-b border-white/10 bg-[hsl(24_12%_8%)] shadow-none;
+  }
+
+  .rc-navbar .container {
+    @apply max-w-7xl gap-6;
+  }
+
+  .rc-navbar .navbar-brand {
+    @apply font-sans text-xl font-bold tracking-tight text-white;
+  }
+
+  .rc-navbar .navbar-brand span {
+    @apply text-orange-400;
+  }
+
+  .rc-navbar .search-wrapper {
+    @apply max-w-none;
+  }
+
+  .rc-navbar .search-wrapper form {
+    @apply gap-2;
+  }
+
+  .rc-navbar .form-control {
+    @apply h-10 w-full rounded-md border border-white/10 bg-white/10 px-4 text-sm text-white shadow-none placeholder:text-white/50;
+  }
+
+  .rc-navbar .form-control:focus {
+    @apply border-orange-400 bg-white/15 ring-2 ring-orange-400/20;
+  }
+
+  .rc-navbar .search-wrapper .btn {
+    @apply h-10 rounded-md border-0 bg-orange-500 px-4 text-sm font-semibold text-white shadow-none;
+  }
+
+  .rc-navbar .nav-link {
+    @apply text-sm font-medium text-white/70 transition-colors hover:text-white;
+  }
+
+  .rc-navbar .theme-toggle {
+    @apply ml-2 h-9 w-9 rounded-md bg-white/10 text-sm;
+  }
+
+  .rc-page-footer {
+    @apply mt-16 border-t border-border bg-[hsl(24_12%_8%)] py-12;
+  }
+
+  .rc-shell {
+    @apply border-border bg-background text-foreground;
+  }
+
+  .rc-panel {
+    @apply rounded-lg border border-border bg-card shadow-sm;
+  }
+
+  .rc-button {
+    @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2;
+  }
+
+  .rc-button-secondary {
+    @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2;
+  }
+}
