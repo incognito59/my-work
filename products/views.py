@@ -33,7 +33,7 @@ def _masked_ip(value):
         return None
     if ':' in value:
         parts = value.split(':')
-        return ':'.join(parts[:2]) + ':…'
+        return ':'.join(parts[:2]) + ':...'
     parts = value.split('.')
     return '.'.join(parts[:2] + ['x', 'x']) if len(parts) == 4 else 'masked'
 
