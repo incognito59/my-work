@@ -22,7 +22,7 @@
       </div>
 
       <div class="col-12 col-lg-6 d-flex align-items-start justify-content-center">
-        <div class="card border-0 shadow-lg rounded-4 p-5 theme-card animate-card auth-card">
+        <div class="card border-0 shadow-lg rounded-4 p-5 theme-card animate-card auth-card rc-auth-card">
           <h2 class="fw-bold mb-1 text-center text-gradient">Create Your Account</h2>
           <p class="text-center text-muted mb-4 small">Join millions of smart shoppers</p>
 
@@ -44,7 +44,7 @@
                 <input 
                   type="text" 
                   name="first_name" 
-                  class="form-control form-control-lg rounded-pill px-4"
+                  class="form-control form-control-lg rounded-pill px-4 rc-auth-control"
                   placeholder="John"
                 >
               </div>
@@ -53,7 +53,7 @@
                 <input 
                   type="text" 
                   name="last_name" 
-                  class="form-control form-control-lg rounded-pill px-4"
+                  class="form-control form-control-lg rounded-pill px-4 rc-auth-control"
                   placeholder="Doe"
                 >
               </div>
@@ -64,7 +64,7 @@
               <input 
                 type="text" 
                 name="username" 
-                class="form-control form-control-lg rounded-pill px-4"
+                class="form-control form-control-lg rounded-pill px-4 rc-auth-control"
                 placeholder="john_doe"
                 required
                 minlength="3"
@@ -77,7 +77,7 @@
               <input 
                 type="email" 
                 name="email" 
-                class="form-control form-control-lg rounded-pill px-4"
+                class="form-control form-control-lg rounded-pill px-4 rc-auth-control"
                 placeholder="john@example.com"
                 required
               >
@@ -88,7 +88,7 @@
               <input 
                 type="password" 
                 name="password" 
-                class="form-control form-control-lg rounded-pill px-4"
+                class="form-control form-control-lg rounded-pill px-4 rc-auth-control"
                 placeholder="••••••••"
                 required
                 minlength="8"
@@ -101,7 +101,7 @@
               <input 
                 type="password" 
                 name="password_confirm" 
-                class="form-control form-control-lg rounded-pill px-4"
+                class="form-control form-control-lg rounded-pill px-4 rc-auth-control"
                 placeholder="••••••••"
                 required
               >
@@ -114,7 +114,7 @@
               </label>
             </div>
 
-            <button type="submit" class="btn btn-danger btn-lg w-100 rounded-pill fw-bold py-3 mb-3">
+            <button type="submit" class="btn btn-danger btn-lg w-100 rounded-pill fw-bold py-3 mb-3 rc-auth-primary">
               ✨ Create Account
             </button>
           </form>
@@ -128,7 +128,7 @@
           <p id="last-provider-text" class="text-center text-muted small mb-3"></p>
 
           <div class="d-flex flex-column gap-2">
-            <a id="google-login" href="/accounts/google/login/" class="btn btn-outline-secondary rounded-pill py-2 fw-semibold d-flex align-items-center justify-content-center gap-2">
+            <a id="google-login" href="/accounts/google/login/" class="btn btn-outline-secondary rounded-pill py-2 fw-semibold d-flex align-items-center justify-content-center gap-2 rc-auth-secondary">
               <svg width="20" height="20" viewBox="0 0 48 48">
                 <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
                 <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>

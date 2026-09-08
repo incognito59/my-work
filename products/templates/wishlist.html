@@ -127,7 +127,7 @@
   }
 </style>
 
-<div class="wishlist-page">
+<div class="wishlist-page rc-wishlist-page">
   <div class="wishlist-header">
     <div>
       <h1>💖 Your Wishlist</h1>
@@ -142,7 +142,7 @@
   </div>
 
   {% if not user.is_authenticated %}
-    <div class="empty-wishlist">
+    <div class="empty-wishlist rc-wishlist-panel">
       <h2>Log in to access your wishlist</h2>
       <p>Save favorite products and pick up where you left off on any device.</p>
       <a href="{% url 'products:login' %}?next={% url 'products:wishlist' %}" class="btn btn-danger btn-lg">Login</a>
@@ -151,7 +151,7 @@
   {% elif wishlist_items %}
     <div class="wishlist-grid">
       {% for item in wishlist_items %}
-        <div class="wishlist-item">
+        <div class="wishlist-item rc-wishlist-panel">
           <img src="{{ item.product.image_src }}" alt="{{ item.product.name }}">
           <h3>{{ item.product.name }}</h3>
           <p>{{ item.product.get_category_display }} • ₦{{ item.product.price|floatformat:2|intcomma }}</p>
@@ -166,7 +166,7 @@
       {% endfor %}
     </div>
   {% else %}
-    <div class="empty-wishlist">
+    <div class="empty-wishlist rc-wishlist-panel">
       <h2>Your wishlist is empty</h2>
       <p>Browse popular products and add your favorites to save them for later.</p>
       <a href="{% url 'products:product-list' %}" class="btn btn-danger btn-lg">Shop Now</a>

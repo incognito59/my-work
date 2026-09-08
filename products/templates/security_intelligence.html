@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Security Intelligence | RedCart{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/tailwind.output.css' %}">
+
+<main class="rc-intel-page" data-intelligence-page>
+  <section class="rc-intel-hero">
+    <div>
+      <p class="rc-kicker"><span class="rc-live-dot"></span> RedCart Security Operations</p>
+      <h1>Internet intelligence, distilled.</h1>
+      <p class="rc-intel-subtitle">A focused view of live defensive telemetry, presented without exposing raw scan payloads.</p>
+    </div>
+    <div class="rc-intel-status">
+      <span class="rc-status-pulse"></span>
+      <div><strong>MONITORING</strong><small>Authenticated session</small></div>
+    </div>
+  </section>
+
+  <section class="rc-bento-grid" aria-label="Security intelligence dashboard">
+    <article class="rc-bento-card rc-bento-wide rc-spotlight">
+      <div class="rc-card-heading">
+        <div><span class="rc-card-index">01</span><h2>Live Shodan Intelligence</h2></div>
+        <span class="rc-live-label"><span class="rc-live-dot"></span> LIVE</span>
+      </div>
+      <p class="rc-card-caption">Sanitized observations from the configured defensive query.</p>
+      <div class="rc-terminal" aria-live="polite">
+        <div class="rc-terminal-bar"><span></span><span></span><span></span><b>shodan://telemetry</b></div>
+        <div id="shodan-feed" class="rc-terminal-feed"><div class="rc-terminal-line rc-muted">[boot] waiting for intelligence feed...</div></div>
+      </div>
+      <div class="rc-card-footer"><span id="shodan-updated">Awaiting update</span><button type="button" id="shodan-refresh" class="rc-terminal-button">Refresh feed</button></div>
+    </article>
+
+    <article class="rc-bento-card rc-bento-tall rc-spotlight">
+      <span class="rc-card-index">02</span>
+      <h2>Signal posture</h2>
+      <div class="rc-signal-ring"><span>LIVE</span></div>
+      <p class="rc-card-caption">The dashboard masks host identifiers and limits response volume before data reaches the browser.</p>
+      <div class="rc-mini-metric"><span>API boundary</span><strong>server-side</strong></div>
+      <div class="rc-mini-metric"><span>Payload policy</span><strong>sanitized</strong></div>
+    </article>
+
+    <article class="rc-bento-card rc-spotlight">
+      <span class="rc-card-index">03</span>
+      <h2>Telemetry lens</h2>
+      <p class="rc-card-caption">Watch for concentration by geography, organization, and exposed service without storing raw banners.</p>
+      <div class="rc-bars"><i style="height: 42%"></i><i style="height: 68%"></i><i style="height: 55%"></i><i style="height: 82%"></i><i style="height: 64%"></i><i style="height: 91%"></i><i style="height: 74%"></i></div>
+    </article>
+
+    <article class="rc-bento-card rc-spotlight">
+      <span class="rc-card-index">04</span>
+      <h2>Operator notes</h2>
+      <ul class="rc-check-list"><li>Use an environment-scoped Shodan query.</li><li>Keep keys on the server only.</li><li>Review rate limits before production launch.</li></ul>
+    </article>
+  </section>
+</main>
+
+<script>
+  (() => {
+    document.querySelectorAll('.rc-spotlight').forEach((card) => {
+      card.addEventListener('pointermove', (event) => {
+        const rect = card.getBoundingClientRect();
+        card.style.setProperty('--spot-x', `${event.clientX - rect.left}px`);
+        card.style.setProperty('--spot-y', `${event.clientY - rect.top}px`);
+      });
+    });
+
+    const feed = document.getElementById('shodan-feed');
+    const updated = document.getElementById('shodan-updated');
+    const refresh = document.getElementById('shodan-refresh');
+    if (!feed || !updated || !refresh) return;
+
+    const render = (items) => {
+      feed.innerHTML = items.length ? items.map((item, index) => `
+        <div class="rc-terminal-line" style="--line-delay:${index * 55}ms">
+          <span class="rc-terminal-time">${item.timestamp || '--:--'}</span>
+          <span class="rc-terminal-cyan">${item.ip || 'masked.host'}</span>
+          <span>:${item.port || '—'}/${item.transport || 'tcp'}</span>
+          <span class="rc-terminal-muted">${item.country || 'Unknown'} · ${item.org || 'Unknown org'}</span>
+        </div>`).join('') : '<div class="rc-terminal-line rc-muted">[feed] no sanitized observations returned.</div>';
+      updated.textContent = `Updated ${new Date().toLocaleTimeString()}`;
+    };
+
+    const load = async () => {
+      refresh.disabled = true;
+      try {
+        const response = await fetch('{% url "products:api-shodan-intelligence" %}', { headers: { Accept: 'application/json' } });
+        const payload = await response.json();
+        if (!response.ok || !payload.success) throw new Error(payload.error || 'Feed unavailable');
+        render(payload.items || []);
+      } catch (error) {
+        feed.innerHTML = `<div class="rc-terminal-line rc-terminal-error">[error] ${error.message}</div>`;
+        updated.textContent = 'Feed unavailable';
+      } finally {
+        refresh.disabled = false;
+      }
+    };
+
+    refresh.addEventListener('click', load);
+    load();
+  })();
+</script>
+{% endblock %}

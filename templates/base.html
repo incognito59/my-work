@@ -525,6 +525,7 @@
             <li class="nav-item"><a class="nav-link" href="{% url 'products:product-list' %}">Shop</a></li>
             <li class="nav-item"><a class="nav-link" href="{% url 'products:blog' %}">Blog</a></li>
             <li class="nav-item"><a class="nav-link" href="{% url 'products:about' %}">About</a></li>
+            {% if user.is_authenticated %}<li class="nav-item"><a class="nav-link" href="{% url 'products:security-intelligence' %}"><i class="bi bi-radar"></i> Intelligence</a></li>{% endif %}
             <li class="nav-item"><a class="nav-link" href="{% url 'products:wishlist' %}"><i class="bi bi-heart"></i> Wishlist</a></li>
             <li class="nav-item"><a class="nav-link" href="{% url 'products:view-cart' %}"><i class="bi bi-cart3"></i> Cart</a></li>
 

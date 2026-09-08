@@ -158,6 +158,9 @@ SITE_URL = config('SITE_URL', default='https://retail-logistics-core-t0xz.onrend
 
 PAYSTACK_PUBLIC_KEY = config('PAYSTACK_PUBLIC_KEY', default='')
 PAYSTACK_SECRET_KEY = config('PAYSTACK_SECRET_KEY', default='')
+SHODAN_API_KEY = config('SHODAN_API_KEY', default='')
+SHODAN_QUERY = config('SHODAN_QUERY', default='ssl.cert.expired:true')
+SHODAN_RESULTS_LIMIT = config('SHODAN_RESULTS_LIMIT', cast=int, default=10)
 
 GROQ_API_KEY = config('GROQ_API_KEY', default='')
 

@@ -22,8 +22,33 @@ from decouple import config
 from django.views.decorators.http import require_http_methods
 from django.core.paginator import Paginator
 from django.db.models import Count
+from django.core.cache import cache
 from .models import Notification, UserNotificationSettings, PushNotificationSubscription, SystemAlert, NotificationLog
 from functools import wraps
+from urllib.parse import urlencode
+
+
+def _masked_ip(value):
+    if not isinstance(value, str):
+        return None
+    if ':' in value:
+        parts = value.split(':')
+        return ':'.join(parts[:2]) + ':…'
+    parts = value.split('.')
+    return '.'.join(parts[:2] + ['x', 'x']) if len(parts) == 4 else 'masked'
+
+
+def _sanitize_shodan_match(match):
+    location = match.get('location') or {}
+    return {
+        'ip': _masked_ip(match.get('ip_str')),
+        'port': match.get('port') if isinstance(match.get('port'), int) else None,
+        'transport': str(match.get('transport', 'tcp'))[:8],
+        'country': str(location.get('country_name', 'Unknown'))[:64],
+        'city': str(location.get('city', 'Unknown'))[:64],
+        'org': str(match.get('org', 'Unknown'))[:80],
+        'timestamp': str(match.get('timestamp', ''))[:32],
+    }
 
 
 def _sync_abandoned_cart(request, cart):
@@ -387,6 +412,48 @@ def index(request):
     }
 
     return render(request, 'index.html', context)
+
+
+@login_required
+def security_intelligence(request):
+    return render(request, 'security_intelligence.html')
+
+
+@login_required
+@require_http_methods(['GET'])
+def shodan_intelligence_api(request):
+    api_key = getattr(settings, 'SHODAN_API_KEY', '')
+    if not api_key:
+        return JsonResponse({'success': False, 'error': 'Shodan integration is not configured.'}, status=503)
+
+    client_key = request.user.pk or request.META.get('REMOTE_ADDR', 'anonymous')
+    rate_key = f'shodan-rate:{client_key}'
+    if not cache.add(rate_key, True, timeout=15):
+        return JsonResponse({'success': False, 'error': 'Rate limit reached. Try again shortly.'}, status=429)
+
+    cache_key = 'shodan-intelligence-feed:v1'
+    cached_feed = cache.get(cache_key)
+    if cached_feed is not None:
+        return JsonResponse({'success': True, 'source': 'cache', 'items': cached_feed})
+
+    query = getattr(settings, 'SHODAN_QUERY', 'ssl.cert.expired:true')
+    limit = max(1, min(getattr(settings, 'SHODAN_RESULTS_LIMIT', 10), 10))
+    params = urlencode({'key': api_key, 'query': query, 'page': 1})
+    request_url = f'https://api.shodan.io/shodan/host/search?{params}'
+
+    try:
+        with urllib.request.urlopen(request_url, timeout=8) as response:
+            payload = json.loads(response.read().decode('utf-8'))
+    except urllib.error.HTTPError as error:
+        status = 502 if error.code >= 500 else 400
+        return JsonResponse({'success': False, 'error': 'Shodan rejected the intelligence request.'}, status=status)
+    except (urllib.error.URLError, TimeoutError, ValueError):
+        return JsonResponse({'success': False, 'error': 'Shodan is temporarily unavailable.'}, status=502)
+
+    matches = payload.get('matches', []) if isinstance(payload, dict) else []
+    feed = [_sanitize_shodan_match(match) for match in matches[:limit] if isinstance(match, dict)]
+    cache.set(cache_key, feed, timeout=30)
+    return JsonResponse({'success': True, 'source': 'live', 'items': feed})
 
 
 def landing_page(request):

@@ -10,6 +10,8 @@ urlpatterns = [
     
     # 🔍 Product pages
     path('shop/', views.index, name='product-list'),
+    path('intelligence/', views.security_intelligence, name='security-intelligence'),
+    path('api/shodan/intelligence/', views.shodan_intelligence_api, name='api-shodan-intelligence'),
     path('product/<int:product_id>/', views.product_detail, name='product-detail'),
     path('product/<int:product_id>/review/', views.submit_review, name='submit-review'),
 

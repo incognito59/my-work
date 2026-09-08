@@ -212,6 +212,78 @@
     @apply h-10 rounded-md border-0 bg-orange-500 px-4 text-sm font-semibold text-white shadow-none;
   }
 
+  .rc-navbar .btn-light,
+  .rc-navbar .btn-light:hover,
+  .rc-navbar .btn-light:focus {
+    color: #f8fafc !important;
+    background: #111827 !important;
+    border-color: #334155 !important;
+  }
+
+  .rc-navbar .navbar-toggler {
+    border-color: rgba(255, 255, 255, 0.22);
+  }
+
+  .rc-navbar .nav-link,
+  .rc-navbar .navbar-brand,
+  .rc-navbar .navbar-brand:hover,
+  .rc-navbar .nav-link:hover,
+  .rc-navbar .nav-link:focus {
+    color: #f8fafc !important;
+  }
+
+  .rc-navbar .dropdown-menu {
+    background: #0b1120 !important;
+    border: 1px solid #1e293b !important;
+  }
+
+  .rc-navbar .dropdown-item {
+    color: #cbd5e1 !important;
+  }
+
+  .rc-navbar .dropdown-item:hover,
+  .rc-navbar .dropdown-item:focus {
+    color: #fff !important;
+    background: #172033 !important;
+  }
+
+  .rc-auth-card {
+    background: rgba(3, 7, 18, 0.92) !important;
+    border: 1px solid rgba(34, 211, 238, 0.18) !important;
+    color: #f8fafc !important;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45) !important;
+  }
+
+  .rc-auth-card h2,
+  .rc-auth-card label,
+  .rc-auth-card .form-check-label {
+    color: #f8fafc !important;
+  }
+
+  .rc-auth-card .text-muted,
+  .rc-auth-card small {
+    color: #94a3b8 !important;
+  }
+
+  .rc-auth-control {
+    color: #f8fafc !important;
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+  }
+
+  .rc-auth-control::placeholder { color: #64748b !important; }
+  .rc-auth-control:focus { border-color: #22d3ee !important; box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.16) !important; }
+  .rc-auth-primary { background: #06b6d4 !important; border-color: #06b6d4 !important; color: #001018 !important; }
+  .rc-auth-secondary { background: #111827 !important; border-color: #334155 !important; color: #f8fafc !important; }
+  .rc-auth-secondary:hover { background: #1e293b !important; color: #fff !important; }
+
+  .rc-wishlist-page { color: #e2e8f0; }
+  .rc-wishlist-page .rc-wishlist-panel { background: #090d16 !important; border: 1px solid #1e293b; color: #f8fafc; box-shadow: 0 20px 70px rgba(0, 0, 0, 0.28); }
+  .rc-wishlist-page .wishlist-header p,
+  .rc-wishlist-page .rc-wishlist-panel p { color: #94a3b8 !important; }
+  .rc-wishlist-page .btn-outline-danger { color: #67e8f9 !important; border-color: #155e75 !important; background: #082f49 !important; }
+  .rc-wishlist-page .btn-danger { background: #06b6d4 !important; border-color: #06b6d4 !important; color: #001018 !important; }
+
   .rc-navbar .nav-link {
     @apply text-sm font-medium text-white/70 transition-colors hover:text-white;
   }
@@ -238,5 +310,102 @@
 
   .rc-button-secondary {
     @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2;
+  }
+
+  .rc-intel-page {
+    @apply mx-auto min-h-screen max-w-7xl px-5 py-10 text-slate-100 sm:px-8;
+    background: #000;
+  }
+
+  .rc-intel-hero {
+    @apply mb-8 flex flex-col justify-between gap-6 rounded-xl border border-cyan-400/20 bg-slate-950/80 p-7 shadow-2xl shadow-cyan-950/20 md:flex-row md:items-end md:p-10;
+    background-image: radial-gradient(circle at 80% 10%, rgba(0, 229, 255, 0.12), transparent 34%), linear-gradient(135deg, #020617, #000);
+  }
+
+  .rc-kicker, .rc-card-index, .rc-live-label, .rc-terminal, .rc-terminal-button, .rc-mini-metric, .rc-check-list {
+    font-family: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
+  }
+
+  .rc-kicker {
+    @apply mb-4 flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-cyan-300;
+  }
+
+  .rc-intel-hero h1 {
+    @apply max-w-3xl font-sans text-4xl font-bold tracking-tight text-white md:text-6xl;
+  }
+
+  .rc-intel-subtitle {
+    @apply mt-4 max-w-2xl text-base leading-7 text-slate-400;
+  }
+
+  .rc-intel-status {
+    @apply flex items-center gap-3 rounded-lg border border-emerald-400/20 bg-emerald-400/5 px-4 py-3 text-emerald-300;
+  }
+
+  .rc-intel-status strong, .rc-intel-status small { display: block; }
+  .rc-intel-status strong { @apply text-xs tracking-[0.2em]; }
+  .rc-intel-status small { @apply mt-1 text-xs text-slate-500; }
+
+  .rc-live-dot {
+    @apply inline-block h-2 w-2 rounded-full bg-red-500 shadow-[0_0_12px_rgba(239,68,68,0.9)];
+    animation: rc-live-pulse 1.4s ease-in-out infinite;
+  }
+
+  .rc-bento-grid { @apply grid grid-cols-1 gap-6 md:grid-cols-3; }
+
+  .rc-bento-card {
+    @apply relative overflow-hidden rounded-xl border border-white/10 bg-black p-6 backdrop-blur-md;
+    background-image: linear-gradient(145deg, rgba(15, 23, 42, 0.82), rgba(0, 0, 0, 0.96));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 18px 60px rgba(0, 0, 0, 0.35);
+  }
+
+  .rc-bento-card::after {
+    content: '';
+    @apply pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300;
+    background: radial-gradient(280px circle at var(--spot-x, 50%) var(--spot-y, 50%), rgba(34, 211, 238, 0.12), transparent 62%);
+  }
+
+  .rc-bento-card:hover::after { @apply opacity-100; }
+  .rc-bento-wide { @apply md:col-span-2; }
+  .rc-bento-tall { @apply md:row-span-2; }
+  .rc-card-heading { @apply relative z-10 flex items-start justify-between gap-4; }
+  .rc-card-heading > div { @apply flex items-start gap-3; }
+  .rc-card-index { @apply text-xs text-cyan-400/70; }
+  .rc-bento-card h2 { @apply relative z-10 text-xl font-semibold tracking-tight text-white; }
+  .rc-card-caption { @apply relative z-10 mt-3 max-w-xl text-sm leading-6 text-slate-400; }
+  .rc-live-label { @apply relative z-10 flex items-center gap-2 text-xs font-semibold tracking-[0.15em] text-red-400; }
+
+  .rc-terminal { @apply relative z-10 mt-6 overflow-hidden rounded-lg border border-cyan-400/20 bg-black/80 text-xs; }
+  .rc-terminal-bar { @apply flex items-center gap-1 border-b border-white/10 px-3 py-2 text-slate-500; }
+  .rc-terminal-bar span { @apply h-2 w-2 rounded-full bg-slate-700; }
+  .rc-terminal-bar span:first-child { @apply bg-red-400; }
+  .rc-terminal-bar span:nth-child(2) { @apply bg-amber-300; }
+  .rc-terminal-bar span:nth-child(3) { @apply bg-emerald-400; }
+  .rc-terminal-bar b { @apply ml-2 font-normal text-slate-500; }
+  .rc-terminal-feed { @apply max-h-72 space-y-2 overflow-y-auto p-4; }
+  .rc-terminal-line { animation: rc-terminal-in 350ms ease both; animation-delay: var(--line-delay, 0ms); }
+  .rc-terminal-time, .rc-terminal-muted, .rc-muted { @apply text-slate-600; }
+  .rc-terminal-cyan { @apply text-cyan-300; }
+  .rc-terminal-error { @apply text-red-400; }
+  .rc-card-footer { @apply relative z-10 mt-4 flex items-center justify-between gap-3 text-xs text-slate-500; }
+  .rc-terminal-button { @apply rounded border border-cyan-400/30 bg-cyan-400/5 px-3 py-2 text-cyan-300 transition hover:bg-cyan-400/15 disabled:cursor-wait disabled:opacity-50; }
+  .rc-signal-ring { @apply mx-auto my-12 flex h-40 w-40 items-center justify-center rounded-full border border-cyan-300/30 text-cyan-300; box-shadow: 0 0 0 16px rgba(34, 211, 238, 0.04), 0 0 60px rgba(34, 211, 238, 0.18); animation: rc-ring-breathe 3s ease-in-out infinite; }
+  .rc-signal-ring span { @apply font-mono text-sm tracking-[0.3em]; }
+  .rc-mini-metric { @apply relative z-10 mt-3 flex items-center justify-between border-t border-white/10 pt-3 text-xs; }
+  .rc-mini-metric span { @apply text-slate-500; }
+  .rc-mini-metric strong { @apply text-cyan-300; }
+  .rc-bars { @apply relative z-10 mt-10 flex h-32 items-end gap-2 border-b border-cyan-400/20; }
+  .rc-bars i { @apply block flex-1 rounded-t bg-cyan-400/60; animation: rc-bar-breathe 2.4s ease-in-out infinite alternate; }
+  .rc-bars i:nth-child(2n) { animation-delay: 300ms; }
+  .rc-check-list { @apply relative z-10 mt-8 space-y-4 text-sm leading-6 text-slate-400; }
+  .rc-check-list li::before { content: '>'; @apply mr-3 text-cyan-300; }
+
+  @keyframes rc-live-pulse { 50% { opacity: .35; transform: scale(.7); } }
+  @keyframes rc-terminal-in { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes rc-ring-breathe { 50% { transform: scale(1.04); box-shadow: 0 0 0 24px rgba(34, 211, 238, 0.03), 0 0 80px rgba(34, 211, 238, 0.28); } }
+  @keyframes rc-bar-breathe { from { opacity: .45; } to { opacity: 1; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rc-live-dot, .rc-terminal-line, .rc-signal-ring, .rc-bars i { animation: none; }
   }
 }
