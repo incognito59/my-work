@@ -428,7 +428,7 @@ def index(request):
         if len(products_by_category[code]['products']) < HOMEPAGE_LIMIT:
             products_by_category[code]['products'].append(product)
 
-    latest_products = list(Product.objects.order_by('-id')[:8])
+    latest_products = list(all_products.order_by('-id')[:8])
 
     wishlisted_ids = []
     if request.user.is_authenticated:
