@@ -262,7 +262,10 @@
   .rc-brand-orbit i { @apply h-1.5 w-1.5 rounded-full bg-cyan-200; box-shadow: 0 0 12px #22d3ee; }
 
   .rc-nav-capsule { @apply absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 rounded-full border border-white/10 bg-white/[0.045] p-1 md:flex; }
-  .rc-nav-link { @apply relative rounded-full px-4 py-2 font-mono text-xs font-medium tracking-wide text-slate-400 no-underline transition-colors duration-200 hover:text-white; }
+  .rc-nav-link {
+    @apply relative rounded-full px-4 py-2 font-mono text-xs font-medium tracking-wide no-underline transition-colors duration-200 hover:text-white;
+    color: var(--main-color-light, #c2e0ff);
+  }
   .rc-nav-link::before { content: ''; @apply absolute inset-x-3 bottom-0 h-px origin-left scale-x-0 bg-cyan-300 transition-transform duration-200; box-shadow: 0 0 10px rgba(34, 211, 238, .9); }
   .rc-nav-link:hover::before, .rc-nav-link:focus-visible::before { @apply scale-x-100; }
   .rc-nav-link:hover { background: radial-gradient(circle at center, rgba(34, 211, 238, .16), transparent 70%); }
