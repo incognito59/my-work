@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>RedCart | Shop Smart, Live Better</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
     <style>
       :root {
@@ -498,11 +499,6 @@
           <a class="rc-nav-link" href="{% url 'products:about' %}">About</a>
           {% if user.is_authenticated %}<a class="rc-nav-link" href="{% url 'products:security-intelligence' %}">Intel</a>{% endif %}
         </nav>
-
-        <div class="rc-nav-telemetry" aria-label="System telemetry status">
-          <span class="rc-telemetry-dot"></span>
-          <span><b>SHODAN_NODE</b>: ACTIVE // <strong id="nav-ping">24ms</strong></span>
-        </div>
 
         <div class="rc-nav-actions">
           <a class="rc-nav-action" href="{% url 'products:wishlist' %}" title="Wishlist"><i class="bi bi-heart"></i><span>Wishlist</span></a>

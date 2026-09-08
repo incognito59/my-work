@@ -113,25 +113,24 @@
               </div>
             </div>
 
-            <div class="d-flex flex-column gap-2">
-              <button type="button" class="btn btn-wishlist {% if is_in_wishlist %}btn-danger{% else %}btn-outline-danger{% endif %}" data-product-id="{{ product.id }}" data-update-text="true" title="Save to wishlist">
-                <i class="bi {% if is_in_wishlist %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
-                {% if is_in_wishlist %}Saved{% else %}Save{% endif %}
+            <div class="product-actions">
+              <button type="button" class="product-action-save btn-wishlist {% if is_in_wishlist %}btn-danger{% else %}btn-outline-danger{% endif %}" data-product-id="{{ product.id }}" aria-label="Save to wishlist" title="Save to wishlist">
+                <i class="bi {% if is_in_wishlist %}bi-heart-fill{% else %}bi-heart{% endif %}" aria-hidden="true"></i>
               </button>
               {% if product.is_out_of_stock %}
-                <button type="button" class="btn btn-secondary w-100 fw-semibold text-light btn-legendary disabled" disabled>
+                <button type="button" class="product-action-button product-action-primary btn btn-secondary fw-semibold text-light disabled" disabled>
                   🚫 Out of Stock
                 </button>
               {% else %}
                 <a href="{% url 'products:add-to-cart' product.id %}" 
-                   class="btn btn-warning w-100 fw-semibold text-dark btn-legendary">
-                  🛒 Add to Cart
+                   class="product-action-button product-action-primary btn fw-semibold">
+                  <i class="bi bi-cart-plus" aria-hidden="true"></i> Add to Cart
                 </a>
               {% endif %}
               <a href="{% url 'products:buy-now' product.id %}" 
-                 class="btn btn-dark w-100 fw-semibold btn-legendary {% if product.is_out_of_stock %}disabled{% endif %}"
+                 class="product-action-button product-action-secondary btn fw-semibold {% if product.is_out_of_stock %}disabled{% endif %}"
                  {% if product.is_out_of_stock %}aria-disabled="true" tabindex="-1"{% endif %}>
-                ⚡ Buy Now
+                <i class="bi bi-lightning-charge-fill" aria-hidden="true"></i> Buy Now
               </a>
             </div>
 
@@ -248,11 +247,7 @@
   <!-- Q&A Section -->
   <div class="mt-5 pt-4 border-top">
     <h4 class="fw-bold mb-4">❓ Questions & Answers</h4>
-    <div class="p-4 border rounded-4 bg-light shadow-sm mb-4">
-      <div class="alert alert-info mb-0" role="alert">
-        <strong>Have a question?</strong> Ask other customers or check our reviews below for common questions about this product.
-      </div>
-    </div>
+    <p class="product-inline-prompt mb-4"><strong>Have a question?</strong> Ask other customers or check our reviews below for common questions about this product.</p>
   </div>
 
   <!-- Reviews Section -->
@@ -308,9 +303,9 @@
           Submit Review
         </button>
       {% else %}
-        <div class="alert alert-info mb-0">
+        <p class="product-inline-prompt mb-0">
           Please <a href="{% url 'products:login' %}?next={{ request.path }}">log in</a> to leave a review.
-        </div>
+        </p>
       {% endif %}
     </form>
   </div>
