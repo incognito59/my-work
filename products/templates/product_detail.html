@@ -517,6 +517,75 @@
   /* ── Theme Card ── */
   .theme-card { transition: background-color 0.5s ease, color 0.5s ease; }
 
+  .product-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 1rem;
+  }
+  .product-action-button,
+  .product-action-save {
+    min-height: 46px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 10px;
+    padding: 0.7rem 1rem;
+    font-size: 0.92rem;
+    line-height: 1;
+    transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+  }
+  .product-action-button { flex: 1; }
+  .product-action-save {
+    flex: 0 0 46px;
+    width: 46px;
+    padding: 0;
+    border: 1px solid #d64b5b;
+    background: transparent;
+    color: #d64b5b;
+  }
+  .product-action-save:hover,
+  .product-action-save.btn-danger {
+    background: #d64b5b;
+    border-color: #d64b5b;
+    color: #fff;
+  }
+  .product-action-primary {
+    border: 1px solid #f68b1e;
+    background: #f68b1e;
+    color: #19120b;
+  }
+  .product-action-primary:hover,
+  .product-action-primary:focus-visible {
+    border-color: #ffad52;
+    background: #ffad52;
+    color: #19120b;
+  }
+  .product-action-secondary {
+    border: 1px solid #67d9ff;
+    background: transparent;
+    color: #67d9ff;
+  }
+  .product-action-secondary:hover,
+  .product-action-secondary:focus-visible {
+    background: rgba(103, 217, 255, 0.12);
+    color: #b8efff;
+  }
+  .product-action-button:hover,
+  .product-action-save:hover { transform: translateY(-1px); }
+  .product-inline-prompt {
+    color: #94a3b8;
+    font-size: 0.95rem;
+  }
+  .product-inline-prompt strong { color: #e2e8f0; }
+  .product-inline-prompt a {
+    color: #67d9ff;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .product-inline-prompt a:hover { color: #b8efff; }
+
   /* ════════════════════════════════
      PRODUCT INFO CARD
   ════════════════════════════════ */
@@ -605,6 +674,9 @@
     .sale-timer-display { font-size: 16px !important; }
     .sale-discount-percentage { font-size: 22px !important; }
     .btn-legendary { padding: 0.6rem 1rem !important; font-size: 0.9rem !important; }
+    .product-actions { gap: 8px; }
+    .product-action-button, .product-action-save { min-height: 44px; padding: 0.65rem 0.75rem; font-size: 0.82rem; }
+    .product-action-save { flex-basis: 44px; width: 44px; }
     .social-share-section .btn-sm { padding: 5px 10px !important; font-size: 0.75rem !important; }
   }
   @media (min-width: 768px) {
@@ -637,6 +709,8 @@
   [data-theme="dark"] .border,
   [data-theme="dark"] .border-bottom       { border-color: #333 !important; }
   [data-theme="dark"] .alert-info          { background-color: #1a3a52; color: #87ceeb; border-color: #2a5a82; }
+  [data-theme="dark"] .product-inline-prompt { color: #94a3b8; }
+  [data-theme="dark"] .product-inline-prompt strong { color: #e2e8f0; }
   [data-theme="dark"] .btn-outline-success { color: #20c997; border-color: #20c997; }
   [data-theme="dark"] .btn-outline-success:hover { background-color: #20c997; color: #000; }
   [data-theme="dark"] .btn-outline-primary { color: #0d6efd; border-color: #0d6efd; }

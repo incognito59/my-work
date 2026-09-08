@@ -716,7 +716,6 @@
       const navDrawer = document.getElementById('mobile-nav-drawer');
       const navMenuToggle = document.getElementById('nav-menu-toggle');
       const navMenuClose = document.getElementById('nav-menu-close');
-      const navPing = document.getElementById('nav-ping');
 
       function setNavDrawer(open) {
         if (!navDrawer) return;
@@ -728,13 +727,6 @@
       navMenuToggle?.addEventListener('click', () => setNavDrawer(true));
       navMenuClose?.addEventListener('click', () => setNavDrawer(false));
       navDrawer?.querySelectorAll('a').forEach(link => link.addEventListener('click', () => setNavDrawer(false)));
-
-      function updateNavTelemetry() {
-        if (navPing) navPing.textContent = `${20 + Math.floor(Math.random() * 26)}ms`;
-      }
-
-      updateNavTelemetry();
-      setInterval(updateNavTelemetry, 3000);
 
       // ============ THEME TOGGLE ============
       const themeToggle = document.getElementById('theme-toggle');
