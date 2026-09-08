@@ -5,20 +5,20 @@ import { Activity, Heart, Menu, ShoppingBag, Terminal, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-const links = ["Home", "Shop", "Blog"];
+const links = ["Home", "Shop", "Blog", "About"];
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [ping, setPing] = useState(24);
 
   useEffect(() => {
-    const timer = window.setInterval(() => setPing(18 + Math.floor(Math.random() * 18)), 3200);
+    const timer = window.setInterval(() => setPing(20 + Math.floor(Math.random() * 26)), 3000);
     return () => window.clearInterval(timer);
   }, []);
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-black/80 backdrop-blur-md">
-      <div className="mx-auto flex h-[72px] max-w-7xl items-center gap-4 px-5 md:px-8">
+      <div className="mx-auto flex min-w-0 flex-wrap items-center gap-4 px-5 py-3 md:h-[72px] md:flex-nowrap md:px-8 md:py-0">
         <Link href="/" className="flex shrink-0 items-center gap-3" aria-label="RedCart home">
           <span className="relative grid h-9 w-9 place-items-center rounded-full border border-cyan-300/80 shadow-[0_0_22px_rgba(34,211,238,.3)]">
             <span className="h-2 w-2 rounded-full bg-cyan-200 shadow-[0_0_14px_#22d3ee]" />
@@ -27,21 +27,23 @@ export default function Navbar() {
           <span className="font-mono text-sm font-bold tracking-[.24em] text-white">RED<span className="text-cyan-300">CART</span></span>
         </Link>
 
-        <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 rounded-full border border-white/10 bg-white/[.045] p-1 md:flex" aria-label="Primary navigation">
-          {links.map((link) => (
-            <Link key={link} href={link === "Home" ? "/" : `/${link.toLowerCase()}`} className="group relative rounded-full px-5 py-2 font-mono text-xs text-slate-400 transition hover:text-white">
-              <span className="absolute inset-x-3 bottom-0 h-px origin-left scale-x-0 bg-cyan-300 shadow-[0_0_12px_#22d3ee] transition-transform duration-200 group-hover:scale-x-100" />
-              {link}
-            </Link>
-          ))}
-        </nav>
-
-        <div className="ml-auto hidden items-center gap-2 rounded-md border border-emerald-400/20 bg-emerald-400/5 px-3 py-2 font-mono text-[9px] text-emerald-300 lg:flex">
-          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400 shadow-[0_0_10px_#34d399]" />
-          SHODAN_NODE: CONNECTED // {ping}ms
+        <div className="hidden min-w-0 flex-1 items-center justify-center md:flex">
+          <nav className="flex max-w-full items-center gap-1 overflow-x-auto rounded-full border border-white/10 bg-white/[.045] p-1" aria-label="Primary navigation">
+            {links.map((link) => (
+              <Link key={link} href={link === "Home" ? "/" : `/${link.toLowerCase()}`} className="group relative shrink-0 rounded-full px-4 py-2 font-mono text-xs text-slate-400 transition hover:text-white lg:px-5">
+                <span className="absolute inset-x-3 bottom-0 h-px origin-left scale-x-0 bg-cyan-300 shadow-[0_0_12px_#22d3ee] transition-transform duration-200 group-hover:scale-x-100" />
+                {link}
+              </Link>
+            ))}
+          </nav>
         </div>
 
-        <div className="ml-auto flex items-center gap-1 md:ml-0">
+        <div className="ml-auto flex min-w-0 shrink-0 items-center gap-2">
+          <div className="hidden max-w-[230px] items-center gap-2 rounded-md border border-emerald-400/20 bg-emerald-400/5 px-3 py-2 font-mono text-[9px] text-emerald-300 lg:flex">
+            <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-emerald-400 shadow-[0_0_10px_#34d399]" />
+            <span className="truncate">SHODAN_NODE: CONNECTED // <strong className="text-emerald-200 [text-shadow:0_0_8px_rgba(74,222,128,.85)]">{ping}ms</strong></span>
+          </div>
+
           <Link href="/wishlist" className="hidden items-center gap-1.5 rounded-md px-2 py-2 font-mono text-[11px] text-slate-400 transition hover:bg-white/5 hover:text-white sm:flex"><Heart className="h-4 w-4 text-cyan-300/80" /> Wishlist</Link>
           <Link href="/cart" className="relative flex items-center gap-1.5 rounded-md px-2 py-2 font-mono text-[11px] text-slate-400 transition hover:bg-white/5 hover:text-white"><ShoppingBag className="h-4 w-4 text-cyan-300/80" /><span className="hidden sm:inline">Cart</span><b className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-cyan-300 px-1 text-[9px] text-black">0</b></Link>
           <Link href="/login" className="hidden px-2 py-2 font-mono text-[11px] text-slate-400 hover:text-white sm:block">Login</Link>
