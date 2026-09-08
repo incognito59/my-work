@@ -10,6 +10,10 @@ services:
         value: "False"
       - key: PYTHON_VERSION
         value: "3.11.7"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: postgres_db
+          property: connectionString
     envVarDefaults:
       DEBUG: "False"
 databases:
