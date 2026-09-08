@@ -533,10 +533,10 @@
           <a href="{% url 'products:product-list' %}">02 / Shop</a>
           <a href="{% url 'products:blog' %}">03 / Blog</a>
           <a href="{% url 'products:about' %}">04 / About</a>
-          {% if user.is_authenticated %}<a href="{% url 'products:security-intelligence' %}">05 / Intelligence</a>{% endif %}
-          <a href="{% url 'products:wishlist' %}">06 / Wishlist</a>
-          <a href="{% url 'products:view-cart' %}">07 / Cart <em>0</em></a>
-          {% if user.is_authenticated %}<a href="{% url 'products:profile' %}">08 / Profile</a><a href="{% url 'products:logout' %}" class="rc-drawer-danger">Terminate session</a>{% else %}<a href="{% url 'products:login' %}">08 / Login</a><a href="{% url 'products:register' %}">09 / Register</a>{% endif %}
+          {% if user.is_authenticated %}<a href="{% url 'products:security-intelligence' %}">INTEL / Intelligence</a>{% endif %}
+          <a href="{% url 'products:wishlist' %}">05 / Wishlist</a>
+          <a href="{% url 'products:view-cart' %}">06 / Cart <em>0</em></a>
+          {% if user.is_authenticated %}<a href="{% url 'products:profile' %}">07 / Profile</a><a href="{% url 'products:logout' %}" class="rc-drawer-danger">Terminate session</a>{% else %}<a href="{% url 'products:login' %}">07 / Login</a><a href="{% url 'products:register' %}">08 / Register</a>{% endif %}
         </div>
       </aside>
     </header>
@@ -737,11 +737,11 @@
       navDrawer?.querySelectorAll('a').forEach(link => link.addEventListener('click', () => setNavDrawer(false)));
 
       function updateNavTelemetry() {
-        if (navPing) navPing.textContent = `${Math.floor(18 + Math.random() * 18)}ms`;
+        if (navPing) navPing.textContent = `${20 + Math.floor(Math.random() * 26)}ms`;
       }
 
       updateNavTelemetry();
-      setInterval(updateNavTelemetry, 3200);
+      setInterval(updateNavTelemetry, 3000);
 
       // ============ THEME TOGGLE ============
       const themeToggle = document.getElementById('theme-toggle');
