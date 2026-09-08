@@ -8,20 +8,20 @@
 <link rel="stylesheet" href="{% static 'css/flash-sale-timer.css' %}">
 <div class="container my-5">
 
-  <div class="row g-2 g-md-4 align-items-start">
+  <div class="flex flex-col gap-4 md:flex-row md:items-start md:gap-6">
     
     <!-- Thumbnails on the left -->
-    <div class="col-auto d-flex flex-column align-items-center mobile-thumbs-col">
-      <img src="{{ product.image_src }}" class="thumb-img mb-2" alt="Main" onclick="changeImage(this)" loading="lazy">
+    <div class="flex w-full flex-col items-center gap-3 md:w-auto mobile-thumbs-col">
+      <img src="{{ product.image_src }}" class="thumb-img h-16 w-16 rounded border border-white/10 object-cover transition duration-300 hover:border-cyan-500/50" alt="Main" onclick="changeImage(this)" loading="lazy">
       {% if product.additional_images %}
         {% for img in product.additional_images %}
-          <img src="{{ img }}" class="thumb-img mb-2" alt="Additional" onclick="changeImage(this)" loading="lazy">
+          <img src="{{ img }}" class="thumb-img h-16 w-16 rounded border border-white/10 object-cover transition duration-300 hover:border-cyan-500/50" alt="Additional" onclick="changeImage(this)" loading="lazy">
         {% endfor %}
       {% endif %}
     </div>
 
     <!-- Main image and details wrapper -->
-    <div class="col">
+    <div class="min-w-0 flex-1">
       <div class="row g-2 g-md-4 align-items-start">
 
         <!-- Main image -->
