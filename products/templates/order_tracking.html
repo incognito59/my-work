@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block content %}
+
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+      <div class="card border-0 shadow-lg rounded-4 p-4 p-md-5 theme-card reveal-on-scroll">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+          <div>
+            <p class="text-uppercase text-muted mb-2" style="letter-spacing: 0.2em; font-size: 0.72rem; font-weight: 700;">Order Tracking</p>
+            <h2 class="fw-bold mb-0">Order #{{ order.id }}</h2>
+          </div>
+          <div class="text-md-end">
+            <div class="rc-pill rc-pill-success">{{ order.get_status_display }}</div>
+            {% if order.tracking_number %}
+              <div class="mt-2 small text-muted">Tracking: <strong>{{ order.tracking_number }}</strong></div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="row g-4 align-items-stretch mb-4">
+          <div class="col-md-3">
+            <div class="rc-panel h-100 p-4">
+              <div class="text-muted small">Placed</div>
+              <div class="fw-semibold mt-2">{{ order.created_at|date:"M d, Y" }}</div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="rc-panel h-100 p-4">
+              <div class="text-muted small">Status</div>
+              <div class="fw-semibold mt-2">{{ order.get_status_display }}</div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="rc-panel h-100 p-4">
+              <div class="text-muted small">Estimated Delivery</div>
+              <div class="fw-semibold mt-2">{{ order.estimated_delivery_date|date:"M d, Y" }}</div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="rc-panel h-100 p-4">
+              <div class="text-muted small">Total</div>
+              <div class="fw-semibold mt-2">₦{{ order.total|floatformat:2|intcomma }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-5">
+          <h5 class="fw-semibold mb-3">Shipment Progress</h5>
+          <div class="row g-3">
+            {% for step in steps %}
+              <div class="col-md-3">
+                <div class="position-relative p-3 border rounded-4 h-100 {% if step.active %}border-primary bg-primary-subtle{% elif step.complete %}border-success bg-success-subtle{% else %}border-secondary-subtle{% endif %}">
+                  <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="fw-semibold">{{ step.label }}</span>
+                    {% if step.complete %}
+                      <span class="text-success">✓</span>
+                    {% elif step.active %}
+                      <span class="text-primary">●</span>
+                    {% endif %}
+                  </div>
+                  <div class="small text-muted">
+                    {% if step.complete %}
+                      Completed
+                    {% elif step.active %}
+                      In progress
+                    {% else %}
+                      Pending
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="row g-4">
+          <div class="col-lg-7">
+            <div class="rc-panel p-4">
+              <h5 class="fw-semibold mb-3">Items in this order</h5>
+
+              {% for item in items %}
+                <div class="d-flex align-items-center justify-content-between gap-3 border-bottom py-3">
+                  <div class="d-flex align-items-center gap-3">
+                    {% if item.product.image_url %}
+                      <img src="{{ item.product.image_url }}" alt="{{ item.product.name }}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 12px;">
+                    {% endif %}
+                    <div>
+                      <div class="fw-semibold">{{ item.product.name }}</div>
+                      <div class="small text-muted">Qty {{ item.quantity }}</div>
+                    </div>
+                  </div>
+                  <div class="fw-semibold">₦{{ item.total_price|floatformat:2|intcomma }}</div>
+                </div>
+              {% empty %}
+                <p class="text-muted mb-0">No items on this order.</p>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="col-lg-5">
+            <div class="rc-panel p-4">
+              <h5 class="fw-semibold mb-3">Order info</h5>
+              <div class="small text-muted mb-2">Delivery address</div>
+              <div class="fw-medium mb-3">
+                {% if order.shipping_address %}
+                  {{ order.shipping_address.full_name|default:order.user.get_full_name|default:order.user.username }}<br>
+                  {{ order.shipping_address.address_line_1 }}{% if order.shipping_address.address_line_2 %}, {{ order.shipping_address.address_line_2 }}{% endif %}<br>
+                  {{ order.shipping_address.city }}, {{ order.shipping_address.state }} {{ order.shipping_address.postal_code }}
+                {% else %}
+                  No address on file.
+                {% endif %}
+              </div>
+
+              <div class="small text-muted mb-2">Payment</div>
+              <div class="mb-3">
+                {% if order.is_paid %}
+                  <span class="rc-pill rc-pill-success">Paid</span>
+                {% else %}
+                  <span class="rc-pill rc-pill-warning">Pending</span>
+                {% endif %}
+              </div>
+
+              <div class="d-grid gap-2">
+                <a href="{% url 'products:profile' %}" class="rc-btn rc-btn-secondary">Back to profile</a>
+                <a href="{% url 'products:order-invoice' order.id %}" class="rc-btn">View invoice</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
