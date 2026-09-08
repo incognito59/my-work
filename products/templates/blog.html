@@ -15,9 +15,11 @@
     text-align: center;
     margin-bottom: 60px;
     padding: 60px 40px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--bg-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 20px;
-    color: white;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02), 0 20px 60px rgba(0, 0, 0, 0.18);
+    color: var(--text-color);
   }
 
   .blog-header h1 {
@@ -28,7 +30,7 @@
 
   .blog-header p {
     font-size: 1.2rem;
-    opacity: 0.95;
+    opacity: 0.8;
   }
 
   .articles-grid {
@@ -39,11 +41,12 @@
   }
 
   .article-card {
-    background: white;
+    background: var(--card-bg);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 15px;
     overflow: hidden;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
-    transition: all 0.3s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
     display: flex;
     flex-direction: column;
     text-decoration: none;
@@ -52,13 +55,14 @@
 
   .article-card:hover {
     transform: translateY(-10px);
-    box-shadow: 0 15px 40px rgba(102, 126, 234, 0.2);
+    box-shadow: 0 15px 40px rgba(255, 71, 71, 0.14);
   }
 
   .article-image {
     width: 100%;
     height: 200px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--bg-color);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -74,8 +78,9 @@
 
   .article-category {
     display: inline-block;
-    background: #667eea;
-    color: white;
+    background: rgba(255, 71, 71, 0.12);
+    color: var(--main-color);
+    border: 1px solid rgba(255, 71, 71, 0.2);
     padding: 5px 12px;
     border-radius: 20px;
     font-size: 0.8rem;
@@ -87,13 +92,14 @@
   .article-title {
     font-size: 1.3rem;
     font-weight: 700;
-    color: #333;
+    color: var(--text-color);
     margin-bottom: 10px;
     line-height: 1.4;
   }
 
   .article-excerpt {
-    color: #666;
+    color: var(--text-color);
+    opacity: 0.8;
     font-size: 0.95rem;
     margin-bottom: 15px;
     flex: 1;
@@ -105,18 +111,19 @@
     justify-content: space-between;
     align-items: center;
     padding-top: 15px;
-    border-top: 1px solid #eee;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
     font-size: 0.85rem;
-    color: #999;
+    color: var(--text-color);
+    opacity: 0.75;
   }
 
   .article-author {
     font-weight: 600;
-    color: #667eea;
+    color: var(--main-color);
   }
 
   .read-more {
-    color: #667eea;
+    color: var(--main-color);
     font-weight: 600;
     text-decoration: none;
     display: inline-block;
@@ -128,11 +135,13 @@
   }
 
   .blog-stats {
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    background: var(--card-bg);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     padding: 40px;
     border-radius: 15px;
     text-align: center;
     margin-bottom: 40px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
   }
 
   .stat-item {
@@ -143,13 +152,59 @@
   .stat-number {
     font-size: 2.5rem;
     font-weight: 800;
-    color: #667eea;
+    color: var(--main-color);
   }
 
   .stat-label {
-    color: #666;
+    color: var(--text-color);
+    opacity: 0.8;
     font-size: 0.95rem;
     margin-top: 5px;
+  }
+
+  .blog-newsletter {
+    background: linear-gradient(135deg, rgba(255, 71, 71, 0.08), var(--card-bg));
+    border: 1px solid rgba(255, 71, 71, 0.16);
+    color: var(--text-color);
+    padding: 50px 40px;
+    border-radius: 20px;
+    text-align: center;
+    margin-top: 60px;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
+  }
+
+  .blog-newsletter h2 {
+    font-size: 2rem;
+    margin-bottom: 15px;
+    color: var(--text-color);
+  }
+
+  .blog-newsletter p {
+    font-size: 1.1rem;
+    margin-bottom: 30px;
+    opacity: 0.8;
+  }
+
+  .blog-newsletter-form {
+    max-width: 500px;
+    margin: 0 auto;
+    display: flex;
+    gap: 10px;
+  }
+
+  .blog-newsletter-input {
+    flex: 1;
+    padding: 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.02);
+    color: var(--text-color);
+    font-size: 1rem;
+  }
+
+  .blog-newsletter-input::placeholder {
+    color: var(--text-color);
+    opacity: 0.55;
   }
 
   @media (max-width: 768px) {
@@ -165,19 +220,10 @@
       display: block;
       margin: 15px 0;
     }
-  }
 
-  [data-theme="dark"] .article-card {
-    background-color: #1e1e1e;
-    color: #e0e0e0;
-  }
-
-  [data-theme="dark"] .article-title {
-    color: #e0e0e0;
-  }
-
-  [data-theme="dark"] .article-excerpt {
-    color: #aaa;
+    .blog-newsletter-form {
+      flex-direction: column;
+    }
   }
 </style>
 
@@ -227,13 +273,13 @@
   </div>
 
   <!-- Newsletter Signup -->
-  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 50px 40px; border-radius: 20px; text-align: center; margin-top: 60px;">
-    <h2 style="font-size: 2rem; margin-bottom: 15px;">📬 Subscribe to Our Blog</h2>
-    <p style="font-size: 1.1rem; margin-bottom: 30px;">Get the latest shopping tips and exclusive offers delivered to your inbox</p>
-    <form method="post" action="{% url 'products:newsletter-signup' %}" style="max-width: 500px; margin: 0 auto; display: flex; gap: 10px;">
+  <div class="blog-newsletter">
+    <h2>📬 Subscribe to Our Blog</h2>
+    <p>Get the latest shopping tips and exclusive offers delivered to your inbox</p>
+    <form method="post" action="{% url 'products:newsletter-signup' %}" class="blog-newsletter-form">
       {% csrf_token %}
-      <input type="email" name="email" placeholder="your@email.com" required style="flex: 1; padding: 14px; border-radius: 10px; border: none; font-size: 1rem;">
-      <button type="submit" style="padding: 14px 30px; background: white; color: #667eea; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">Subscribe</button>
+      <input type="email" name="email" placeholder="your@email.com" required class="blog-newsletter-input">
+      <button type="submit" class="rc-btn">Subscribe</button>
     </form>
   </div>
 </div>

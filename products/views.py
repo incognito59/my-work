@@ -1858,7 +1858,7 @@ def about_page(request):
     stats = {
         'products': Product.objects.count(),
         'users': User.objects.count(),
-        'orders': Order.objects.count(),
+        'orders': Order.objects.filter(status='delivered').count(),
         'countries': 1,
     }
     team_members = [
