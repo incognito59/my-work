@@ -610,7 +610,7 @@
 </style>
 <link rel="stylesheet" href="{% static 'css/tailwind.output.css' %}">
 
-<div class="shop-container !mx-auto !min-h-0 !max-w-7xl !bg-background !px-5 !py-10 text-foreground sm:!px-8">
+<div class="shop-container rc-page-enter !mx-auto !min-h-0 !max-w-7xl !bg-background !px-5 !py-10 text-foreground sm:!px-8">
 
   <!-- RECENTLY VIEWED -->
   <div id="recently-viewed-wrapper" class="recently-viewed-wrapper" style="display: none;">
@@ -625,7 +625,7 @@
 
   <!-- HERO -->
   <section class="hero-section !mb-10 !grid !grid-cols-1 !gap-8 !rounded-lg !border !border-border !bg-card !p-7 !shadow-sm lg:!grid-cols-[1.6fr_1fr] lg:!p-10">
-    <div class="hero-copy">
+    <div class="hero-copy rc-hero-copy">
       <span class="hero-eyebrow !mb-4 !rounded-md !bg-muted !px-3 !py-1.5 !text-xs !font-semibold !tracking-[0.12em] !text-primary">Premium shop experience</span>
       <h1 class="!mb-4 !max-w-2xl !font-sans !text-4xl !font-bold !leading-tight !tracking-tight !text-foreground sm:!text-5xl">Shop smarter with curated categories and instant search.</h1>
       <p class="!mb-7 !max-w-xl !text-base !leading-7 !text-muted-foreground">Explore top products and flash savings across all categories.</p>
@@ -633,10 +633,10 @@
         <a href="{% url 'products:wishlist' %}" class="hero-btn hero-btn-primary !rounded-md !bg-primary !px-4 !py-2.5 !text-sm !font-semibold !text-primary-foreground !shadow-none">View Wishlist</a>
       </div>
     </div>
-    <div class="hero-highlights">
-      <div class="highlight-card !rounded-md !border !border-border !bg-background !p-4 !shadow-none"><strong class="!text-primary">{{ total_products }}+</strong><span>Products in stock</span></div>
-      <div class="highlight-card !rounded-md !border !border-border !bg-background !p-4 !shadow-none"><strong class="!text-primary">24/7</strong><span>Shopping assistance</span></div>
-      <div class="highlight-card !rounded-md !border !border-border !bg-background !p-4 !shadow-none"><strong class="!text-primary">Fast</strong><span>Live search &amp; filters</span></div>
+    <div class="hero-highlights rc-hero-highlights">
+      <div class="highlight-card rc-stat !rounded-md !border !border-border !bg-background !p-4 !shadow-none"><strong class="!text-primary">{{ total_products }}+</strong><span>Products in stock</span></div>
+      <div class="highlight-card rc-stat !rounded-md !border !border-border !bg-background !p-4 !shadow-none"><strong class="!text-primary">24/7</strong><span>Shopping assistance</span></div>
+      <div class="highlight-card rc-stat !rounded-md !border !border-border !bg-background !p-4 !shadow-none"><strong class="!text-primary">Fast</strong><span>Live search &amp; filters</span></div>
     </div>
   </section>
 
@@ -646,7 +646,7 @@
   </div>
 
   <!-- CATEGORY CHIPS -->
-  <div class="category-nav !justify-start !gap-2">
+  <div class="category-nav rc-category-nav !justify-start !gap-2">
     <a href="{% url 'products:product-list' %}" class="category-chip !rounded-md !border-border !bg-card !px-3 !py-2 !text-sm !text-foreground hover:!border-primary hover:!bg-muted hover:!text-foreground">
       <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
       All
@@ -679,7 +679,7 @@
   {% if latest_products %}
   <div class="latest-row">
     {% for product in latest_products %}
-      <div class="latest-card">
+      <div class="latest-card rc-latest-card">
         <img src="{{ product.image_src|default:'https://placehold.co/400x220/f9f9f9/aaa?text=No+Image' }}"
              alt="{{ product.name }}" class="latest-image"
              onerror="this.src='https://placehold.co/400x220/f9f9f9/aaa?text=No+Image'">
@@ -708,7 +708,7 @@
   <!-- PRODUCTS BY CATEGORY -->
   {% for category_code, category_data in products_by_category.items %}
     {% if category_data.products %}
-    <div class="category-section !rounded-lg !border !border-border !bg-transparent !p-0 !shadow-none" id="category-{{ category_code|default:'Uncategorized'|slugify }}">
+    <div class="category-section rc-category-section !rounded-lg !border !border-border !bg-transparent !p-0 !shadow-none" id="category-{{ category_code|default:'Uncategorized'|slugify }}">
 
       <div class="category-header">
         <h2 class="category-title !font-sans !text-xl !font-bold !tracking-tight !text-foreground">
@@ -718,13 +718,13 @@
         <a href="{% url 'products:category-page' category_code|slugify %}" class="see-all-link !rounded-md !border-border !px-3 !py-1.5 !text-primary hover:!bg-muted hover:!text-primary">See All →</a>
       </div>
 
-      <div class="products-grid">
+      <div class="products-grid rc-product-grid">
         {% for product in category_data.products %}
-        <div class="product-card !rounded-lg !border-border !bg-card !shadow-sm hover:!border-primary/40 hover:!shadow-md {% if product.has_active_sale %}has-sale{% endif %}"
+        <div class="product-card rc-product-card !rounded-lg !border-border !bg-card !shadow-sm hover:!border-primary/40 hover:!shadow-md {% if product.has_active_sale %}has-sale{% endif %}"
              data-category="{{ category_code|default:'Uncategorized'|slugify }}"
              data-name="{{ product.name|lower }}">
 
-          <div class="product-img-wrap !border-border !bg-muted">
+          <div class="product-img-wrap rc-product-media !border-border !bg-muted">
             <button type="button"
                     class="wishlist-icon-btn {% if product.id in wishlisted_ids %}active{% endif %}"
                     data-product-id="{{ product.id }}" title="Save to wishlist">
@@ -737,7 +737,7 @@
 
             <img src="{{ product.image_src|default:'https://placehold.co/300x300/f9f9f9/aaa?text=No+Image' }}"
                  alt="{{ product.name }}"
-                 class="product-image"
+                 class="product-image rc-product-image"
                  onerror="this.src='https://placehold.co/300x300/f9f9f9/aaa?text=No+Image'">
 
             {% if product.is_out_of_stock %}
