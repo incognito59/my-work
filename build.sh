@@ -14,7 +14,7 @@ from pathlib import Path
 from django.core import serializers
 from products.models import Product
 if Product.objects.count() == 0:
-    fixture = json.loads(Path('data.json').read_text())
+    fixture = json.loads(Path('data.json').read_text(encoding='utf-8'))
     product_records = [item for item in fixture if item.get('model') == 'products.product']
     for product in serializers.deserialize('json', json.dumps(product_records)):
         product.save()
