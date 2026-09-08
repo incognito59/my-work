@@ -26,7 +26,7 @@
 
         <!-- Main image -->
         <div class="min-w-0 w-full">
-          <div class="main-img-container border rounded-4 shadow-sm overflow-hidden animate-img position-relative">
+          <div class="main-img-container relative overflow-hidden rounded-xl border shadow-sm animate-img">
             <img id="main-image" src="{{ product.image_src }}" class="block h-auto w-full object-contain" alt="{{ product.name }}" onclick="openImageZoom(this)" loading="lazy">
             {% if product.is_out_of_stock %}
               <div class="stock-badge stock-out">🚫 Out of Stock</div>
@@ -39,28 +39,28 @@
 
           <div id="image-zoom-modal" class="image-zoom-modal" onclick="closeImageZoom()" style="display:none;">
             <div class="image-zoom-inner" onclick="event.stopPropagation()">
-              <button type="button" class="btn btn-light btn-sm position-absolute top-0 end-0 m-3" onclick="closeImageZoom()">Close</button>
-              <img id="zoomed-image" src="{{ product.image_src }}" alt="{{ product.name }}" class="img-fluid rounded-4">
+              <button type="button" class="modal-close-button absolute right-0 top-0 m-3" onclick="closeImageZoom()">Close</button>
+              <img id="zoomed-image" src="{{ product.image_src }}" alt="{{ product.name }}" class="h-auto max-w-full rounded-xl">
             </div>
           </div>
         </div>
 
         <!-- Product details -->
         <div class="min-w-0 w-full">
-          <div class="p-3 p-md-4 rounded-4 shadow-sm theme-card border animate-card h-100">
-            <div class="flex items-start justify-between gap-4 mb-2">
+          <div class="theme-card animate-card h-full rounded-xl border p-3 shadow-sm md:p-4">
+            <div class="mb-2 flex items-start justify-between gap-4">
               <div>
-                <h3 class="fw-bold mb-1 fs-5 fs-md-6">{{ product.name }}</h3>
-                <small class="text-muted">SKU: #{{ product.id }}</small>
+                <h3 class="mb-1 text-lg font-bold">{{ product.name }}</h3>
+                <small class="text-slate-400">SKU: #{{ product.id }}</small>
               </div>
               {% if product.review_count %}
                 <div class="rating-badge">
                   <span class="stars">★ {{ product.average_review_rating|floatformat:1 }}/5</span>
-                  <small class="text-muted d-block">{{ product.review_count }} reviews</small>
+                  <small class="block text-slate-400">{{ product.review_count }} reviews</small>
                 </div>
               {% endif %}
             </div>
-            <p class="text-muted mb-3 small">{{ product.description|default:'No description available for this product. Please check back soon for details.' }}</p>
+            <p class="mb-3 text-sm text-slate-400">{{ product.description|default:'No description available for this product. Please check back soon for details.' }}</p>
 
             {% if product.has_active_sale %}
             <!-- Flash Sale Banner -->
@@ -82,8 +82,8 @@
               </div>
             </div>
             {% else %}
-            <div class="d-flex align-items-center gap-3 mb-4">
-              <h4 class="fw-bold animated-price text-danger mb-0">₦{{ product.price|floatformat:2|intcomma }}</h4>
+            <div class="mb-4 flex items-center gap-3">
+              <h4 class="animated-price mb-0 font-bold text-red-500">₦{{ product.price|floatformat:2|intcomma }}</h4>
             </div>
             {% endif %}
 
@@ -96,18 +96,18 @@
 
             <!-- Social Share Buttons -->
             <div class="social-share-section mb-3 pb-3 border-bottom">
-              <small class="text-muted d-block mb-2">Share Product:</small>
-              <div class="d-flex gap-2 flex-wrap">
+              <small class="mb-2 block text-slate-400">Share Product:</small>
+              <div class="flex flex-wrap gap-2">
                 <a href="https://wa.me/?text=Check%20out%20this%20product:%20{{ product.name|urlencode }}%20{{ share_url|urlencode }}" 
-                   target="_blank" class="btn btn-sm btn-outline-success" title="Share on WhatsApp">
+                   target="_blank" class="product-share-button product-share-whatsapp" title="Share on WhatsApp">
                   <i class="bi bi-whatsapp"></i> WhatsApp
                 </a>
                 <a href="https://www.facebook.com/sharer/sharer.php?u={{ share_url|urlencode }}" 
-                   target="_blank" class="btn btn-sm btn-outline-primary" title="Share on Facebook">
+                   target="_blank" class="product-share-button product-share-facebook" title="Share on Facebook">
                   <i class="bi bi-facebook"></i> Facebook
                 </a>
                 <a href="https://twitter.com/intent/tweet?text=Check%20out%20{{ product.name|urlencode }}%20{{ share_url|urlencode }}" 
-                   target="_blank" class="btn btn-sm btn-outline-info" title="Share on Twitter">
+                   target="_blank" class="product-share-button product-share-twitter" title="Share on Twitter">
                   <i class="bi bi-twitter"></i> Twitter
                 </a>
               </div>
@@ -166,7 +166,7 @@
                     </svg>
                   </span>
                   <span class="info-label">Price</span>
-                  <span class="info-value fw-bold" style="color:#F68B1E;">₦{% if product.has_active_sale %}{{ product.sale_price|floatformat:2|intcomma }}{% else %}{{ product.price|floatformat:2|intcomma }}{% endif %}</span>
+                  <span class="info-value font-bold" style="color:#F68B1E;">₦{% if product.has_active_sale %}{{ product.sale_price|floatformat:2|intcomma }}{% else %}{{ product.price|floatformat:2|intcomma }}{% endif %}</span>
                 </div>
 
                 <div class="product-info-row">
@@ -194,15 +194,15 @@
               </div>
             </div>
 
-            <div class="mt-3 text-muted small">
+            <div class="mt-3 text-sm text-slate-400">
               <p><strong>⏱️ Estimated Arrival:</strong> 3 - 7 business days</p>
             </div>
 
             {% if price_history %}
             <div class="price-history-card mt-4">
-              <div class="d-flex justify-content-between align-items-center mb-2">
+              <div class="mb-2 flex items-center justify-between">
                 <strong>📈 Price History</strong>
-                <span class="text-muted small">Last {{ price_history|length }} updates</span>
+                <span class="text-sm text-slate-400">Last {{ price_history|length }} updates</span>
               </div>
               <div class="price-history-chart mb-3">
                 <canvas id="priceHistoryChart"></canvas>
@@ -226,16 +226,16 @@
 
   {% if ai_recommendations %}
   <div class="mt-5 pt-4">
-    <h4 class="fw-bold mb-4">You might also like</h4>
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-3">
+    <h4 class="mb-4 font-bold">You might also like</h4>
+    <div class="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
       {% for rec in ai_recommendations %}
-      <div class="col">
-        <div class="card h-100 shadow-sm border-0">
-          <img src="{{ rec.image_src }}" class="card-img-top" alt="{{ rec.name }}" loading="lazy">
-          <div class="card-body">
-            <h5 class="card-title">{{ rec.name|truncatechars:40 }}</h5>
-            <p class="card-text text-muted mb-2">₦{{ rec.price|floatformat:2|intcomma }}</p>
-            <a href="{% url 'products:product-detail' rec.id %}" class="btn btn-outline-danger btn-sm">View Product</a>
+      <div>
+        <div class="recommendation-card h-full">
+          <img src="{{ rec.image_src }}" class="h-48 w-full object-cover" alt="{{ rec.name }}" loading="lazy">
+          <div class="p-4">
+            <h5 class="mb-2 font-semibold">{{ rec.name|truncatechars:40 }}</h5>
+            <p class="mb-2 text-slate-400">₦{{ rec.price|floatformat:2|intcomma }}</p>
+            <a href="{% url 'products:product-detail' rec.id %}" class="product-outline-button">View Product</a>
           </div>
         </div>
       </div>
@@ -252,20 +252,20 @@
 
   <!-- Reviews Section -->
   <div class="mt-5 pt-4 border-top">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <h4 class="fw-bold mb-0">⭐ Customer Reviews ({{ reviews|length }})</h4>
+    <div class="mb-4 flex items-center justify-between">
+      <h4 class="mb-0 font-bold">⭐ Customer Reviews ({{ reviews|length }})</h4>
       {% if reviews %}
-        <span class="badge bg-success">Highly Rated</span>
+        <span class="product-status-badge product-status-success">Highly Rated</span>
       {% endif %}
     </div>
 
     {% for review in reviews %}
-      <div class="p-4 mb-3 border rounded-4 bg-light shadow-sm animate-card">
-        <div class="d-flex justify-content-between align-items-center mb-2">
+      <div class="review-card mb-3 animate-card p-4">
+        <div class="mb-2 flex items-center justify-between">
           <div>
             <strong>{{ review.user.get_full_name|default:review.user.username }}</strong>
             {% if review.verified_purchase %}
-              <span class="badge bg-success ms-2">Verified Purchase ✅</span>
+              <span class="product-status-badge product-status-success ml-2">Verified Purchase ✅</span>
             {% endif %}
           </div>
           <span class="text-warning">
@@ -275,31 +275,31 @@
           </span>
         </div>
         <p class="mb-2">{{ review.review_text }}</p>
-        <small class="text-muted">{{ review.created_at|date:"M d, Y" }}</small>
+        <small class="text-slate-400">{{ review.created_at|date:"M d, Y" }}</small>
       </div>
     {% empty %}
-      <p class="text-muted">No reviews yet. Be the first to leave one!</p>
+      <p class="text-slate-400">No reviews yet. Be the first to leave one!</p>
     {% endfor %}
 
     <!-- Review Form -->
-    <form method="post" action="{% url 'products:submit-review' product.id %}" class="mt-4 p-4 border rounded-4 shadow-sm theme-card animate-card">
+    <form method="post" action="{% url 'products:submit-review' product.id %}" class="theme-card animate-card mt-4 rounded-xl border p-4 shadow-sm">
       {% csrf_token %}
-      <h5 class="fw-semibold mb-3">Write a Review</h5>
+      <h5 class="mb-3 font-semibold">Write a Review</h5>
       {% if user.is_authenticated %}
         <div class="mb-3">
           <label class="form-label">Your Review</label>
-          <textarea name="review_text" class="form-control" rows="3" required></textarea>
+          <textarea name="review_text" class="product-form-control" rows="3" required></textarea>
         </div>
         <div class="mb-3">
           <label class="form-label">Rating</label>
-          <select name="rating" class="form-select" required>
+          <select name="rating" class="product-form-control" required>
             <option value="">Select rating</option>
             {% for i in "12345" %}
               <option value="{{ i }}">{{ i }} star{% if i != '1' %}s{% endif %}</option>
             {% endfor %}
           </select>
         </div>
-        <button type="submit" class="btn btn-warning w-100 fw-semibold text-dark btn-legendary">
+        <button type="submit" class="product-submit-button">
           Submit Review
         </button>
       {% else %}
