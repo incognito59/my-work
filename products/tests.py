@@ -182,6 +182,23 @@ class ShopFilterTests(TestCase):
                 self.assertEqual(actual_ids, expected_ids)
 
 
+class OrderTrackingTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='tracker', password='pass')
+        self.client.login(username='tracker', password='pass')
+        self.order = Order.objects.create(user=self.user, status='processing', tracking_number='TRK123')
+
+    def test_order_tracking_page_renders_status_steps(self):
+        response = self.client.get(reverse('products:order-track', args=[self.order.id]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Placed')
+        self.assertContains(response, 'Processing')
+        self.assertContains(response, 'Shipped')
+        self.assertContains(response, 'Delivered')
+        self.assertContains(response, 'TRK123')
+
+
 class OrderModelTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username='john', password='pass')
