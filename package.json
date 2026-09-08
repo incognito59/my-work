@@ -5,7 +5,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "tsc --noEmit",
     "build:css": "tailwindcss -i ./frontend/css/tailwind.css -o ./frontend/css/tailwind.output.css --minify",
     "watch:css": "tailwindcss -i ./frontend/css/tailwind.css -o ./frontend/css/tailwind.output.css --watch"
   },

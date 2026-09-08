@@ -17,6 +17,7 @@ media/
 # Virtual environment
 .venv/
 node_modules/
+.next/
 
 # Static files
 staticfiles/
