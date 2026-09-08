@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import plugin from "tailwindcss/plugin";
 
 const config: Config = {
   content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
@@ -30,13 +31,13 @@ const config: Config = {
     },
   },
   plugins: [
-    ({ addUtilities }) => {
+    plugin(({ addUtilities }) => {
       addUtilities({
         ".crt-scanlines": {
           backgroundImage: "repeating-linear-gradient(to bottom, transparent 0, transparent 3px, rgba(255,255,255,.025) 4px)",
         },
       });
-    },
+    }),
   ],
 };
 
