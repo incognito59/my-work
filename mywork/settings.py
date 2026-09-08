@@ -14,7 +14,7 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='retail-logistics-core.onrender.
 
 CSRF_TRUSTED_ORIGINS = config(
     'CSRF_TRUSTED_ORIGINS',
-    default='https://retail-logistics-core.onrender.com,http://localhost:3000,http://localhost:8000'
+    default='https://retail-logistics-core.onrender.com,https://retail-logistics-core-t0xz.onrender.com,http://localhost:3000,http://localhost:8000'
 ).split(',')
 
 SECURE_SSL_REDIRECT = not DEBUG and not IS_TESTING
@@ -154,7 +154,7 @@ else:
     EMAIL_USE_SSL = config('EMAIL_USE_SSL', cast=bool, default=False)
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='')
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
-SITE_URL = config('SITE_URL', default='https://retail-logistics-core.onrender.com')
+SITE_URL = config('SITE_URL', default='https://retail-logistics-core-t0xz.onrender.com')
 
 PAYSTACK_PUBLIC_KEY = config('PAYSTACK_PUBLIC_KEY', default='')
 PAYSTACK_SECRET_KEY = config('PAYSTACK_SECRET_KEY', default='')
