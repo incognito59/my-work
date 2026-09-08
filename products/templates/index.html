@@ -219,6 +219,76 @@
   .filter-summary { color: #667eea !important; font-weight: 700; min-width: 200px; font-size: 0.92rem; }
   [data-theme="dark"] .filter-summary { color: #99aaff !important; }
 
+  .shop-filter-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 12px;
+    margin-bottom: 28px;
+    padding: 16px;
+    border: 1px solid rgba(102,126,234,0.18);
+    border-radius: 14px;
+    background: rgba(255,255,255,0.72);
+  }
+  .shop-filter-field {
+    display: flex;
+    flex: 1 1 150px;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+    color: #4f5d84;
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+  .shop-filter-search { flex-basis: 240px; }
+  .shop-filter-price { flex-basis: 120px; }
+  .shop-filter-field input,
+  .shop-filter-field select {
+    width: 100%;
+    min-height: 40px;
+    padding: 9px 11px;
+    border: 1px solid rgba(102,126,234,0.22);
+    border-radius: 8px;
+    background: #fff;
+    color: #1f2937;
+    font: inherit;
+    font-size: 0.84rem;
+    font-weight: 500;
+    outline: none;
+  }
+  .shop-filter-field input:focus,
+  .shop-filter-field select:focus { border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.14); }
+  .shop-filter-submit,
+  .shop-filter-clear {
+    display: inline-flex;
+    min-height: 40px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    padding: 9px 14px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .shop-filter-submit { border: 1px solid #667eea; background: #667eea; color: #fff; cursor: pointer; }
+  .shop-filter-submit:hover { background: #5a6edc; }
+  .shop-filter-clear { border: 1px solid rgba(102,126,234,0.22); color: #667eea; background: transparent; }
+  .shop-filter-clear:hover { background: rgba(102,126,234,0.1); }
+  [data-theme="dark"] .shop-filter-form { border-color: #2a2a35; background: #15151f; }
+  [data-theme="dark"] .shop-filter-field { color: #aabbdd; }
+  [data-theme="dark"] .shop-filter-field input,
+  [data-theme="dark"] .shop-filter-field select { border-color: #3a3a45; background: #1f1f2b; color: #f0f0f0; }
+  [data-theme="dark"] .shop-filter-clear { border-color: #3a3a45; color: #99aaff; }
+
+  @media (max-width: 640px) {
+    .shop-filter-field,
+    .shop-filter-search,
+    .shop-filter-price { flex-basis: calc(50% - 6px); }
+    .shop-filter-submit,
+    .shop-filter-clear { flex: 1 1 calc(50% - 6px); }
+  }
+
   /* ── CATEGORY CHIPS ── */
   .category-nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 28px; }
   .category-chip {
