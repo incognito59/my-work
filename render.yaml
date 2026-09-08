@@ -1,10 +1,10 @@
 services:
   - type: web
     name: retail-logistics-core
-    env: python
+    env: node
     plan: free
-    buildCommand: bash build.sh
-    startCommand: gunicorn mywork.wsgi:application
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
     envVars:
       - key: DEBUG
         value: "False"
