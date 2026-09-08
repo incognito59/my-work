@@ -277,6 +277,17 @@
   .rc-nav-action em, .rc-drawer-links em { @apply absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-cyan-300 px-1 font-mono text-[9px] not-italic text-black; }
   .rc-nav-register { @apply rounded-md border border-cyan-300/50 bg-cyan-300/10 px-3 py-2 font-mono text-[11px] text-cyan-200 no-underline transition hover:bg-cyan-300/20 hover:text-white; }
   .rc-nav-icon, .rc-nav-menu { @apply inline-flex h-8 w-8 items-center justify-center rounded-md border border-white/10 bg-white/5 text-slate-300 transition hover:border-cyan-300/40 hover:text-cyan-200; }
+  .rc-nav-icon {
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .rc-global-nav [class^="bi-"],
+  .rc-global-nav [class*=" bi-"] {
+    font-family: "bootstrap-icons" !important;
+  }
   .rc-nav-menu { @apply md:hidden; }
   .rc-nav-search { @apply relative mx-auto hidden max-w-[420px] pb-3 md:block; }
   .rc-nav-search form { @apply flex h-8 items-center gap-2 rounded-md border border-white/10 bg-white/[0.04] px-3; }
